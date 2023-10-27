@@ -14,11 +14,13 @@ export interface OrderModel {
   edited_by: any;
   created_at: string;
   updated_at: string;
+  customer_name: string;
   deleted_at: any;
   table_no?: string;
   payment_method_id: number;
   note: any;
   total_paid: number;
+  ref: string;
   total: number;
   products: Product[];
   payment_method: PaymentMethod;

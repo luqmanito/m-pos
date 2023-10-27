@@ -1,6 +1,4 @@
-// screens/LoginScreen.tsx
-
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {ScrollView} from 'react-native';
 import store from '../../Public/Assets/online-store.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -37,15 +35,16 @@ import {
   Modal,
 } from 'native-base';
 import ToastAlert from '../../Components/Toast/Toast';
-import useScreenOrientation from '../../Hooks/useScreenOrientation';
+// import useScreenOrientation from '../../Hooks/useScreenOrientation';
 import {StyleSheet} from 'react-native';
+import {PrimaryColorContext} from '../../Context';
 
 type RegisterScreenProps = {
   navigation: any; // If you are using react-navigation, replace any with the correct navigation type
 };
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
-  const orientation = useScreenOrientation();
+  // const orientation = useScreenOrientation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -62,6 +61,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
   const [dataCamera, setDataCamera] = useState<DataCamera | undefined>(
     undefined,
   );
+  const primaryColor = useContext(PrimaryColorContext);
   const [currentLoc, setCurrentLoc] = useState({
     latitude: null,
     longitude: null,
@@ -217,16 +217,16 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
         />
       </View> */}
       <ScrollView>
-        <Center>
+        <Center my={4}>
           <Image
             source={store}
-            width={'40%'}
-            top={10}
+            width={350}
             resizeMode="contain"
             alt="logo-register"
           />
         </Center>
-        <Center mt={orientation === 'portrait' ? -60 : null}>
+        {/* <Center mt={orientation === 'portrait' ? -60 : null}> */}
+        <Center>
           <Text fontSize="md" bold>
             Kelola Usaha Jadi Makin Gampang
           </Text>
@@ -376,7 +376,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
                     onPress={() => {
                       setIsOpenMap(true);
                     }}
-                    bg={'#0c50ef'}
+                    bg={primaryColor?.primaryColor}
                     borderRadius={10}>
                     Pilih Lokasi
                   </Button>
@@ -396,7 +396,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
                         onPress={() => {
                           setIsOpenMap(true);
                         }}
-                        bg={'#0c50ef'}
+                        bg={primaryColor?.primaryColor}
                         borderRadius={10}>
                         Ganti Lokasi
                       </Button>
@@ -444,7 +444,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
                         onPress={() => setIsOpen(true)}
                         name="add-photo-alternate"
                         size={45}
-                        color="#0c50ef"
+                        color={primaryColor?.primaryColor}
                       />
                     )}
                   </Flex>
@@ -453,7 +453,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
             </FormControl>
           </Box>
         </Center>
-        <Center>
+        <Center mx={4}>
           <Button
             borderRadius={34}
             mb={5}
@@ -471,9 +471,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
             onPress={handleSubmit}
             isLoading={isLoading ? true : false}
             isLoadingText="Loading"
-            w={'90%'}
+            w={'100%'}
             marginTop={5}
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
               <MaterialIcons name="save" color="white" /> Simpan
             </Text>
@@ -487,7 +487,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
             <Modal.Header>{'Upload Foto Usaha'}</Modal.Header>
             <Modal.Body>
               <Button
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 leftIcon={
                   <MaterialCommunityIcons
                     name="camera-outline"
@@ -499,7 +499,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
                 Ambil Foto Kamera
               </Button>
               <Button
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 leftIcon={
                   <Fontisto name="photograph" size={20} color="white" />
                 }
@@ -540,7 +540,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
                 />
               </View>
               <Button
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 leftIcon={<Ionicons name="location" size={15} color="white" />}
                 onPress={() => getCurrentLocation()}>
                 Ambil lokasi saat ini

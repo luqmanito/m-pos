@@ -1,15 +1,19 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {Button, Center, Text, View} from 'native-base';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Foundation from 'react-native-vector-icons/Foundation';
+import {PrimaryColorContext} from '../../Context';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 
-const NewEmployee = ({navigation}) => {
+const NewEmployee = () => {
+  const navigation = useNavigation<NavigationProp<any>>();
   const dataEmployee = useSelector(
     (state: RootState) => state.employeeSlice.dataEmployee,
   );
+  const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
       <View mt={10} justifyContent={'center'} alignItems={'center'}>
@@ -35,12 +39,7 @@ const NewEmployee = ({navigation}) => {
               <Text bold fontSize={'xl'}>
                 {dataEmployee?.name}
               </Text>
-              <Text bold>
-                {dataEmployee?.role === 'one' ? 'Admin' : 'User'}
-              </Text>
-              <Text mt={2} color={'#abafcc'}>
-                {dataEmployee?.mobile_number}
-              </Text>
+              <Text bold>{dataEmployee?.role}</Text>
               <Text mt={2} color={'#abafcc'}>
                 {dataEmployee?.email}
               </Text>
@@ -52,7 +51,11 @@ const NewEmployee = ({navigation}) => {
         <View bg={'white'} borderRadius={10}>
           <View mt={4} flexDirection={'row'}>
             <View justifyContent={'center'} mx={4}>
-              <Foundation name="info" size={25} color="#0c50ef" />
+              <Foundation
+                name="info"
+                size={25}
+                color={primaryColor?.primaryColor}
+              />
             </View>
             <View>
               <Text bold fontSize={'lg'}>
@@ -61,8 +64,8 @@ const NewEmployee = ({navigation}) => {
             </View>
           </View>
           <Text mx={4} mb={4} fontSize={'md'}>
-            Password sementara sudah dikirim ke email pegawaimu. Silakan minta
-            pegawai bersangkutan untuk log in Hidup Merchant.
+            Akun pegawai berhasil dibuat. Silakan minta pegawai bersangkutan
+            untuk log in Hidup Merchant.
           </Text>
         </View>
       </View>
@@ -75,15 +78,15 @@ const NewEmployee = ({navigation}) => {
         <Button
           isLoadingText={'loading'}
           borderRadius={20}
-          bg={'#0c50ef'}
-          onPress={() => navigation.navigate('EmployeeSettings')}>
+          bg={primaryColor?.primaryColor}
+          onPress={() => navigation.navigate('SettingScreen')}>
           <Text
             bold
             fontSize={'xl'}
             textAlign={'center'}
             color="white"
             flex={2}>
-            Lihat Daftar Pegawai
+            Tutup
           </Text>
         </Button>
       </View>

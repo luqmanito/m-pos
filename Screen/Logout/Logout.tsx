@@ -10,6 +10,12 @@ import {
 
 import {useIsFocused} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {setPayments} from '../../Redux/Reducers/paymentMethod';
+import {useDispatch} from 'react-redux';
+import {clearCart} from '../../Redux/Reducers/cart';
+import {clearStateButton} from '../../Redux/Reducers/button';
+import {clearStateVisited} from '../../Redux/Reducers/isProductVisited';
+import {clearOrderState} from '../../Redux/Reducers/orders';
 
 type LogoutScreenProps = {
   navigation: any;
@@ -17,11 +23,19 @@ type LogoutScreenProps = {
 
 export const LogoutScreen: React.FC<LogoutScreenProps> = ({navigation}) => {
   const isFocused = useIsFocused();
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
+
   const handleSubmit = async () => {
     try {
       navigation.navigate('LoginScreen');
-      await AsyncStorage.removeItem('authToken');
+      dispatch(setPayments([]));
+      dispatch(clearCart());
+      dispatch(clearStateButton());
+      dispatch(clearOrderState());
+      dispatch(clearStateVisited());
+      const keys = await AsyncStorage.getAllKeys();
+      await AsyncStorage.multiRemove(keys);
     } catch (error) {
       console.log('Error removing item from AsyncStorage:', error);
     }

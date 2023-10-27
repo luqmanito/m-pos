@@ -1,5 +1,5 @@
 import {HStack, Image, Switch, Text, View} from 'native-base';
-import React, {FunctionComponent} from 'react';
+import React, {FunctionComponent, useContext} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FastImage from 'react-native-fast-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -10,6 +10,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import {updateCartItemQuantity} from '../../Redux/Reducers/cart';
 import {RootState} from '../../Redux/store';
 import {setActiveId, setNote} from '../../Redux/Reducers/button';
+import useNetworkInfo from '../../Hooks/useNetworkInfo';
+import {PrimaryColorContext} from '../../Context';
 
 type ProductProps = {
   name: string | undefined;
@@ -21,6 +23,7 @@ type ProductProps = {
   id: number | undefined;
   msg?: string;
   onCashier: boolean;
+  onEditNote?: string;
   onCheckout?: boolean;
   active?: boolean;
   setNoteProduct?: (newNote: string) => void;
@@ -36,12 +39,14 @@ const Product: FunctionComponent<ProductProps> = ({
   quantity,
   active,
   onCheckout,
+  onEditNote,
   setNoteProduct,
 }) => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const detailQty = cartItems.find(item => item.productId === id);
-
+  const isConnected = useNetworkInfo().isConnected;
+  const primaryColor = useContext(PrimaryColorContext);
   const handleIncreaseQuantity = (productId: number) => {
     const cartItem = cartItems.find(item => item.productId === productId);
     if (cartItem) {
@@ -92,7 +97,9 @@ const Product: FunctionComponent<ProductProps> = ({
     dispatch(setActiveId(id));
     dispatch(setNote(true));
     if (setNoteProduct) {
-      setNoteProduct(detailQty?.note ? detailQty?.note : '');
+      setNoteProduct(
+        onEditNote ? onEditNote : detailQty?.note ? detailQty?.note : '',
+      );
     }
   };
 
@@ -101,7 +108,23 @@ const Product: FunctionComponent<ProductProps> = ({
       <View minW={350} mx={4} mt={4} bg="white" borderRadius={15}>
         <HStack mx={4}>
           <View>
-            {photos ? (
+            {photos && !isConnected ? (
+              // <FastImage
+              //   style={styles.image}
+              //   source={{
+              //     uri: photos,
+              //     priority: FastImage.priority.normal,
+              //   }}
+              //   resizeMode={FastImage.resizeMode.contain}
+              //   fallback={noImage}
+              // />
+              <Image
+                source={noImage}
+                alt={'foto-produk'}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            ) : photos && isConnected ? (
               <FastImage
                 style={styles.image}
                 source={{
@@ -109,6 +132,7 @@ const Product: FunctionComponent<ProductProps> = ({
                   priority: FastImage.priority.normal,
                 }}
                 resizeMode={FastImage.resizeMode.contain}
+                fallback={noImage}
               />
             ) : (
               <Image
@@ -160,7 +184,7 @@ const Product: FunctionComponent<ProductProps> = ({
                   name="minuscircle"
                   size={25}
                   style={styles.iconLeft}
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               </Pressable>
               <Text bold mx={1} mb={1}>
@@ -176,7 +200,7 @@ const Product: FunctionComponent<ProductProps> = ({
                   name="pluscircle"
                   size={25}
                   style={styles.iconRight}
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               </Pressable>
             </View>
@@ -185,7 +209,11 @@ const Product: FunctionComponent<ProductProps> = ({
         {onCheckout && !detailQty?.note ? (
           <Pressable onPress={() => handleNotes()}>
             <Text mb={2} mt={2} mx={4}>
-              <MaterialIcons name="note-add" size={15} color="#0c50ef" />
+              <MaterialIcons
+                name="note-add"
+                size={15}
+                color={primaryColor?.primaryColor}
+              />
               Tambah Catatan
             </Text>
           </Pressable>
@@ -211,7 +239,7 @@ const Product: FunctionComponent<ProductProps> = ({
                   name="edit"
                   style={styles.iconCart}
                   size={15}
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               </Pressable>
             </View>

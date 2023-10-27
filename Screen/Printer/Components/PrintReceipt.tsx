@@ -1,5 +1,5 @@
 import {Button, useToast, View} from 'native-base';
-import React, {useEffect} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {StyleSheet} from 'react-native';
 import {BluetoothEscposPrinter} from 'react-native-bluetooth-escpos-printer';
 import {useSelector} from 'react-redux';
@@ -10,8 +10,10 @@ import {RootState} from '../../../Redux/store';
 import userNetwork from '../../../Network/lib/user';
 import {hsdLogo} from './dummy-logo';
 import ToastAlert from '../../../Components/Toast/Toast';
+import {PrimaryColorContext} from '../../../Context';
 
 const PrintReceipt = () => {
+  const primaryColor = useContext(PrimaryColorContext);
   const paymentReceipt = useSelector(
     (state: RootState) => state.paymentSlice.items[0],
   );
@@ -36,7 +38,7 @@ const PrintReceipt = () => {
           borderRadius={12}
           mx={4}
           mt={4}
-          bg={'#0c50ef'}
+          bg={primaryColor?.primaryColor}
           onPress={async () => {
             let columnWidths = [16, 16];
             try {

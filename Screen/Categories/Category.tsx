@@ -1,4 +1,4 @@
-import React, {FunctionComponent, useEffect, useState} from 'react';
+import React, {FunctionComponent, useContext, useEffect, useState} from 'react';
 import {Button, HStack, Radio, Text, View} from 'native-base';
 import NavBar from '../../Components/Navbar/Navbar';
 import {useNavigation} from '@react-navigation/native';
@@ -9,6 +9,7 @@ import {setCategoryCode, setCategoryName} from '../../Redux/Reducers/product';
 import {Pressable} from 'react-native';
 import {RootState} from '../../Redux/store';
 import {CategoryModel, RootCategoryModel} from '../../models/CategoryModel';
+import {PrimaryColorContext} from '../../Context';
 
 interface CategoryScreenProps {}
 
@@ -20,7 +21,7 @@ const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
   const categoryCode = useSelector(
     (state: RootState) => state.productSlice?.categoryCode,
   );
-
+  const primaryColor = useContext(PrimaryColorContext);
   const fetchProducts = async (): Promise<RootCategoryModel> => {
     try {
       const response = await productNetwork.categoryList({
@@ -94,7 +95,7 @@ const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
         position={'absolute'}
         bottom={28}
         alignSelf="center"
-        bg={'#0c50ef'}>
+        bg={primaryColor?.primaryColor}>
         <Text fontSize={'md'} color="white">
           <MaterialIcons name="save" size={15} color="white" /> Simpan Kategori
         </Text>

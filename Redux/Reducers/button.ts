@@ -4,10 +4,14 @@ export interface ButtonState {
   note: boolean;
   table_number: string;
   activeId?: number;
+  selectedId?: number;
   bluetoothStatus: string;
   bluetoothName: string;
   payment_methodId: number | null;
   payment_method: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  customerEmail: string | null;
 }
 
 const initialState: ButtonState = {
@@ -15,7 +19,11 @@ const initialState: ButtonState = {
   table_number: '',
   bluetoothStatus: '',
   bluetoothName: '',
+  customerName: '',
+  customerPhone: '',
+  customerEmail: '',
   activeId: 0,
+  selectedId: 0,
   payment_methodId: null,
   payment_method: null,
 };
@@ -36,6 +44,12 @@ const buttonSlice = createSlice({
         activeId: action.payload,
       };
     },
+    setSelectedId: (state, action) => {
+      return {
+        ...state,
+        selectedId: action.payload,
+      };
+    },
     setTableNumber: (state, action) => {
       return {
         ...state,
@@ -52,6 +66,24 @@ const buttonSlice = createSlice({
       return {
         ...state,
         bluetoothName: action.payload,
+      };
+    },
+    setCustomerName: (state, action) => {
+      return {
+        ...state,
+        customerName: action.payload,
+      };
+    },
+    setCustomerPhone: (state, action) => {
+      return {
+        ...state,
+        customerPhone: action.payload,
+      };
+    },
+    setCustomerEmail: (state, action) => {
+      return {
+        ...state,
+        customerEmail: action.payload,
       };
     },
     setPaymentMethodId: (state, action) => {
@@ -71,9 +103,13 @@ const buttonSlice = createSlice({
       return {
         note: false,
         activeId: 0,
+        selectedId: 0,
         table_number: '',
         bluetoothName: '',
         bluetoothStatus: '',
+        customerName: '',
+        customerPhone: '',
+        customerEmail: '',
         payment_methodId: null,
         payment_method: null,
       };
@@ -86,7 +122,11 @@ export const {
   setActiveId,
   setBluetoohStatus,
   setTableNumber,
+  setSelectedId,
   clearStateButton,
+  setCustomerEmail,
+  setCustomerName,
+  setCustomerPhone,
   setPaymentMethodId,
   setPaymentMethod,
   setBluetoohName,

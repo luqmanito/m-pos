@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'native-base';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -19,6 +19,7 @@ import {useReport} from '../../Hooks/useReport';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import formatDateYYYY_MM_DD from '../../Components/Date/FormatYYYY-MM-DD';
 import {dates} from '../../Components/Date/Today';
+import {PrimaryColorContext} from '../../Context';
 
 const ReportScreen = () => {
   const {handleChange, reportDataTotal, reportDataPayment} = useReport();
@@ -27,7 +28,7 @@ const ReportScreen = () => {
   const [selectedStartDate, setSelectedStartDate] = useState('');
   const [rangeName, setRangeName] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-
+  const primaryColor = useContext(PrimaryColorContext);
   let totalPriceTransaction = 0;
   let totalTransaction = 0;
 
@@ -67,7 +68,7 @@ const ReportScreen = () => {
                   as={<Ionicons name={'calendar'} />}
                   size={6}
                   ml="2"
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               }
               InputRightElement={
@@ -75,7 +76,7 @@ const ReportScreen = () => {
                   as={<Ionicons name={'chevron-down'} />}
                   size={6}
                   mr="2"
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               }
             />
@@ -90,10 +91,10 @@ const ReportScreen = () => {
               <Entypo name="info-with-circle" size={20} color="#b0b4d8" />
             </View>
           </View>
-          <Text mx={4} fontSize={'xl'} bold color={'#0c50ef'}>
+          <Text mx={4} fontSize={'xl'} bold color={primaryColor?.primaryColor}>
             {RupiahFormatter(totalPriceTransaction)}
           </Text>
-          <Text mx={4} fontSize={'sm'}>
+          <Text mx={4} my={4} fontSize={'sm'}>
             {totalTransaction} Transaksi
           </Text>
           {reportDataTotal?.map((item, index) => {
@@ -126,7 +127,7 @@ const ReportScreen = () => {
           })}
         </View>
         <View borderRadius={10} bg={'white'} mx={4} my={4}>
-          <Text mx={4} mt={4} bold>
+          <Text mx={4} my={4} bold>
             Metode Pembayaran
           </Text>
           {reportDataPayment?.map((item, index) => {
@@ -191,7 +192,7 @@ const ReportScreen = () => {
                       <AntDesign
                         name={'checkcircle'}
                         size={20}
-                        color="#0c50ef"
+                        color={primaryColor?.primaryColor}
                       />
                     </View>
                   ) : null}
@@ -212,7 +213,7 @@ const ReportScreen = () => {
                         <AntDesign
                           name={'checkcircle'}
                           size={20}
-                          color="#0c50ef"
+                          color={primaryColor?.primaryColor}
                         />
                       ) : null}
                     </View>
@@ -234,7 +235,7 @@ const ReportScreen = () => {
                         <AntDesign
                           name={'checkcircle'}
                           size={20}
-                          color="#0c50ef"
+                          color={primaryColor?.primaryColor}
                         />
                       </View>
                     ) : null}
@@ -252,7 +253,7 @@ const ReportScreen = () => {
                 borderRadius={34}
                 alignItems={'center'}
                 justifyContent={'center'}
-                bg={'#0c50ef'}>
+                bg={primaryColor?.primaryColor}>
                 <Text fontSize={'lg'} color="white">
                   Tampilkan
                 </Text>

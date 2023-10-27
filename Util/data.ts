@@ -29,7 +29,7 @@ export const settingsData = [
     permission: ['ADMIN'],
   },
   {
-    id: 3,
+    id: 9,
     iconElement: Ionicons,
     bg: '#f7f7f7',
     icon: 'sync-circle-sharp',
@@ -41,7 +41,7 @@ export const settingsData = [
     permission: ['ADMIN', 'USER'],
   },
   {
-    id: 4,
+    id: 3,
     iconElement: MaterialIcons,
     bg: '#f5effb',
     icon: 'print',
@@ -53,7 +53,7 @@ export const settingsData = [
     permission: ['ADMIN', 'USER'],
   },
   {
-    id: 5,
+    id: 4,
     iconElement: FontAwesome,
     bg: '#edf7ee',
     icon: 'whatsapp',

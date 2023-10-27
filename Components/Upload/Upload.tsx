@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {Button, Center, Modal, Text} from 'native-base';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Fontisto from 'react-native-vector-icons/Fontisto';
@@ -12,6 +12,7 @@ import {
   ImageLibraryOptions,
 } from 'react-native-image-picker';
 import {DataCamera, setDataCamera} from '../../Redux/Reducers/upload';
+import {PrimaryColorContext} from '../../Context';
 
 interface UploadCompProps {
   position: string;
@@ -22,6 +23,7 @@ interface UploadCompProps {
 export const UploadComp = ({position, title, size}: UploadCompProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
+  const primaryColor = useContext(PrimaryColorContext);
   const option: ImageLibraryOptions = {
     mediaType: 'photo',
     includeBase64: true,
@@ -68,7 +70,7 @@ export const UploadComp = ({position, title, size}: UploadCompProps) => {
         onPress={() => setIsOpen(true)}
         name="add-photo-alternate"
         size={45}
-        color="#0c50ef"
+        color={primaryColor?.primaryColor}
       />
       <Center>
         <Modal size={size} isOpen={isOpen} onClose={() => setIsOpen(false)}>
@@ -77,19 +79,23 @@ export const UploadComp = ({position, title, size}: UploadCompProps) => {
             <Modal.Header>{title}</Modal.Header>
             <Modal.Body>
               <Button
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 leftIcon={<FontAwesome name="camera" size={15} color="white" />}
                 onPress={() => openCamera()}>
                 Ambil Foto Kamera
               </Button>
               <Button
-                bg={'#e3e9ff'}
+                bg={primaryColor?.secondaryColor}
                 leftIcon={
-                  <Fontisto name="photograph" size={15} color="#0c50ef" />
+                  <Fontisto
+                    name="photograph"
+                    size={15}
+                    color={primaryColor?.primaryColor}
+                  />
                 }
                 onPress={openGallery}
                 mt={4}>
-                <Text color={'#0c50ef'}>Via Gallery</Text>
+                <Text color={primaryColor?.primaryColor}>Via Gallery</Text>
               </Button>
             </Modal.Body>
           </Modal.Content>

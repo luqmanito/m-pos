@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-import {useLoading} from '../Context';
+
 import {OrderDetail} from '../models/OrderDetail';
 import orderNetwork from '../Network/lib/order';
 import {createPayment} from '../Redux/Reducers/payment';
@@ -8,7 +8,7 @@ import {RootState} from '../Redux/store';
 
 const useOrderDetails = () => {
   const [orders, setOrders] = useState<OrderDetail>();
-  const {setLoading} = useLoading();
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
   const idState = useSelector(
@@ -17,12 +17,12 @@ const useOrderDetails = () => {
 
   useEffect(() => {
     const fetchProducts = async (): Promise<void> => {
-      setLoading(true);
+      setIsLoading(true);
       try {
         if (idState) {
           const response = await orderNetwork.detail(idState);
           if (response) {
-            setLoading(false);
+            setIsLoading(false);
             dispatch(
               createPayment({
                 products: response?.data?.products,
@@ -39,14 +39,14 @@ const useOrderDetails = () => {
           }
         }
       } catch (error) {
-        setLoading(false);
+        setIsLoading(false);
         console.error('Error fetching products:', error);
         throw error;
       }
     };
     fetchProducts();
-  }, [setLoading, dispatch, idState]);
-  return orders;
+  }, [dispatch, idState]);
+  return {orders, isLoading};
 };
 
 export default useOrderDetails;

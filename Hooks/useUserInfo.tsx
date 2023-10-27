@@ -9,6 +9,7 @@ import useNetworkInfo from './useNetworkInfo';
 const useUserInfo = () => {
   const [userData, setUserData] = useState<UserModel>();
   const {setLoading} = useLoading();
+  const [onlineModule, setOnlineModule] = useState(false);
   const [fetchData, setFetchData] = useState(false);
   const isFocused = useIsFocused();
   const isConnected = useNetworkInfo().isConnected;
@@ -23,6 +24,14 @@ const useUserInfo = () => {
       try {
         const response = await userNetwork.userProfile();
         if (response) {
+          const hasOrderOnlineModule = response.data.business.modules.some(
+            module => module.name === 'order online',
+          );
+          if (hasOrderOnlineModule) {
+            setOnlineModule(true);
+          } else {
+            setOnlineModule(false);
+          }
           await cache.store('DataUser', response.data);
           setLoading(false);
           setUserData(response.data);
@@ -49,6 +58,7 @@ const useUserInfo = () => {
   return {
     userData,
     handleRefresh,
+    onlineModule,
   };
 };
 

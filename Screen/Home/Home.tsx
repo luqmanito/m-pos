@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {
   View,
   Text,
@@ -23,18 +23,23 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {WavePatternComponent} from '../../Components/WavePattern/WavePattern';
 // import {LineChart} from 'react-native-chart-kit';
 import {RefreshControl, StyleSheet} from 'react-native';
-import useNetworkInfo from '../../Hooks/useNetworkInfo';
 import useUserInfo from '../../Hooks/useUserInfo';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import {useReport} from '../../Hooks/useReport';
+
+import {PrimaryColorContext} from '../../Context';
+// import {PrimaryColorContext} from '../../LoadingContext';
 
 interface HomeProps {
   navigation: any;
 }
 export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
-  const isConnected = useNetworkInfo().isConnected;
+  const primaryColor = useContext(PrimaryColorContext);
+
   const {reportDataTotal} = useReport();
   const {userData, handleRefresh} = useUserInfo();
+
+  // dispatch(setPaymentMethod(paymentMethod));
   // const data = {
   //   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
   //   datasets: [
@@ -108,7 +113,7 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
           <Text bold fontSize={'lg'}>
             {userData?.name}
           </Text>
-          <Text>Anda sebagai Pemilik {isConnected ? 'online' : 'offline'}</Text>
+          <Text>Anda sebagai {userData?.role} </Text>
           <Divider mt={2} />
           <View mt={4} flexDirection={'row'}>
             <View flex={1}>
@@ -127,7 +132,11 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
           mx={4}
           my={2}>
           <View flex={1} justifyContent={'center'} alignItems={'center'}>
-            <Entypo name="info-with-circle" size={20} color="#0c50ef" />
+            <Entypo
+              name="info-with-circle"
+              size={20}
+              color={primaryColor?.primaryColor}
+            />
           </View>
           <View flex={10}>
             <Text>
@@ -169,14 +178,28 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
                   justifyContent={'center'}
                   alignItems={'flex-end'}
                   flex={4}>
-                  <AntDesign name="right" size={15} color="#0c50ef" />
+                  <AntDesign
+                    name="right"
+                    size={15}
+                    color={primaryColor?.primaryColor}
+                  />
                 </View>
               </View>
             </View>
           </View>
-          <View>
-            <Entypo name="flow-line" size={35} color="#2dbf52" />
+
+          <View borderRadius={20} flexDirection={'row'} mt={2}>
+            <View flex={2} justifyContent={'center'} alignItems={'center'}>
+              <View mr={4}>
+                <Entypo name="flow-line" size={35} color="#2dbf52" />
+              </View>
+            </View>
+            <View flex={10} bg={'white'} p={2} />
           </View>
+
+          {/* <View>
+            <Entypo name="flow-line" size={35} color="#2dbf52" />
+          </View> */}
           <View mb={4} borderRadius={20} flexDirection={'row'}>
             <View flex={2} justifyContent={'center'} alignItems={'center'}>
               <View
@@ -205,7 +228,7 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
               <View flexDirection={'row'}>
                 <View flex={8}>
                   <Text fontSize={'xs'}>Langkah 2</Text>
-                  <Text bold color={'#0c50ef'}>
+                  <Text bold color={primaryColor?.primaryColor}>
                     Mulai Jualan
                   </Text>
                 </View>
@@ -213,7 +236,11 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
                   justifyContent={'center'}
                   alignItems={'flex-end'}
                   flex={4}>
-                  <AntDesign name="right" size={15} color="#0c50ef" />
+                  <AntDesign
+                    name="right"
+                    size={15}
+                    color={primaryColor?.primaryColor}
+                  />
                 </View>
               </View>
             </Pressable>
@@ -274,11 +301,20 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
             onPress={() => navigation.navigate('ReportScreen')}
             mt={4}
             flexDirection={'row'}>
-            <Text flex={1} mx={4} my={4} bold color={'#0c50ef'}>
+            <Text
+              flex={1}
+              mx={4}
+              my={4}
+              bold
+              color={primaryColor?.primaryColor}>
               Lihat Selengkapnya
             </Text>
             <View my={4} flex={1} mx={4} alignItems="flex-end">
-              <AntDesign name="right" size={20} color="#0c50ef" />
+              <AntDesign
+                name="right"
+                size={20}
+                color={primaryColor?.primaryColor}
+              />
             </View>
           </Pressable>
         </View>
@@ -295,7 +331,7 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
             <Text bold>Pesanan Online</Text>
           </View>
           <View flex={1} alignItems={'flex-end'}>
-            <Text bold color={'#0c50ef'}>
+            <Text bold color={primaryColor?.primaryColor}>
               Lihat Semua
             </Text>
           </View>

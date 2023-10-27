@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useContext} from 'react';
 import {
   View,
   Button,
@@ -17,23 +17,26 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import {useFocusEffect} from '@react-navigation/native';
-import {StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import {StyleSheet} from 'react-native';
 import {clearStateProduct} from '../../Redux/Reducers/product';
 import {useDispatch} from 'react-redux';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
-
-import {clearCart} from '../../Redux/Reducers/cart';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import {formatTime} from '../../Components/Time/Time';
 import formatDate from '../../Components/Date/Date';
 
 import useOrders from '../../Hooks/useOrders';
-import {todayBahasa} from '../../Components/Date/Today';
+// import {todayBahasa} from '../../Components/Date/Today';
 import useNetworkInfo from '../../Hooks/useNetworkInfo';
+import {PrimaryColorContext} from '../../Context';
 
 interface PaymentInfo {
-  totalPrice: string;
+  totalPrice: string | number;
   totalPayment: number;
   exchangePayment: number;
   invoiceNumber: string | null;
@@ -51,11 +54,12 @@ const initialPaymentInfo: PaymentInfo = {
 };
 
 export const TransactionScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp<any>>();
   const [activeTab, setActiveTab] = useState('Tab1');
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenCalendar, setIsOpenCalendar] = useState(false);
   const dispatch = useDispatch();
-
+  const primaryColor = useContext(PrimaryColorContext);
   const handleTabPress = (tabName: string) => {
     setActiveTab(tabName);
   };
@@ -98,13 +102,13 @@ export const TransactionScreen: React.FC = () => {
 
   markedDates[selectedStartDate] = {
     startingDay: true,
-    color: '#0c50ef',
+    color: primaryColor?.primaryColor ? primaryColor?.primaryColor : '#20b529',
     textColor: 'white',
   };
 
   markedDates[selectedEndDate] = {
     endingDay: true,
-    color: '#0c50ef',
+    color: primaryColor?.primaryColor ? primaryColor?.primaryColor : '#20b529',
     textColor: 'white',
   };
 
@@ -175,7 +179,9 @@ export const TransactionScreen: React.FC = () => {
   while (currentDate < end) {
     const dateString = currentDate.toISOString().split('T')[0];
     markedDates[dateString] = {
-      color: '#e3e9ff',
+      color: primaryColor?.primaryColor
+        ? primaryColor?.primaryColor
+        : '#20b529',
       textColor: 'black',
     };
     currentDate.setDate(currentDate.getDate() + 1);
@@ -207,12 +213,17 @@ export const TransactionScreen: React.FC = () => {
           <Button
             borderRadius={20}
             onPress={() => {
-              dispatch(clearCart());
+              navigation.navigate('ReportScreen');
             }}
             alignSelf="center"
-            bg={'#e3e9ff'}>
-            <Text fontSize={'md'} mx={2} bold color="#0c50ef">
-              <Foundation name="graph-bar" color="#0c50ef" /> Laporan
+            bg={primaryColor?.secondaryColor}>
+            <Text
+              fontSize={'md'}
+              mx={2}
+              bold
+              color={primaryColor?.primaryColor}>
+              <Foundation name="graph-bar" color={primaryColor?.primaryColor} />{' '}
+              Laporan
             </Text>
           </Button>
         </View>
@@ -221,21 +232,31 @@ export const TransactionScreen: React.FC = () => {
       <View mx={6} mt={4} flexDirection={'row'}>
         <Pressable
           p={2}
+          mb={4}
           onPress={() => handleTabPress('Tab1')}
-          bg={activeTab === 'Tab1' ? '#e3e9ff' : null}
+          bg={activeTab === 'Tab1' ? primaryColor?.secondaryColor : null}
           w={'50%'}
           borderRadius={20}>
-          <Text textAlign={'center'} bold color={'#0c50ef'} borderRadius={20}>
+          <Text
+            textAlign={'center'}
+            bold
+            color={primaryColor?.primaryColor}
+            borderRadius={20}>
             Pendapatan
           </Text>
         </Pressable>
         <Pressable
           p={2}
+          mb={4}
           onPress={() => handleTabPress('Tab2')}
-          bg={activeTab === 'Tab2' ? '#e3e9ff' : null}
+          bg={activeTab === 'Tab2' ? primaryColor?.secondaryColor : null}
           w={'50%'}
           borderRadius={20}>
-          <Text textAlign={'center'} bold color={'#0c50ef'} borderRadius={20}>
+          <Text
+            textAlign={'center'}
+            bold
+            color={primaryColor?.primaryColor}
+            borderRadius={20}>
             Pencairan
           </Text>
         </Pressable>
@@ -248,7 +269,7 @@ export const TransactionScreen: React.FC = () => {
               _text={
                 activeMethod === 'method1'
                   ? {
-                      color: '#0c50ef',
+                      color: primaryColor?.primaryColor,
                     }
                   : {
                       color: '#1F2937',
@@ -256,7 +277,9 @@ export const TransactionScreen: React.FC = () => {
               }
               onPress={() => setActiveMethod('method1')}
               variant="unstyled"
-              borderBottomColor={activeMethod === 'method1' ? '#0c50ef' : null}
+              borderBottomColor={
+                activeMethod === 'method1' ? primaryColor?.primaryColor : null
+              }
               borderBottomWidth={activeMethod === 'method1' ? 2 : 0}
               textAlign={'center'}
               flex={1}>
@@ -268,7 +291,7 @@ export const TransactionScreen: React.FC = () => {
               _text={
                 activeMethod === 'method2'
                   ? {
-                      color: '#0c50ef',
+                      color: primaryColor?.primaryColor,
                     }
                   : {
                       color: '#1F2937',
@@ -276,7 +299,9 @@ export const TransactionScreen: React.FC = () => {
               }
               onPress={() => setActiveMethod('method2')}
               variant="unstyled"
-              borderBottomColor={activeMethod === 'method2' ? '#0c50ef' : null}
+              borderBottomColor={
+                activeMethod === 'method2' ? primaryColor?.primaryColor : null
+              }
               borderBottomWidth={activeMethod === 'method2' ? 2 : 0}
               textAlign={'center'}
               flex={1}>
@@ -287,7 +312,7 @@ export const TransactionScreen: React.FC = () => {
               _text={
                 activeMethod === 'method3'
                   ? {
-                      color: '#0c50ef',
+                      color: primaryColor?.primaryColor,
                     }
                   : {
                       color: '#1F2937',
@@ -295,7 +320,9 @@ export const TransactionScreen: React.FC = () => {
               }
               onPress={() => setActiveMethod('method3')}
               variant="unstyled"
-              borderBottomColor={activeMethod === 'method3' ? '#0c50ef' : null}
+              borderBottomColor={
+                activeMethod === 'method3' ? primaryColor?.primaryColor : null
+              }
               borderBottomWidth={activeMethod === 'method3' ? 2 : 0}
               textAlign={'center'}
               flex={1}>
@@ -320,7 +347,7 @@ export const TransactionScreen: React.FC = () => {
                     as={<Ionicons name={'calendar'} />}
                     size={6}
                     ml="2"
-                    color="#0c50ef"
+                    color={primaryColor?.primaryColor}
                   />
                 }
                 InputRightElement={
@@ -328,7 +355,7 @@ export const TransactionScreen: React.FC = () => {
                     as={<Ionicons name={'chevron-down'} />}
                     size={6}
                     mr="2"
-                    color="#0c50ef"
+                    color={primaryColor?.primaryColor}
                   />
                 }
               />
@@ -347,17 +374,15 @@ export const TransactionScreen: React.FC = () => {
               bg={'white'}>
               <View my={4} flexDirection={'row'}>
                 <Text mx={4} fontSize={'lg'} flex={2} bold>
-                  {todayBahasa}
+                  {/* {todayBahasa} */}
+                  Hasil Transaksi
                 </Text>
-                <View justifyContent={'center'} alignItems={'center'} flex={1}>
-                  <Text fontSize={'lg'}>
-                    Rp.40.000
-                    <AntDesign
-                      name={isVisible ? 'up' : 'down'}
-                      size={15}
-                      color="#0c50ef"
-                    />
-                  </Text>
+                <View mr={4} alignItems={'flex-end'} flex={1}>
+                  <AntDesign
+                    name={isVisible ? 'up' : 'down'}
+                    size={15}
+                    color={primaryColor?.primaryColor}
+                  />
                 </View>
               </View>
             </View>
@@ -388,12 +413,18 @@ export const TransactionScreen: React.FC = () => {
                       borderTopWidth={1}>
                       <View flexDirection={'row'}>
                         <Text my={4} fontSize="lg" mx={4} flex={2}>
-                          <Entypo name="wallet" size={15} color="#0c50ef" />
-                          Tunai
+                          <Entypo
+                            name="wallet"
+                            size={15}
+                            color={primaryColor?.primaryColor}
+                          />
+                          {item?.payment_method_id === 1
+                            ? 'Tunai'
+                            : 'Non-Tunai'}
                         </Text>
                         <View my={2} flex={2} flexDirection={'column'}>
                           <Text
-                            color={'#0c50ef'}
+                            color={primaryColor?.primaryColor}
                             bold
                             textAlign={'right'}
                             mx={4}
@@ -426,10 +457,13 @@ export const TransactionScreen: React.FC = () => {
               </Text>
             </Modal.Header>
             <Modal.Body>
-              <Text fontSize={'3xl'} bold color={'#0c50ef'}>
+              <Text fontSize={'3xl'} bold color={primaryColor?.primaryColor}>
                 {RupiahFormatter(paymentInfo?.totalPrice)}
               </Text>
-              <Text my={2}>Pembayaran berhasil via Tunai</Text>
+              <Text my={2}>
+                Pembayaran berhasil via{' '}
+                {paymentInfo?.totalPayment === 0 ? 'Non Tunai' : 'Tunai'}
+              </Text>
               <Divider />
               <Text mt={2} fontSize={'lg'} bold>
                 Detail Transaksi
@@ -445,18 +479,26 @@ export const TransactionScreen: React.FC = () => {
               <View mb={2} flexDirection={'row'}>
                 <Text flex={1}>Nominal Pembayaran</Text>
                 <Text flex={1}>
-                  {RupiahFormatter(paymentInfo?.totalPayment)}
+                  {paymentInfo?.totalPayment === 0
+                    ? RupiahFormatter(paymentInfo?.totalPrice)
+                    : RupiahFormatter(paymentInfo?.totalPayment)}
                 </Text>
               </View>
-              <View mb={2} flexDirection={'row'}>
-                <Text flex={1}>Kembalian</Text>
-                <Text flex={1}>
-                  {RupiahFormatter(
-                    paymentInfo?.totalPayment -
-                      parseFloat(paymentInfo?.totalPrice),
-                  )}
-                </Text>
-              </View>
+              {paymentInfo?.totalPayment !== 0 ? (
+                <View mb={2} flexDirection={'row'}>
+                  <Text flex={1}>Kembalian</Text>
+                  <Text flex={1}>
+                    {paymentInfo?.totalPayment ===
+                    Number(paymentInfo?.totalPrice)
+                      ? 'Rp.0'
+                      : RupiahFormatter(
+                          paymentInfo?.totalPayment -
+                            Number(paymentInfo?.totalPrice),
+                        )}
+                  </Text>
+                </View>
+              ) : null}
+
               <Divider />
               <View my={4} flexDirection={'row'}>
                 <Text flex={1}>Nama Kasir</Text>
@@ -467,7 +509,7 @@ export const TransactionScreen: React.FC = () => {
                 borderRadius={34}
                 alignItems={'center'}
                 justifyContent={'center'}
-                bg={'#0c50ef'}>
+                bg={primaryColor?.primaryColor}>
                 <Text fontSize={'lg'} color="white">
                   Oke
                 </Text>
@@ -523,7 +565,7 @@ export const TransactionScreen: React.FC = () => {
                 mt={4}
                 alignItems={'center'}
                 justifyContent={'center'}
-                bg={'#0c50ef'}>
+                bg={primaryColor?.primaryColor}>
                 <Text fontSize={'lg'} color="white">
                   Pilih Tanggal
                   {` ${

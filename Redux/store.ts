@@ -9,8 +9,12 @@ import {CartState} from './Reducers/cart';
 import {ButtonState} from './Reducers/button';
 import {PaymentState} from './Reducers/payment';
 import {EmployeesState} from './Reducers/employee';
-// import {offline} from '@redux-offline/redux-offline';
-// import offlineConfig from '@redux-offline/redux-offline/lib/defaults';
+import {ProductListModel} from '../models/ProductModel';
+import {PaymentMethodModel} from '../models/PaymentMethod';
+import {VisitState} from './Reducers/isProductVisited';
+// import {OrderModel, RootOrderModel} from '../models/OrderModel';
+import {OrderState} from './Reducers/orders';
+
 // RootState type to define the global state type
 export interface RootState {
   authSlice: AuthState;
@@ -18,15 +22,18 @@ export interface RootState {
   productSlice: ProductState;
   cartSlice: CartState;
   buttonSlice: ButtonState;
+  orderSlice: OrderState;
   paymentSlice: PaymentState;
   employeeSlice: EmployeesState;
-  // Add other slices if you have them
+  productListSlice: ProductListModel;
+  paymentMethodSlice: PaymentMethodModel;
+  isProductVisited: VisitState;
 }
 
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  blacklist: [''],
+  blacklist: ['isProductVisited'],
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);

@@ -1,6 +1,6 @@
 // HomeScreen.tsx
 
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useContext} from 'react';
 import {
   View,
   Button,
@@ -38,6 +38,7 @@ import {dates} from '../../Components/Date/Today';
 import {useGenerateInvoiceNumber} from '../../Hooks/useInvoiceTemporary';
 import {getCurrentDateTime} from '../../Components/Date/Time';
 import useUserInfo from '../../Hooks/useUserInfo';
+import {PrimaryColorContext} from '../../Context';
 export const PaymentScreen: React.FC = () => {
   const paymentMethodCode = useSelector(
     (state: RootState) => state.buttonSlice?.payment_methodId,
@@ -68,12 +69,13 @@ export const PaymentScreen: React.FC = () => {
   const table_number = useSelector(
     (state: RootState) => state.buttonSlice?.table_number,
   );
+  const globalState = useSelector((state: RootState) => state?.buttonSlice);
 
   const handlePriceChange = (value: string) => {
     const numericValue = value.replace(/[^\d]/g, '');
     setNominal(Number(numericValue));
   };
-
+  const primaryColor = useContext(PrimaryColorContext);
   const invoiceNumber = useGenerateInvoiceNumber();
 
   useEffect(() => {
@@ -114,12 +116,13 @@ export const PaymentScreen: React.FC = () => {
       date: getCurrentDateTime(),
       total_price: totalSum,
       cashierName: userData?.name,
+      name: globalState?.customerName,
+      phone: globalState?.customerPhone,
+      email: globalState?.customerEmail,
     };
     try {
       let dataSubmissions = await cache.get('paymentSubmissions');
       if (dataSubmissions) {
-        console.log(invoiceNumber);
-
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
         ToastAlert(toast, 'sukses', 'Berhasil Bayar');
@@ -132,11 +135,10 @@ export const PaymentScreen: React.FC = () => {
             exchangePayment: exchange,
             invoiceNumber: invoiceNumber,
             datePayment: dates,
-            cashierName: 'admin',
+            cashierName: userData?.name,
           }),
         );
       } else {
-        console.log(invoiceNumber);
         dataSubmissions = [];
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
@@ -150,7 +152,7 @@ export const PaymentScreen: React.FC = () => {
             exchangePayment: exchange,
             invoiceNumber: invoiceNumber,
             datePayment: dates,
-            cashierName: 'admin',
+            cashierName: userData?.name,
           }),
         );
       }
@@ -224,10 +226,10 @@ export const PaymentScreen: React.FC = () => {
               alignItems="flex-end"
               justifyContent={'center'}>
               <Button
-                bg={'#e3e9ff'}
+                bg={primaryColor?.secondaryColor}
                 onPress={() => setIsOpen(true)}
                 borderRadius={20}>
-                <Text bold fontSize={'md'} color="#0c50ef">
+                <Text bold fontSize={'md'} color={primaryColor?.primaryColor}>
                   Lihat Detail
                 </Text>
               </Button>
@@ -311,7 +313,7 @@ export const PaymentScreen: React.FC = () => {
           borderRadius={34}
           alignItems={'center'}
           justifyContent={'center'}
-          bg={'#0c50ef'}>
+          bg={primaryColor?.primaryColor}>
           <Text fontSize={'lg'} color="white">
             {paymentMethodCode === 1 ? 'Terima Pembayaran' : 'Sudah Bayar'}
           </Text>
@@ -333,21 +335,27 @@ export const PaymentScreen: React.FC = () => {
               </Text>
               <Button
                 mt={4}
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 onPress={() => {
                   submitPayment();
                 }}
                 leftIcon={<FontAwesome name="check" size={15} color="white" />}>
-                <Text bold color={'#e3e9ff'}>
+                <Text bold color={primaryColor?.secondaryColor}>
                   Konfirmasi Pembayaran
                 </Text>
               </Button>
               <Button
                 mt={4}
-                bg={'#e3e9ff'}
+                bg={primaryColor?.secondaryColor}
                 onPress={() => setIsConfirm(false)}
-                leftIcon={<AntDesign name="back" size={15} color="#0c50ef" />}>
-                <Text bold color={'#0c50ef'}>
+                leftIcon={
+                  <AntDesign
+                    name="back"
+                    size={15}
+                    color={primaryColor?.primaryColor}
+                  />
+                }>
+                <Text bold color={primaryColor?.primaryColor}>
                   Kembali
                 </Text>
               </Button>
@@ -407,7 +415,7 @@ export const PaymentScreen: React.FC = () => {
               <Button
                 mb={4}
                 borderRadius={20}
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 onPress={() => setIsOpen(false)}
                 leftIcon={
                   <AntDesign name="closecircleo" size={15} color="white" />

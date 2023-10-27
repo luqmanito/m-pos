@@ -1,5 +1,5 @@
 import {Divider, ScrollView, Text, View} from 'native-base';
-import React, {createElement} from 'react';
+import React, {createElement, useContext} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -9,11 +9,12 @@ import {Pressable} from 'react-native';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {settingsData} from '../../Util/data';
 import useUserInfo from '../../Hooks/useUserInfo';
+import {PrimaryColorContext} from '../../Context';
 
 const SettingScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const {userData} = useUserInfo();
-
+  const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
       <NavBar msg="Pengaturan" />
@@ -36,16 +37,24 @@ const SettingScreen = () => {
           </View>
           <View mt={4} flexDirection={'row'}>
             <View ml={4} justifyContent={'center'} alignItems={'flex-start'}>
-              <View bg={'#e3e9ff'} p={2} borderRadius={8}>
-                <FontAwesome name="user" size={15} color="#0c50ef" />
+              <View bg={primaryColor?.secondaryColor} p={2} borderRadius={8}>
+                <FontAwesome
+                  name="user"
+                  size={15}
+                  color={primaryColor?.primaryColor}
+                />
               </View>
             </View>
             <View ml={4} flex={8}>
               <Text bold>{userData?.name}</Text>
-              <Text>Pemilik</Text>
+              <Text>{userData?.role}</Text>
             </View>
             <View justifyContent={'center'} alignItems={'center'} mr={4}>
-              <AntDesign name="right" size={15} color="#0c50ef" />
+              <AntDesign
+                name="right"
+                size={15}
+                color={primaryColor?.primaryColor}
+              />
             </View>
           </View>
         </View>
@@ -120,7 +129,11 @@ const SettingScreen = () => {
                     </Text>
                   </View>
                   <View justifyContent={'center'} alignItems={'center'} mr={4}>
-                    <AntDesign name="right" size={15} color="#0c50ef" />
+                    <AntDesign
+                      name="right"
+                      size={15}
+                      color={primaryColor?.primaryColor}
+                    />
                   </View>
                 </View>
                 <View mx={4} mt={4}>
@@ -147,7 +160,11 @@ const SettingScreen = () => {
                 <Text>Pastikan aktifitasmu sudah selesai</Text>
               </View>
               <View justifyContent={'center'} alignItems={'center'} mr={4}>
-                <AntDesign name="right" size={15} color="#0c50ef" />
+                <AntDesign
+                  name="right"
+                  size={15}
+                  color={primaryColor?.primaryColor}
+                />
               </View>
             </View>
           </View>

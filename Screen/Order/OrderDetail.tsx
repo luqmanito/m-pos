@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useContext} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import formatDate from '../../Components/Date/Date';
 import NavBar from '../../Components/Navbar/Navbar';
 import PrintReceipt from '../Printer/Components/PrintReceipt';
-import {useLoading} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
 import useOrderDetails from '../../Hooks/useOrderDetail';
 import {StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -28,7 +28,7 @@ import {skeletonItems} from './Components/Loading';
 export const OrderDetailScreen: React.FC = () => {
   const dispatch = useDispatch();
   const {loading} = useLoading();
-
+  const primaryColor = useContext(PrimaryColorContext);
   const orders = useOrderDetails();
   useFocusEffect(
     useCallback(() => {
@@ -236,7 +236,7 @@ export const OrderDetailScreen: React.FC = () => {
                           <MaterialCommunityIcons
                             name="download"
                             size={20}
-                            color="#0c50ef"
+                            color={primaryColor?.primaryColor}
                           />
                           Download Struk
                         </Text>
@@ -244,7 +244,7 @@ export const OrderDetailScreen: React.FC = () => {
                           <MaterialCommunityIcons
                             name="share-variant"
                             size={20}
-                            color="#0c50ef"
+                            color={primaryColor?.primaryColor}
                           />
                           Bagikan Struk
                         </Text>

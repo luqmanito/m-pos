@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {StyleSheet, Dimensions} from 'react-native';
 import pass from '../../Public/Assets/pass.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,6 +22,7 @@ import {
 } from 'native-base';
 import {RootState} from '../../Redux/store';
 import ToastAlert from '../../Components/Toast/Toast';
+import {PrimaryColorContext} from '../../Context';
 
 type PasswordScreenProps = {
   navigation: any; // If you are using react-navigation, replace any with the correct navigation type
@@ -46,7 +47,7 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({navigation}) => {
       setStrongPassword(false);
     }
   }
-
+  const primaryColor = useContext(PrimaryColorContext);
   useEffect(() => {
     if (newPassword.length > 0) {
       isStrongPassword(newPassword);
@@ -57,7 +58,6 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({navigation}) => {
 
   const handleSubmit = async () => {
     if (newPassword === '' || confirmPassword === '') {
-      console.log('ksong');
     } else {
       setIsLoading(true);
       try {
@@ -162,7 +162,7 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({navigation}) => {
             isLoadingText="Loading"
             w={'100%'}
             marginTop={5}
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
               <Entypo name="check" size={15} color="white" /> Perbarui Password
             </Text>

@@ -11,7 +11,7 @@ import {
   View,
   VStack,
 } from 'native-base';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -21,11 +21,13 @@ import {UploadComp} from '../../Components/Upload/Upload';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
+import {PrimaryColorContext} from '../../Context';
 
 const PrinterConfiguration = () => {
   const dataCamera = useSelector(
     (state: RootState) => state.uploadSlice.dataCamera,
   );
+  const primaryColor = useContext(PrimaryColorContext);
   const [sizePaper, setSizePaper] = useState('');
   const [name, setName] = useState('');
   const navigation = useNavigation<NavigationProp<any>>();
@@ -100,7 +102,7 @@ const PrinterConfiguration = () => {
             isLoadingText="Loading"
             w={'100%'}
             marginTop={5}
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
               <Entypo name="save" size={15} color="white" /> Simpan Perubahan
             </Text>

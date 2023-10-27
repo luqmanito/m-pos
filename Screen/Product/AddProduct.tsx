@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import {Pressable} from 'react-native';
 import NavBar from '../../Components/Navbar/Navbar';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import {formatPrice} from '../../Components/Rupiah/RupiahFormatter';
+import {PrimaryColorContext} from '../../Context';
 
 interface addProductProps {
   navigation: any;
@@ -50,6 +51,7 @@ export const AddProductScreen: React.FC<addProductProps> = ({navigation}) => {
   const categoryCode = useSelector(
     (state: RootState) => state.productSlice?.categoryCode,
   );
+  const primaryColor = useContext(PrimaryColorContext);
   const toast = useToast();
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -240,7 +242,7 @@ export const AddProductScreen: React.FC<addProductProps> = ({navigation}) => {
             isLoadingText="Loading"
             w={'100%'}
             alignSelf="center"
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
               <MaterialIcons name="save" color="white" /> Simpan
             </Text>

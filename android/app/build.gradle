@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
-
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 project.ext.envConfigFiles = [
     debug: ".env",
@@ -83,14 +84,15 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.mobilepos"
+    namespace "com.supalapos"
     defaultConfig {
         applicationId "com.supalapos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
-        versionName "6.0"
-        resValue "string", "build_config_package", "com.mobilepos"
+        versionCode 10
+        versionName "10.0"
+        resValue "string", "build_config_package", "com.supalapos"
+        multiDexEnabled true
     }
     signingConfigs {
         debug {
@@ -125,6 +127,9 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation platform('com.google.firebase:firebase-bom:28.4.0')
+    implementation 'com.google.firebase:firebase-analytics'
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation project(':react-native-bluetooth-escpos-printer')

@@ -1,6 +1,4 @@
-// HomeScreen.tsx
-
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useContext} from 'react';
 import {
   View,
   Button,
@@ -19,9 +17,9 @@ import {
   Divider,
   Skeleton,
 } from 'native-base';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import _ from 'lodash';
+// import _ from 'lodash';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import shop from '../../Public/Assets/shop.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -44,13 +42,14 @@ import {clearCart} from '../../Redux/Reducers/cart';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import useCategories from '../../Hooks/useCategory';
 import useProducts from '../../Hooks/useProducts';
-import {useLoading} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
 import {screenWidth} from '../../App';
 import useNetworkInfo from '../../Hooks/useNetworkInfo';
 import useScreenOrientation from '../../Hooks/useScreenOrientation';
 
 export const CashierScreen: React.FC = () => {
   const {loading} = useLoading();
+  const primaryColor = useContext(PrimaryColorContext);
   const skeletonCount = 10;
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
@@ -60,13 +59,16 @@ export const CashierScreen: React.FC = () => {
   );
   const {
     productCashier,
-    handleSearch,
+    // handleSearch,
     newFetchData,
-    handleCategory,
+    // handleCategory,
+    searchOfflineProductsByName,
+    filterOfflineProductsByCategory,
+    fetchAllProductsCache,
     handleRefresh,
     emptyData,
   } = useProducts('cashier');
-  const {categories} = useCategories();
+  const {categories, fetchCategories} = useCategories();
   const orientation = useScreenOrientation();
   const numProducts = screenWidth > 600 ? 11 : 4;
   const [selectedCategories, setSelectedCategories] = useState(0);
@@ -79,12 +81,18 @@ export const CashierScreen: React.FC = () => {
   const handleTabPress = (tabName: string) => {
     setActiveTab(tabName);
   };
+  // dispatch(setMark({name: 'cashierVisited', value: true}));
+  // const debouncedFetchProducts = _.debounce(handleSearch, 1500);
+  // const debouncedFetchProducts = _.debounce(searchOfflineProductsByName, 500);
+  // useEffect(() => {
+  //   debouncedFetchProducts(searchResults);
+  //   return () => debouncedFetchProducts.cancel();
+  // }, [debouncedFetchProducts, searchResults]);
 
-  const debouncedFetchProducts = _.debounce(handleSearch, 1500);
-  useEffect(() => {
-    debouncedFetchProducts(searchResults);
-    return () => debouncedFetchProducts.cancel();
-  }, [debouncedFetchProducts, searchResults]);
+  // useEffect(() => {
+  //   debouncedFetchProducts(searchResults);
+  //   return () => debouncedFetchProducts.cancel();
+  // }, [debouncedFetchProducts, searchResults]);
 
   useFocusEffect(
     useCallback(() => {
@@ -207,6 +215,26 @@ export const CashierScreen: React.FC = () => {
               style={isConnected ? styles.wifi : styles.wifi_off}
             />
           </View>
+          <View ml={4}>
+            <Button
+              isLoading={loading}
+              isLoadingText="Loading"
+              onPress={() => {
+                fetchCategories();
+                fetchAllProductsCache('Cashier');
+              }}
+              isDisabled={isConnected ? false : true}
+              bg={primaryColor?.primaryColor}
+              leftIcon={
+                <MaterialCommunityIcons
+                  name={'download'}
+                  size={24}
+                  color="#fff"
+                />
+              }>
+              Download Produk
+            </Button>
+          </View>
         </View>
         <View flexDirection={'row'}>
           <Button
@@ -215,9 +243,14 @@ export const CashierScreen: React.FC = () => {
               dispatch(clearCart());
             }}
             alignSelf="center"
-            bg={'#e3e9ff'}>
-            <Text fontSize={'md'} mx={2} bold color="#0c50ef">
-              <FontAwesome name="plus-circle" color="#0c50ef" /> Input Manual
+            bg={primaryColor?.secondaryColor}>
+            <Text
+              fontSize={'md'}
+              mx={2}
+              bold
+              color={primaryColor?.primaryColor}>
+              <MaterialIcons name="clear" color={primaryColor?.primaryColor} />{' '}
+              Reset
             </Text>
           </Button>
         </View>
@@ -233,6 +266,7 @@ export const CashierScreen: React.FC = () => {
               value={searchResults}
               onChangeText={text => {
                 setSearchResults(text);
+                searchOfflineProductsByName(text);
               }}
               width="100%"
               borderRadius="13"
@@ -243,7 +277,7 @@ export const CashierScreen: React.FC = () => {
                   style={styles.iconSearch}
                   name="search"
                   size={20}
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               }
             />
@@ -268,7 +302,7 @@ export const CashierScreen: React.FC = () => {
                   as={<AntDesign name={'down'} />}
                   size={4}
                   mr="2"
-                  color="#0c50ef"
+                  color={primaryColor?.primaryColor}
                 />
               }
             />
@@ -283,7 +317,7 @@ export const CashierScreen: React.FC = () => {
           justifyContent={screenWidth > 600 ? 'center' : null}
           alignItems={screenWidth > 600 ? 'center' : null}
           mb={10}>
-          {productCashier !== null ? (
+          {productCashier?.length > 0 ? (
             <FlatList
               key={numOfColumns()}
               data={productCashier.map(transformProductToItem)}
@@ -300,12 +334,16 @@ export const CashierScreen: React.FC = () => {
               }
               onEndReachedThreshold={0}
             />
+          ) : productCashier?.length === 0 && searchResults ? (
+            <View mt={12} justifyContent={'center'} alignItems={'center'}>
+              <Text bold> Tidak Ada Data Ditemukan</Text>
+            </View>
           ) : (
             <View mt={12} justifyContent={'center'} alignItems={'center'}>
               <Image
                 source={shop}
                 alt={'logo-pemkab'}
-                w={'80%'}
+                // w={'80%'}
                 resizeMode="contain"
               />
 
@@ -364,7 +402,7 @@ export const CashierScreen: React.FC = () => {
               alignSelf="center"
               bottom={18}
               flexDirection={'row'}
-              bg={'#0c50ef'}>
+              bg={primaryColor?.primaryColor}>
               <Text ml={4} color="white" flex={2}>
                 {filteredItems.length + ' Produk'}
               </Text>
@@ -407,7 +445,7 @@ export const CashierScreen: React.FC = () => {
                       <AntDesign
                         name={'checkcircle'}
                         size={20}
-                        color="#0c50ef"
+                        color={primaryColor?.primaryColor}
                       />
                     ) : null}
                   </View>
@@ -430,7 +468,7 @@ export const CashierScreen: React.FC = () => {
                             <AntDesign
                               name={'checkcircle'}
                               size={20}
-                              color="#0c50ef"
+                              color={primaryColor?.primaryColor}
                             />
                           ) : null}
                         </View>
@@ -443,14 +481,15 @@ export const CashierScreen: React.FC = () => {
               <Button
                 mt={4}
                 onPress={() => {
-                  handleCategory(selectedCategories);
+                  // handleCategory(selectedCategories);
+                  filterOfflineProductsByCategory(selectedCategories);
                   setIsOpen(false);
                   dispatch(setCategoryName(categoriesName));
                 }}
                 borderRadius={34}
                 alignItems={'center'}
                 justifyContent={'center'}
-                bg={'#0c50ef'}>
+                bg={primaryColor?.primaryColor}>
                 <Text fontSize={'lg'} color="white">
                   Tampilkan
                 </Text>

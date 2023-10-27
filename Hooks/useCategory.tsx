@@ -7,11 +7,11 @@ import cache from '../Util/cache';
 import useNetworkInfo from './useNetworkInfo';
 
 const useCategories = () => {
-  const isFocused = useIsFocused();
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const {setLoading} = useLoading();
   const isConnected = useNetworkInfo().isConnected;
-
+  const [counter, setCounter] = useState(0);
+  const isFocused = useIsFocused();
   const fetchCategories = async (): Promise<CategoryModel[] | void> => {
     setLoading(true);
     try {
@@ -20,28 +20,30 @@ const useCategories = () => {
       });
       if (response) {
         await cache.store('DataCategory', response.data.data);
-        setLoading(false);
-        // return setCategories(response.data.data);
+        return setCategories(response.data.data);
       }
     } catch (error) {
-      setLoading(false);
       console.error('Error fetching products:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
     const fetchCategoriesCache = async (): Promise<void> => {
-      setLoading(true);
-      const dataUser = await cache.get('DataCategory');
+      // setLoading(true);
+      const dataCategories = await cache.get('DataCategory');
       setLoading(false);
-      setCategories(dataUser);
+      setCategories(dataCategories);
     };
-    // if (isFocused && !isConnected) {
-    fetchCategoriesCache();
-    // }
-    // if (isFocused && isConnected) {
-    //   fetchCategories();
-    // }
+    if (isFocused && !isConnected) {
+      fetchCategoriesCache();
+    }
+    if (isFocused && isConnected && counter === 0) {
+      fetchCategories();
+      setCounter(counter + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, setLoading]);
   return {categories, fetchCategories};
 };

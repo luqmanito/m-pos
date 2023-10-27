@@ -87,8 +87,6 @@ const useEditPhoto = () => {
   }: productProps) => {
     setLoading(true);
     if (deleteConfirmed) {
-      console.log('kena');
-
       try {
         const response = await ProductNetwork.deleteImages({
           id: imageId,

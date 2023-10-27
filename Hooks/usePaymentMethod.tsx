@@ -1,16 +1,19 @@
 import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
+import {useDispatch} from 'react-redux';
 
 import {useLoading} from '../Context';
 
 import {PaymentMethodModel, PaymentModelContent} from '../models/PaymentMethod';
 import paymentNetwork from '../Network/lib/payment';
+import {setPayments} from '../Redux/Reducers/paymentMethod';
 
 // import cache from '../Util/cache';
 import useNetworkInfo from './useNetworkInfo';
 
 const usePaymentMethod = () => {
   const isFocused = useIsFocused();
+  const dispatch = useDispatch();
   const [paymentMethod, setPaymentMethod] = useState<PaymentModelContent[]>([]);
   const [fetchData, setfetchData] = useState(false);
   const {setLoading} = useLoading();
@@ -29,6 +32,7 @@ const usePaymentMethod = () => {
         const response = await paymentNetwork.list();
         if (response) {
           setPaymentMethod(response.data);
+          dispatch(setPayments(response.data));
           // await cache.store('DataCategory', response.data.data);
           setLoading(false);
           // return setCategories(response.data.data);
@@ -51,7 +55,7 @@ const usePaymentMethod = () => {
     if (isFocused && isConnected) {
       fetchPaymentMethods();
     }
-  }, [isFocused, isConnected, fetchData, setLoading]);
+  }, [isFocused, isConnected, dispatch, fetchData, setLoading]);
   return {paymentMethod, refreshPage, fetchData};
 };
 

@@ -1,29 +1,48 @@
 import {ScrollView, Text, View} from 'native-base';
 import React, {FunctionComponent, useEffect, useState} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
-import productNetwork from '../../Network/lib/product';
+// import productNetwork from '../../Network/lib/product';
 import Product from '../../Components/Product/Product';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import {ProductModel} from '../../models/ProductModel';
+// import useCategories from '../../Hooks/useCategory';
+import useProducts from '../../Hooks/useProducts';
 
 const ProductList: FunctionComponent = () => {
   const [products, setProducts] = useState<ProductModel[]>([]);
   const categoryState = useSelector((state: RootState) => state.productSlice);
+  // const {categories} = useCategories();
+  const {product} = useProducts('Catalogue');
 
   useEffect(() => {
-    const fetchData = async () => {
+    // const fetchData = async () => {
+    //   try {
+    //     const response = await productNetwork.productCategoryList();
+    //     if (categoryState?.categoryCode) {
+    //       const productsFiltered = response.data.filter(
+    //         product =>
+    //           product?.category_id ===
+    //           parseInt(categoryState?.categoryCode, 10),
+    //       );
+    //       setProducts(productsFiltered);
+    //     } else {
+    //       setProducts(response.data);
+    //     }
+    //   } catch (error) {
+    //     console.error('Error fetching products:', error);
+    //   }
+    // };
+    const fetchData = () => {
       try {
-        const response = await productNetwork.productCategoryList();
         if (categoryState?.categoryCode) {
-          const productsFiltered = response.data.filter(
-            product =>
-              product?.category_id ===
-              parseInt(categoryState?.categoryCode, 10),
+          const productsFiltered = product.filter(
+            item =>
+              item?.category_id === parseInt(categoryState?.categoryCode, 10),
           );
           setProducts(productsFiltered);
         } else {
-          setProducts(response.data);
+          setProducts(product);
         }
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -31,7 +50,7 @@ const ProductList: FunctionComponent = () => {
     };
 
     fetchData();
-  }, [categoryState?.categoryCode]);
+  }, [categoryState?.categoryCode, product]);
   return (
     <>
       <NavBar msg={categoryState?.categoryName} />
@@ -40,19 +59,19 @@ const ProductList: FunctionComponent = () => {
           Daftar Produk
         </Text>
         <Text fontSize={'sm'} color={'coolGray.500'}>
-          {products.length} Produk
+          {products?.length} Produk
         </Text>
       </View>
-      <ScrollView>
-        {products.map(product => {
+      <ScrollView mb={4}>
+        {products?.map(item => {
           return (
             <Product
-              key={product?.id}
-              name={product?.name}
-              msg={product?.name}
+              key={item?.id}
+              name={item?.name}
+              msg={item?.name}
               id={undefined}
-              price={product?.price}
-              photos={product.photos ? product?.photos[0]?.original_url : ''}
+              price={item?.price}
+              photos={item.photos ? item?.photos[0]?.original_url : ''}
               toggle={false}
               basePrice={undefined}
               onCashier={false}

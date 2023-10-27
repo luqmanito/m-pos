@@ -1,4 +1,4 @@
-import React, {FunctionComponent, useState} from 'react';
+import React, {FunctionComponent, useContext, useState} from 'react';
 import {
   Button,
   FormControl,
@@ -13,6 +13,7 @@ import {useNavigation} from '@react-navigation/native';
 import categoryNetwork from '../../Network/lib/categories';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ToastAlert from '../../Components/Toast/Toast';
+import {PrimaryColorContext} from '../../Context';
 
 interface CategoryScreenProps {}
 
@@ -23,7 +24,7 @@ const AddCategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
   const [description, setDescription] = useState<string | undefined>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigation = useNavigation();
-
+  const primaryColor = useContext(PrimaryColorContext);
   const postCategory = async (): Promise<void> => {
     setIsLoading(true);
     try {
@@ -86,7 +87,7 @@ const AddCategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
         position={'absolute'}
         bottom={28}
         alignSelf="center"
-        bg={'#0c50ef'}>
+        bg={primaryColor?.primaryColor}>
         <Text fontSize={'md'} color="white">
           <MaterialIcons name="save" size={15} color="white" /> Simpan Kategori
         </Text>

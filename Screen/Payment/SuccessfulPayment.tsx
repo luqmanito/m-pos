@@ -1,7 +1,7 @@
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import React from 'react';
+import React, {useContext} from 'react';
 import {View, Button, Text, Center, Divider, ScrollView} from 'native-base';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
@@ -11,6 +11,7 @@ import {clearCartPayment} from '../../Redux/Reducers/payment';
 import {clearCart} from '../../Redux/Reducers/cart';
 import {clearStateButton} from '../../Redux/Reducers/button';
 import PrintReceipt from '../Printer/Components/PrintReceipt';
+import {PrimaryColorContext} from '../../Context';
 
 type PaymentProps = {
   navigation: any; // If you are using react-navigation, replace any with the correct navigation type
@@ -20,10 +21,11 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
   navigation,
 }) => {
   const dispatch = useDispatch();
+
   const paymentReceipt = useSelector(
     (state: RootState) => state.paymentSlice.items[0],
   );
-
+  const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
       <ScrollView>
@@ -99,7 +101,7 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
               <MaterialCommunityIcons
                 name="download"
                 size={20}
-                color="#0c50ef"
+                color={primaryColor?.primaryColor}
               />
               Download Struk
             </Text>
@@ -107,7 +109,7 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
               <MaterialCommunityIcons
                 name="share-variant"
                 size={20}
-                color="#0c50ef"
+                color={primaryColor?.primaryColor}
               />
               Bagikan Struk
             </Text>
@@ -125,8 +127,8 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
           borderRadius={18}
           mx={4}
           my={4}
-          bg={'#e3e9ff'}>
-          <Text fontSize={'md'} color={'#0c50ef'}>
+          bg={primaryColor?.secondaryColor}>
+          <Text fontSize={'md'} color={primaryColor?.primaryColor}>
             Tutup
           </Text>
         </Button>

@@ -1,11 +1,14 @@
-import React, {useState} from 'react';
-import {StyleSheet} from 'react-native';
+import React, {useContext, useState} from 'react';
 import cashier from '../../Public/Assets/cashier.png';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
+import userNetwork from '../../Network/lib/user';
+import firebaseNetwork from '../../Network/lib/firebase';
+import messaging from '@react-native-firebase/messaging';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AuthNetwork from '../../Network/lib/auth';
+import cache from '../../Util/cache';
 import {
   Center,
   Image,
@@ -24,6 +27,7 @@ import {
   ScrollView,
 } from 'native-base';
 import ToastAlert from '../../Components/Toast/Toast';
+import {PrimaryColorContext} from '../../Context';
 
 type LoginScreenProps = {
   navigation: any; // If you are using react-navigation, replace any with the correct navigation type
@@ -32,6 +36,8 @@ type LoginScreenProps = {
 const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [show, setShow] = useState(false);
+
+  const primaryColor = useContext(PrimaryColorContext);
   const [auth, setAuth] = useState({
     email: '',
     password: '',
@@ -53,15 +59,38 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
       });
       if (response) {
         await AsyncStorage.setItem('authToken', response?.data?.token);
-        setIsLoading(false);
-        ToastAlert(toast, 'sukses', 'Berhasil Masuk');
-        navigation.navigate('Dashboard', {screen: 'Home'});
+        try {
+          await messaging().registerDeviceForRemoteMessages();
+          const token = await messaging().getToken();
+          const userData = await userNetwork.userProfile();
+          if (
+            userData?.data?.role === 'KITCHEN' ||
+            userData?.data?.role === 'CASHIER'
+          ) {
+            const sendToken = await firebaseNetwork.sendDeviceToken(token);
+            if (sendToken) {
+              console.log('suskes kirim token');
+            }
+            ToastAlert(toast, 'sukses', 'Berhasil Masuk');
+            await cache.store('DataUser', userData.data);
+            navigation.navigate('KitchenScreen');
+          } else {
+            const sendToken = await firebaseNetwork.sendDeviceToken(token);
+            if (sendToken) {
+              console.log('suskes kirim token');
+            }
+            ToastAlert(toast, 'sukses', 'Berhasil Masuk');
+            navigation.navigate('Dashboard', {screen: 'Home'});
+          }
+        } catch (error) {
+          console.error('Error fetching data user:', error);
+          throw error;
+        }
       }
     } catch (error: any) {
-      setIsLoading(false);
       console.log(error);
-
       ToastAlert(toast, 'error', error?.response?.data?.message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -70,14 +99,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
     <>
       <KeyboardAvoidingView>
         <ScrollView>
-          <Center mb={-8} h={'40%'}>
-            <Image
-              source={cashier}
-              style={styles.image}
-              width={'90%'}
-              resizeMode="contain"
-              alt="logo-login"
-            />
+          <Center my={4}>
+            <Image source={cashier} resizeMode="contain" alt="logo-login" />
           </Center>
           <Center>
             <Text fontSize="md" bold>
@@ -135,50 +158,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
               Lupa Password ?
             </Text>
           </Pressable>
-          <Center h={250}>
-            <View position={'absolute'} bottom={10} w={'90%'}>
-              <Button
-                borderRadius={34}
-                isDisabled={!auth?.email || !auth?.password ? true : false}
-                onPress={handleSubmit}
-                isLoading={isLoading ? true : false}
-                isLoadingText="Loading"
-                w={'100%'}
-                marginTop={5}
-                bg={'#0c50ef'}>
-                <Text fontSize={'md'} color="white">
-                  <Entypo name="login" size={15} color="white" /> Masuk
-                </Text>
-              </Button>
-
-              <Button
-                borderRadius={34}
-                onPress={() => navigation.navigate('RegisterScreen')}
-                isLoadingText="Loading"
-                w={'100%'}
-                marginTop={5}
-                bg={'#0c50ef'}>
-                <Text fontSize={'md'} color="white">
-                  <MaterialIcons
-                    name="app-registration"
-                    size={15}
-                    color="white"
-                  />{' '}
-                  Daftar Merchant
-                </Text>
-              </Button>
-            </View>
-          </Center>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <View alignSelf={'center'} position={'absolute'} bottom={18} w={'90%'}>
+        <Button
+          borderRadius={34}
+          isDisabled={!auth?.email || !auth?.password ? true : false}
+          onPress={handleSubmit}
+          isLoading={isLoading ? true : false}
+          isLoadingText="Loading"
+          w={'100%'}
+          marginTop={5}
+          bg={primaryColor?.primaryColor}>
+          <Text fontSize={'md'} color="white">
+            <Entypo name="login" size={15} color="white" /> Masuk
+          </Text>
+        </Button>
+
+        <Button
+          borderRadius={34}
+          onPress={() => navigation.navigate('RegisterScreen')}
+          isLoadingText="Loading"
+          w={'100%'}
+          marginTop={5}
+          bg={primaryColor?.primaryColor}>
+          <Text fontSize={'md'} color="white">
+            <MaterialIcons name="app-registration" size={15} color="white" />
+            Daftar Merchant
+          </Text>
+        </Button>
+      </View>
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  image: {
-    top: 10,
-  },
-});
 
 export default LoginScreen;

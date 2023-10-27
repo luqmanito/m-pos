@@ -24,7 +24,6 @@ export const useReport = () => {
     useState<ReportModelTotalTransaction[]>();
 
   const handleChange = ({name, value}: PropsType) => {
-    console.log(name, value);
     setDate({
       ...date,
       [name]: value,

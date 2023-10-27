@@ -1,6 +1,6 @@
 // HomeScreen.tsx
 
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useContext} from 'react';
 import {
   View,
   Button,
@@ -12,10 +12,12 @@ import {
   TextArea,
   FormControl,
   Stack,
+  WarningOutlineIcon,
 } from 'native-base';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 import {
   useNavigation,
   NavigationProp,
@@ -30,28 +32,51 @@ import {RootState} from '../../Redux/store';
 import {clearCart, updateCartItemQuantity} from '../../Redux/Reducers/cart';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import NavBar from '../../Components/Navbar/Navbar';
-import {setNote, setTableNumber} from '../../Redux/Reducers/button';
+import {
+  setCustomerEmail,
+  setCustomerName,
+  setCustomerPhone,
+  setNote,
+  setTableNumber,
+} from '../../Redux/Reducers/button';
 import {screenWidth} from '../../App';
+import {PrimaryColorContext} from '../../Context';
+import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 
 export const CheckoutScreen: React.FC = () => {
+  const [modalVisible, setModalVisible] = useState(false);
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
   const filteredItems = cartItems.filter(item => item.quantity > 0);
   const [noteProduct, setNoteProduct] = useState<string>('');
-
+  const primaryColor = useContext(PrimaryColorContext);
   const [isOpen, setIsOpen] = useState(false);
-
+  // const [name, setName] = useState<string | null>('');
+  // const [phone, setPhone] = useState<string | null>('');
+  // const [email, setEmail] = useState<string | null>('');
+  const table_number = useSelector(
+    (state: RootState) => state.buttonSlice?.table_number,
+  );
+  const customer_name = useSelector(
+    (state: RootState) => state.buttonSlice?.customerName,
+  );
   const dispatch = useDispatch();
 
   useFocusEffect(
     useCallback(() => {
+      console.log(table_number);
       dispatch(clearStateProduct());
       dispatch(clearDataCamera());
-    }, [dispatch]),
+    }, [dispatch, table_number]),
   );
+  const navigation = useNavigation<NavigationProp<any>>();
+  // useEffect(() => {
+  const routes = navigation.getState()?.routes;
+  const prevRoute = routes[routes.length - 2];
+  // }, [navigation]);
 
   const noteState = useSelector((state: RootState) => state.buttonSlice?.note);
-
+  const {updateOrder, confirmOrder} = usePaymentSubmit();
   const idState = useSelector(
     (state: RootState) => state.buttonSlice?.activeId,
   );
@@ -75,10 +100,21 @@ export const CheckoutScreen: React.FC = () => {
     }
   };
 
-  const navigation = useNavigation<NavigationProp<any>>();
+  function handleConfirm() {
+    updateOrder();
+    confirmOrder();
+    setIsOpen(false);
+  }
+
   return (
     <>
-      <NavBar msg="Ringkasan Pesanan" />
+      <NavBar
+        msg={
+          prevRoute.name === 'EditOrderScreen'
+            ? 'Ubah Ringkasan Pesanan '
+            : 'Ringkasan Pesanan'
+        }
+      />
       <ScrollView mb={8}>
         <FormControl>
           <Stack mx={4} mt={4}>
@@ -87,6 +123,7 @@ export const CheckoutScreen: React.FC = () => {
             </FormControl.Label>
             <Input
               bg={'#f4f5fa'}
+              value={table_number}
               borderRadius={10}
               onChangeText={text => {
                 dispatch(setTableNumber(text));
@@ -97,6 +134,11 @@ export const CheckoutScreen: React.FC = () => {
             />
           </Stack>
         </FormControl>
+        {prevRoute.name === 'EditOrderScreen' ? (
+          <Text mt={2} ml={4}>
+            Nama Customer : {customer_name}
+          </Text>
+        ) : null}
         {filteredItems.length > 0
           ? filteredItems.map(product => {
               return (
@@ -111,6 +153,7 @@ export const CheckoutScreen: React.FC = () => {
                   photos={product?.photos}
                   toggle={false}
                   onCashier={false}
+                  onEditNote={product?.note}
                   setNoteProduct={setNoteProduct}
                 />
               );
@@ -134,34 +177,101 @@ export const CheckoutScreen: React.FC = () => {
       </View>
 
       <View bottom={18} flexDirection={'row'} mx={4}>
-        <View
-          w={50}
-          h={50}
-          borderRadius={25}
-          bg={'#fdecec'}
-          justifyContent={'center'}
-          alignItems={'center'}>
-          <MaterialIcons
-            onPress={() => setIsOpen(true)}
-            name="delete"
-            size={25}
-            color="#ef4536"
-          />
-        </View>
+        {prevRoute.name === 'EditOrderScreen' ? null : (
+          <View
+            w={50}
+            h={50}
+            borderRadius={25}
+            bg={'#fdecec'}
+            justifyContent={'center'}
+            alignItems={'center'}>
+            <MaterialIcons
+              onPress={() => setIsOpen(true)}
+              name="delete"
+              size={25}
+              color="#ef4536"
+            />
+          </View>
+        )}
 
         <View flex={1}>
           <Button
-            // onPress={() => navigation.navigate('PaymentScreen')}
-            onPress={() => navigation.navigate('PaymentMethodScreen')}
+            onPress={
+              () =>
+                prevRoute.name === 'EditOrderScreen'
+                  ? setIsOpen(true)
+                  : setModalVisible(true)
+              // (navigation.navigate('PaymentMethodScreen')
+            }
             borderRadius={34}
             ml={4}
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text fontSize={'lg'} color="white">
-              Tagih
+              {prevRoute.name === 'EditOrderScreen' ? 'Confirm' : 'Tagih'}
             </Text>
           </Button>
         </View>
       </View>
+
+      <Modal isOpen={modalVisible} onClose={setModalVisible} size={'full'}>
+        <Modal.Content>
+          <Modal.CloseButton />
+          <Modal.Header>Isi Data Pemesan</Modal.Header>
+          <Modal.Body>
+            <FormControl isRequired>
+              <Stack>
+                <FormControl.Label>Nama </FormControl.Label>
+                <Input
+                  bg={'white'}
+                  borderRadius={10}
+                  onChangeText={text => dispatch(setCustomerName(text))}
+                  type="text"
+                  placeholder="Contoh: Budi"
+                />
+              </Stack>
+              <Stack mt={4}>
+                <FormControl.Label>No Handphone</FormControl.Label>
+                <Input
+                  bg={'white'}
+                  borderRadius={10}
+                  onChangeText={text => dispatch(setCustomerPhone(text))}
+                  type="text"
+                  placeholder="Contoh: 0812345678"
+                />
+              </Stack>
+              <Stack mt={4}>
+                <FormControl.Label>Email</FormControl.Label>
+                <Input
+                  bg={'white'}
+                  borderRadius={10}
+                  onChangeText={text => dispatch(setCustomerEmail(text))}
+                  type="text"
+                  placeholder="Contoh: mas@mail.com"
+                />
+              </Stack>
+            </FormControl>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button.Group space={2}>
+              <Button
+                variant="ghost"
+                colorScheme="blueGray"
+                onPress={() => {
+                  setModalVisible(false);
+                }}>
+                Lewati
+              </Button>
+              <Button
+                onPress={() => {
+                  setModalVisible(false);
+                  navigation.navigate('PaymentMethodScreen');
+                }}>
+                Simpan
+              </Button>
+            </Button.Group>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
 
       <Center>
         <Modal
@@ -183,7 +293,7 @@ export const CheckoutScreen: React.FC = () => {
                 autoCompleteType={undefined}
               />
               <Button
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 onPress={handleAddNote}
                 leftIcon={<FontAwesome name="save" size={15} color="white" />}>
                 Simpan Catatan
@@ -197,24 +307,42 @@ export const CheckoutScreen: React.FC = () => {
         <Modal size={'full'} isOpen={isOpen} onClose={() => setIsOpen(false)}>
           <Modal.Content mb={0} mt={'auto'} maxWidth="400px">
             <Modal.CloseButton />
-            <Modal.Header>{'Hapus Pesanan ?'}</Modal.Header>
+            <Modal.Header>
+              {prevRoute.name === 'EditOrderScreen'
+                ? 'Konfirmasi Pesanan'
+                : 'Hapus Pesanan ?'}
+            </Modal.Header>
             <Modal.Body>
               <Text mb={4}>
-                Pastikan pesanan yang akan dihapus sudah dibatalkan pembeli.
+                {prevRoute.name === 'EditOrderScreen'
+                  ? 'Pastikan pesanan sudah benar ?'
+                  : 'Pastikan pesanan yang akan dihapus sudah dibatalkan pembeli'}
               </Text>
               <Button
                 mb={4}
                 bg={'#f04438'}
                 onPress={() => {
-                  navigation.goBack();
+                  prevRoute.name === 'EditOrderScreen'
+                    ? handleConfirm()
+                    : navigation.goBack();
                   dispatch(clearCart());
                 }}
-                leftIcon={<AntDesign name="delete" size={15} color="white" />}>
-                Hapus
+                leftIcon={
+                  <MaterialCommunityIcons
+                    name={
+                      prevRoute.name === 'EditOrderScreen'
+                        ? 'cart-check'
+                        : 'delete-outline'
+                    }
+                    size={15}
+                    color="white"
+                  />
+                }>
+                {prevRoute.name === 'EditOrderScreen' ? 'Konfirmasi' : 'Hapus'}
               </Button>
               <Button
                 bg={'#fadedb'}
-                onPress={handleAddNote}
+                onPress={() => setIsOpen(false)}
                 leftIcon={
                   <MaterialIcons name="cancel" size={15} color="#e85844" />
                 }>

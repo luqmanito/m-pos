@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useContext} from 'react';
 import {
   View,
   Button,
@@ -37,7 +37,7 @@ import {clearDataCamera} from '../../Redux/Reducers/upload';
 import Product from '../../Components/Product/Product';
 import {ProductModel} from '../../models/ProductModel';
 import useProducts from '../../Hooks/useProducts';
-import {useLoading} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
 import useCategories from '../../Hooks/useCategory';
 import {screenWidth} from '../../App';
 import useNetworkInfo from '../../Hooks/useNetworkInfo';
@@ -56,16 +56,31 @@ interface Item {
 interface Props {
   item: Item;
 }
-
 export const CatalogueScreen: React.FC = () => {
-  const {product, handleSearch, newFetchData, handleRefresh, emptyData} =
-    useProducts('catalogue');
+  const {
+    product,
+    fetchAllProductsCache,
+    // handleSearch,
+    newFetchData,
+    handleRefresh,
 
+    // filterOfflineProductsCategory,
+    searchOfflineProductsName,
+    emptyData,
+  } = useProducts('Catalogue');
+
+  function filterOfflineCategory(categoryId: number): number {
+    const filteredProduct = product?.filter(
+      item => item.category_id === categoryId,
+    );
+    return filteredProduct?.length === undefined ? 0 : filteredProduct?.length;
+  }
+  const primaryColor = useContext(PrimaryColorContext);
   const orientation = useScreenOrientation();
-  const {categories} = useCategories();
+  const {categories, fetchCategories} = useCategories();
   const {loading} = useLoading();
   const dispatch = useDispatch();
-
+  // dispatch(setMark({name: 'catalogueVisited', value: true}));
   const numProducts = screenWidth > 600 ? 11 : 4;
   const skeletonCount = 10;
   const [searchResults, setSearchResults] = useState('');
@@ -87,9 +102,9 @@ export const CatalogueScreen: React.FC = () => {
     }
   }
 
-  const debouncedFetchProducts = _.debounce(handleSearch, 2000);
+  // const debouncedFetchProducts = _.debounce(handleSearch, 2000);
+  const debouncedFetchProducts = _.debounce(searchOfflineProductsName, 500);
   useEffect(() => {
-    // console.log(categories);
     debouncedFetchProducts(searchResults);
     return () => debouncedFetchProducts.cancel();
   }, [debouncedFetchProducts, searchResults]);
@@ -197,12 +212,34 @@ export const CatalogueScreen: React.FC = () => {
               style={isConnected ? styles.wifi : styles.wifi_off}
             />
           </View>
+          <View ml={4}>
+            <Button
+              isLoading={loading}
+              isLoadingText="Loading"
+              onPress={() => {
+                fetchCategories();
+                fetchAllProductsCache('Catalogue');
+              }}
+              isDisabled={isConnected ? false : true}
+              bg={primaryColor?.primaryColor}
+              leftIcon={
+                <MaterialCommunityIcons
+                  name={'download'}
+                  size={24}
+                  color="#fff"
+                  style={styles.download}
+                />
+              }>
+              Download Produk
+            </Button>
+          </View>
         </View>
+
         <View flexDirection={'row'}>
           <MaterialCommunityIcons
             name="sort-alphabetical-variant"
             size={24}
-            color="#0c50ef"
+            color={primaryColor?.primaryColor}
             style={styles.icon}
           />
 
@@ -210,7 +247,7 @@ export const CatalogueScreen: React.FC = () => {
             onPress={() => navigation.navigate('PrinterScreen')}
             name="filter"
             size={24}
-            color="#0c50ef"
+            color={primaryColor?.primaryColor}
             style={styles.icon}
           />
         </View>
@@ -219,12 +256,14 @@ export const CatalogueScreen: React.FC = () => {
         <Input
           mt={4}
           bg={'white'}
+          isDisabled={activeTab === 'Tab2'}
           placeholder="Cari Produk"
           placeholderTextColor={'#888888'}
           variant="filled"
           value={searchResults}
           onChangeText={text => {
             setSearchResults(text);
+            // searchOfflineProductsName(text);
           }}
           width="100%"
           borderRadius="10"
@@ -235,7 +274,7 @@ export const CatalogueScreen: React.FC = () => {
               style={styles.iconSearch}
               name="search"
               size={20}
-              color="#0c50ef"
+              color={primaryColor?.primaryColor}
             />
           }
         />
@@ -243,21 +282,29 @@ export const CatalogueScreen: React.FC = () => {
       <View mx={6} mt={4} mb={4} flexDirection={'row'}>
         <Pressable
           p={2}
-          bg={activeTab === 'Tab1' ? '#e3e9ff' : null}
+          bg={activeTab === 'Tab1' ? primaryColor?.secondaryColor : null}
           w={'50%'}
           onPress={() => handleTabPress('Tab1')}
           borderRadius={20}>
-          <Text textAlign={'center'} bold color={'#0c50ef'} borderRadius={20}>
+          <Text
+            textAlign={'center'}
+            bold
+            color={primaryColor?.primaryColor}
+            borderRadius={20}>
             Produk
           </Text>
         </Pressable>
         <Pressable
           p={2}
           onPress={() => handleTabPress('Tab2')}
-          bg={activeTab === 'Tab2' ? '#e3e9ff' : null}
+          bg={activeTab === 'Tab2' ? primaryColor?.secondaryColor : null}
           w={'50%'}
           borderRadius={20}>
-          <Text textAlign={'center'} bold color={'#0c50ef'} borderRadius={20}>
+          <Text
+            textAlign={'center'}
+            bold
+            color={primaryColor?.primaryColor}
+            borderRadius={20}>
             Etalase
           </Text>
         </Pressable>
@@ -296,7 +343,7 @@ export const CatalogueScreen: React.FC = () => {
               <Image
                 source={shop}
                 alt={'logo-pemkab'}
-                w={'80%'}
+                // w={'80%'}
                 resizeMode="contain"
               />
 
@@ -325,7 +372,7 @@ export const CatalogueScreen: React.FC = () => {
                     Semua Produk
                   </Text>
                   <Text fontSize={'sm'} color={'coolGray.500'}>
-                    1 Produk
+                    {`${product?.length > 0 ? product?.length : 0} Produk`}
                   </Text>
                 </View>
                 <View bg={'coolGray.300'} h={0.5} mx={4} />
@@ -342,7 +389,7 @@ export const CatalogueScreen: React.FC = () => {
                       <View mx={4} my={4}>
                         <Text fontSize={'lg'}>{item?.name}</Text>
                         <Text fontSize={'sm'} color={'coolGray.500'}>
-                          {'1 produk'}
+                          {`${filterOfflineCategory(item?.id)} Produk`}
                         </Text>
                       </View>
                       <View bg={'coolGray.300'} h={0.5} mx={4} />
@@ -389,7 +436,7 @@ export const CatalogueScreen: React.FC = () => {
         position={'absolute'}
         alignSelf="center"
         bottom={18}
-        bg={'#0c50ef'}>
+        bg={primaryColor?.primaryColor}>
         <Text fontSize={'md'} color="white">
           <MaterialIcons name="add-circle" size={15} color="white" />{' '}
           {activeTab === 'Tab1' ? 'Tambah Produk' : 'Tambah Kategori'}
@@ -419,5 +466,9 @@ const styles = {
   wifi_off: {
     marginLeft: 10,
     color: '#fc2b0c',
+  },
+  download: {
+    // marginLeft: 10,
+    color: '#2dbf52',
   },
 };

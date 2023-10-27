@@ -24,6 +24,22 @@ export interface Business {
   updated_at: string;
   deleted_at: any;
   photo: Photo[];
+  modules: Modules[];
+}
+
+export interface Modules {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: any;
+  pivot: PivotModule;
+}
+
+export interface PivotModule {
+  business_id: number;
+  module_id: number;
+  setting_value: number;
 }
 
 export interface Photo {

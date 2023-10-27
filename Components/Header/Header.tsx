@@ -1,21 +1,30 @@
-import React from 'react';
+import React, {useContext} from 'react';
 
 import {View, Text} from 'native-base';
-import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
+// import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import {StyleSheet} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useNetworkInfo from '../../Hooks/useNetworkInfo';
-import cache from '../../Util/cache';
+// import cache from '../../Util/cache';
+import noImage from '../../Public/Assets/no-Image.jpg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {PrimaryColorContext} from '../../Context';
+import useUserInfo from '../../Hooks/useUserInfo';
+import FastImage from 'react-native-fast-image';
+
+// import {usePrimaryColor} from '../../PrimaryColorContext';
+// import {PrimaryColorContext, usePrimaryColor} from '../../LoadingContext';
 
 export const HeaderComponent: React.FC = () => {
-  const isConnected = useNetworkInfo().isConnected;
+  const {userData} = useUserInfo();
   const navigation = useNavigation<NavigationProp<any>>();
-
+  const primaryColor = useContext(PrimaryColorContext);
+  // const {primaryColor} = usePrimaryColor();
   const deleteCache = async (): Promise<void> => {
+    navigation.navigate('KitchenScreen');
     // const dataUser = await cache.removeItem('paymentSubmissions');
     const allKeys = await AsyncStorage.getAllKeys();
     // const data = await cache.get('paymentSubmissions');
@@ -34,18 +43,35 @@ export const HeaderComponent: React.FC = () => {
         justifyContent={'space-between'}
         paddingX={5}
         paddingTop={30}>
-        <View flexDirection={'row'} alignItems={'center'}>
+        <View
+          // alignSelf={'center'}
+          flexDirection={'row'}
+          alignItems={'center'}>
           <Text color={'white'} fontSize={'lg'} bold>
-            Hidup Merchant{' '}
+            {userData?.business?.name}
           </Text>
-          <View>
+          {userData?.business?.photo[0]?.original_url ? (
+            <View ml={4} overflow={'hidden'}>
+              <FastImage
+                style={styles.image}
+                source={{
+                  uri: userData?.business?.photo[0]?.original_url,
+                  priority: FastImage.priority.normal,
+                }}
+                resizeMode={FastImage.resizeMode.contain}
+                fallback={noImage}
+              />
+            </View>
+          ) : null}
+
+          {/* <View>
             <MaterialCommunityIcons
               name={isConnected ? 'wifi-check' : 'wifi-remove'}
               size={24}
               color="#fff"
               style={isConnected ? styles.wifi : styles.wifi_off}
             />
-          </View>
+          </View> */}
         </View>
 
         <View flexDirection={'row'}>
@@ -73,16 +99,19 @@ export const HeaderComponent: React.FC = () => {
         </View>
       </View>
 
-      <View zIndex={-1} h={92} overflow="hidden" bg={'#0c50ef'}>
-        {/* First wave pattern */}
-        <Svg
+      <View
+        zIndex={-1}
+        h={92}
+        overflow="hidden"
+        bg={primaryColor?.primaryColor}>
+        {/* <Svg
           height="100%"
-          width="100%"
-          viewBox="0 0 1440 320"
+          width={screenWidth}
+          viewBox={`0 0 ${screenWidth} 320`}
           style={styles.wave}>
           <Defs>
             <LinearGradient id="gradient1" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#0c50ef" />
+              <Stop offset="0" stopColor={primaryColor?.primaryColor} />
               <Stop offset="1" stopColor="#00a1ff" />
             </LinearGradient>
           </Defs>
@@ -93,11 +122,10 @@ export const HeaderComponent: React.FC = () => {
           />
         </Svg>
 
-        {/* Second wave pattern */}
         <Svg
           height="100%"
           width="100%"
-          viewBox="0 0 1440 320"
+          viewBox={`0 0 ${screenWidth} 320`}
           style={styles.wave}>
           <Defs>
             <LinearGradient id="gradient2" x1="0" y1="0" x2="1" y2="1">
@@ -112,15 +140,14 @@ export const HeaderComponent: React.FC = () => {
           />
         </Svg>
 
-        {/* Third wave pattern */}
         <Svg
           height="100%"
           width="100%"
-          viewBox="0 0 1440 320"
+          viewBox={`0 0 ${screenWidth} 320`}
           style={styles.wave}>
           <Defs>
             <LinearGradient id="gradient3" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#0c50ef" />
+              <Stop offset="0" stopColor={primaryColor?.primaryColor} />
               <Stop offset="1" stopColor="#4d79ff" />
             </LinearGradient>
           </Defs>
@@ -129,9 +156,8 @@ export const HeaderComponent: React.FC = () => {
             fillOpacity={1}
             d="M0,96C160,128,320,192,480,186.7C640,181,800,107,960,85.3C1120,64,1280,96,1360,112L1440,128L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,0,0L0,0Z"
           />
-        </Svg>
+        </Svg> */}
       </View>
-      {/* </View> */}
     </>
   );
 };
@@ -144,6 +170,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginLeft: 15,
+  },
+  image: {
+    width: 40,
+    height: 40,
+    // flex: 1,
   },
   wifi: {
     marginLeft: 5,

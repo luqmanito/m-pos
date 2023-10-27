@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1006346550004",
+    "project_id": "mobile-pos-398006",
+    "storage_bucket": "mobile-pos-398006.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006346550004:android:6f92dd981d26cff3db3ca1",
+        "android_client_info": {
+          "package_name": "com.supalapos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBa0DtJ9imTJubEvemPyrKoqBJ68zeyeM8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

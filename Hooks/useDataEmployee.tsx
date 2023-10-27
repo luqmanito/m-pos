@@ -12,7 +12,6 @@ const useDataEmployee = () => {
       if (response) {
         setDataDetailEmployee(response);
       }
-      console.log(response);
     };
     if (isFocused) {
       NewEmployee();

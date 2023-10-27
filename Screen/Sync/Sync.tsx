@@ -1,6 +1,6 @@
 import {Button, Text, View} from 'native-base';
-import React, {useEffect, useState} from 'react';
-import {useLoading} from '../../Context';
+import React, {useContext, useEffect, useState} from 'react';
+import {PrimaryColorContext, useLoading} from '../../Context';
 import {getCurrentDateTime} from '../../Components/Date/Time';
 import NavBar from '../../Components/Navbar/Navbar';
 import useCategories from '../../Hooks/useCategory';
@@ -15,10 +15,10 @@ const SyncDataScreen = () => {
     let dataSubmissions = await cache.get('paymentSubmissions');
     setDataSync(dataSubmissions);
   };
-  const {fetchAllProductsCache} = useProducts('cashier');
+  // const {fetchAllProductsCache} = useProducts('cashier');
   const {fetchCategories} = useCategories();
   const {submitPayment} = usePaymentSubmit();
-
+  const primaryColor = useContext(PrimaryColorContext);
   useEffect(() => {
     fetchDataSubmission();
   }, [dataSync]);
@@ -49,7 +49,7 @@ const SyncDataScreen = () => {
               // fetchAllProductsCache();
             }}
             isDisabled={dataSync === null || dataSync.length === 0}
-            bg={'#0c50ef'}
+            bg={primaryColor?.primaryColor}
             borderRadius={10}>
             <Text color={'white'} fontSize={'lg'}>
               Kirim data transaksi
@@ -74,9 +74,9 @@ const SyncDataScreen = () => {
             // isDisabled={}
             onPress={() => {
               fetchCategories();
-              fetchAllProductsCache();
+              // fetchAllProductsCache();
             }}
-            bg={'#0c50ef'}
+            bg={primaryColor?.primaryColor}
             borderRadius={10}>
             <Text color={'white'} fontSize={'lg'}>
               Download data produk

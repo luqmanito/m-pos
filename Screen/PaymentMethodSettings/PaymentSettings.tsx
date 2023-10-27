@@ -8,13 +8,14 @@ import {
   Text,
   View,
 } from 'native-base';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import NavBar from '../../Components/Navbar/Navbar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import usePaymentMethod from '../../Hooks/usePaymentMethod';
 import useChangePaymentStatus from '../../Hooks/useChangePaymentStatus';
+import {PrimaryColorContext} from '../../Context';
 
 const PaymentSettings = () => {
   const {paymentMethod} = usePaymentMethod();
@@ -22,7 +23,7 @@ const PaymentSettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<number | null>(null);
-
+  const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
       <NavBar msg="Metode Pembayaran" />
@@ -33,7 +34,10 @@ const PaymentSettings = () => {
               <React.Fragment key={payment?.id}>
                 <View mt={4} mx={4} flexDirection={'row'}>
                   <View justifyContent={'center'} alignItems={'flex-start'}>
-                    <View bg={'#e3e9ff'} p={2} borderRadius={8}>
+                    <View
+                      bg={primaryColor?.secondaryColor}
+                      p={2}
+                      borderRadius={8}>
                       <Ionicons
                         name={payment?.id === 1 ? 'cash' : 'card'}
                         size={15}
@@ -78,7 +82,7 @@ const PaymentSettings = () => {
               <Text>Apakah anda ingin mengubah status pembayaran ?</Text>
               <Button
                 mt={4}
-                bg={'#0c50ef'}
+                bg={primaryColor?.primaryColor}
                 onPress={() => {
                   setIsOpen(false);
                   // refreshPage();
@@ -88,22 +92,22 @@ const PaymentSettings = () => {
                   });
                 }}
                 leftIcon={<FontAwesome name="check" size={15} color="white" />}>
-                <Text bold color={'#e3e9ff'}>
+                <Text bold color={primaryColor?.secondaryColor}>
                   Iya
                 </Text>
               </Button>
               <Button
                 mt={4}
-                bg={'#e3e9ff'}
+                bg={primaryColor?.secondaryColor}
                 onPress={() => setIsOpen(false)}
                 leftIcon={
                   <MaterialCommunityIcons
                     name="cancel"
                     size={15}
-                    color="#0c50ef"
+                    color={primaryColor?.primaryColor}
                   />
                 }>
-                <Text bold color={'#0c50ef'}>
+                <Text bold color={primaryColor?.primaryColor}>
                   Batal
                 </Text>
               </Button>

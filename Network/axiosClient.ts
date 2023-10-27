@@ -31,7 +31,7 @@ axiosClient.interceptors.request.use(
 );
 
 axiosClient.interceptors.response.use(response => {
-  if (response.status === 200) {
+  if (response.status === 200 || 204) {
     console.info('\x1b[42m', response.status, response.config.url);
   } else {
     console.warn(response.status, response.config.url);

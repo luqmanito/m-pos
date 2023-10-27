@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useContext} from 'react';
 import {
   View,
   Button,
@@ -6,33 +6,40 @@ import {
   Input,
   Center,
   Image,
-  ScrollView,
   Divider,
   HStack,
   Badge,
   FlatList,
   Pressable,
+  Icon,
+  Modal,
 } from 'native-base';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import shop from '../../Public/Assets/shop.png';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {
   useNavigation,
   NavigationProp,
   useFocusEffect,
 } from '@react-navigation/native';
 import _ from 'lodash';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, TouchableOpacity} from 'react-native';
 import {clearStateProduct} from '../../Redux/Reducers/product';
 import {useDispatch} from 'react-redux';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
 import noImage from '../../Public/Assets/no-Image.jpg';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import formatDate from '../../Components/Date/Date';
-import {setActiveId} from '../../Redux/Reducers/button';
+import {
+  setCustomerName,
+  setSelectedId,
+  setTableNumber,
+} from '../../Redux/Reducers/button';
 import useOrders from '../../Hooks/useOrders';
-import {useLoading} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
 import {RenderFooter} from '../../Components/RenderFooter/RenderFooter';
 import {RenderSkeletonItems} from './Components/Loading';
 import {OrderModel} from '../../models/OrderModel';
@@ -41,10 +48,38 @@ import {screenWidth} from '../../App';
 import useNetworkInfo from '../../Hooks/useNetworkInfo';
 import useDataSubmission from '../../Hooks/useDataSubmission';
 import usePaymentSubmit from '../../Hooks/useSubmitPayment';
+import {clearCart, updateCartItemQuantity} from '../../Redux/Reducers/cart';
+import {PhotoModel} from '../../models/PhotoModel';
+import useUserInfo from '../../Hooks/useUserInfo';
 
-interface Product {
-  product: any;
+export interface Product {
+  id: number;
+  order_id: number;
+  product_id: number;
   name: string;
+  quantity: number;
+  price: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: any;
+  note: any;
+  product: Product2;
+}
+
+export interface Product2 {
+  id: number;
+  business_id: number;
+  name: string;
+  code: string;
+  description: string;
+  price: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: any;
+  category_id: number;
+  is_subtract: boolean;
+  quantity: number;
+  photos: PhotoModel[];
 }
 
 interface Item {
@@ -53,6 +88,8 @@ interface Item {
   products: Product[];
   created_at: string;
   total: number;
+  table_no: string;
+  customer_name: string;
 }
 
 interface Props {
@@ -62,15 +99,27 @@ interface Props {
 export const OrderScreen: React.FC = () => {
   const skeletonItems = RenderSkeletonItems(screenWidth);
   const {loading} = useLoading();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [filterName, setFilterName] = useState('Pending');
+  const [selectedFilter, setSelectedFilter] = useState('Pending');
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('Tab1');
   const [searchResults, setSearchResults] = useState('');
-  const [activeMethod, setActiveMethod] = useState('method1');
-  const {orders, handleSearch, newFetchData, handleRefresh, emptyData} =
-    useOrders();
+  // const [activeMethod, setActiveMethod] = useState('method1');
+  const {
+    orders,
+    handleSearch,
+    fetchOrdersByStatus,
+    newFetchData,
+    handleRefresh,
+    emptyData,
+  } = useOrders();
   const {submitPayment} = usePaymentSubmit();
   const debouncedFetchProducts = _.debounce(handleSearch, 300);
   const {cacheDataSubmissions} = useDataSubmission();
+  const {onlineModule} = useUserInfo();
+  const primaryColor = useContext(PrimaryColorContext);
   useEffect(() => {
     debouncedFetchProducts(searchResults);
     return () => debouncedFetchProducts.cancel();
@@ -100,31 +149,15 @@ export const OrderScreen: React.FC = () => {
     );
   };
 
-  // const transformProductToItem = (order: Item) => {
-  //   return {
-  //     order_code: order.order_code,
-  //     products: order.products,
-  //     id: order.id,
-  //     total: order.total,
-  //     created_at: order.created_at,
-  //   };
-  // };
-
   const transformProductToItem = (order: OrderModel) => ({
     order_code: order.order_code,
     products: order.products,
     id: order.id.toString(),
-    total: order.total, // Ensure this is a number, not a string
+    total: order.total,
     created_at: order.created_at,
+    table_no: order.table_no,
+    customer_name: order.customer_name,
   });
-
-  // const transformProductToItem = (order: OrderModel) => ({
-  //   order_code: order.order_code,
-  //   products: order.products,
-  //   id: order.id.toString(), // Convert the id to a string
-  //   total: order.total,
-  //   created_at: order.created_at,
-  // });
 
   const renderItem: React.FC<Props> = ({item}) => (
     <>
@@ -136,17 +169,17 @@ export const OrderScreen: React.FC = () => {
         borderTopColor={'gray.200'}
         bg={'white'}>
         <View my={4} flexDirection={'row'}>
-          <Text mx={4} fontSize={'lg'} flex={2} color={'#848aac'} bold>
+          <Text mx={4} fontSize={'lg'} flex={10} color={'#848aac'} bold>
             {item?.order_code}
           </Text>
-          <View justifyContent={'center'} alignItems={'center'} flex={1}>
+          <View justifyContent={'center'} alignItems={'center'} flex={2}>
             <Badge
               colorScheme="success"
               alignSelf="center"
               borderRadius={14}
               variant={'subtle'}>
               <Text bold color={'#2ebd53'}>
-                Selesai
+                {filterName}
               </Text>
             </Badge>
           </View>
@@ -172,20 +205,6 @@ export const OrderScreen: React.FC = () => {
                   resizeMode="contain"
                 />
               )}
-
-              {/* <Image
-                source={
-                  item?.products[0]
-                    ? {
-                        uri: item?.products[0]?.product?.photos[0]
-                          ?.original_url,
-                      }
-                    : noImage
-                }
-                alt={'logo-pemkab'}
-                size="sm"
-                resizeMode="contain"
-              /> */}
             </View>
             <View mx={4} my={4}>
               <Text bold>{item?.products[0]?.name}</Text>
@@ -205,16 +224,33 @@ export const OrderScreen: React.FC = () => {
               color={'#848aac'}>{` (${item?.products.length} Produk)`}</Text>
           </Text>
           <Button
+            isDisabled={filterName === 'Confirm'}
             onPress={() => {
-              navigation.navigate('OrderDetailScreen');
-              dispatch(setActiveId(item?.id));
+              navigation.navigate('EditOrderScreen');
+              dispatch(clearCart());
+              dispatch(setTableNumber(item?.table_no));
+              dispatch(setCustomerName(item?.customer_name));
+              item?.products.map(listOrder => {
+                dispatch(
+                  updateCartItemQuantity({
+                    productId: listOrder?.product_id,
+                    quantity: listOrder?.quantity,
+                    subTotal: listOrder?.quantity * listOrder?.price,
+                    name: listOrder?.name,
+                    photos: listOrder?.product?.photos[0]?.original_url,
+                    basePrice: listOrder?.price,
+                    note: listOrder?.note,
+                  }),
+                );
+              });
+              dispatch(setSelectedId(item?.id));
             }}
             mt={2}
             mb={4}
             borderRadius={20}
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text color={'white'} bold>
-              Lihat Detail
+              Edit Order
             </Text>
           </Button>
         </View>
@@ -267,31 +303,47 @@ export const OrderScreen: React.FC = () => {
               style={styles.iconSearch}
               name="search"
               size={20}
-              color="#0c50ef"
+              color={primaryColor?.primaryColor}
             />
           }
         />
       </View>
-
       <View mx={6} mt={4} flexDirection={'row'}>
-        <Pressable
-          p={2}
-          bg={activeTab === 'Tab1' ? '#e3e9ff' : null}
-          w={'50%'}
-          borderRadius={20}
-          onPress={() => setActiveTab('Tab1')}>
-          <Text textAlign={'center'} bold color={'#0c50ef'} borderRadius={20}>
-            Online
-          </Text>
-        </Pressable>
+        {onlineModule ? (
+          <Pressable
+            p={2}
+            bg={activeTab === 'Tab1' ? primaryColor?.secondaryColor : null}
+            w={'50%'}
+            borderRadius={20}
+            onPress={() => {
+              fetchOrdersByStatus('pending', 'ONLINE');
+              setFilterName('Pending');
+              setActiveTab('Tab1');
+            }}>
+            <Text
+              textAlign={'center'}
+              bold
+              color={primaryColor?.primaryColor}
+              borderRadius={20}>
+              Online
+            </Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
-          onPress={() => setActiveTab('Tab2')}
+          onPress={() => {
+            fetchOrdersByStatus('confirm', 'OFFLINE');
+            setActiveTab('Tab2');
+          }}
           p={2}
-          bg={activeTab === 'Tab2' ? '#e3e9ff' : null}
-          w={'50%'}
+          bg={activeTab === 'Tab2' ? primaryColor?.secondaryColor : null}
+          w={onlineModule ? '50%' : 'full'}
           borderRadius={20}>
-          <Text textAlign={'center'} bold color={'#0c50ef'} borderRadius={20}>
+          <Text
+            textAlign={'center'}
+            bold
+            color={primaryColor?.primaryColor}
+            borderRadius={20}>
             Offline
           </Text>
         </Pressable>
@@ -300,46 +352,44 @@ export const OrderScreen: React.FC = () => {
         <>{renderSkeletonItems()}</>
       ) : activeTab === 'Tab1' ? (
         <>
-          <View borderBottomWidth={0.2} my={4} flexDirection={'row'}>
-            <Button
-              bg={'transparent'}
-              _text={
-                activeMethod === 'method1'
-                  ? {
-                      color: '#0c50ef',
-                    }
-                  : {
-                      color: '#1F2937',
-                    }
-              }
-              onPress={() => setActiveMethod('method1')}
-              variant="unstyled"
-              borderBottomColor={activeMethod === 'method1' ? '#0c50ef' : null}
-              borderBottomWidth={activeMethod === 'method1' ? 2 : 0}
-              textAlign={'center'}
-              flex={1}>
-              Pesanan Tersimpan
-            </Button>
-
-            <Button
-              bg={'transparent'}
-              _text={
-                activeMethod === 'method3'
-                  ? {
-                      color: '#0c50ef',
-                    }
-                  : {
-                      color: '#1F2937',
-                    }
-              }
-              onPress={() => setActiveMethod('method3')}
-              variant="unstyled"
-              borderBottomColor={activeMethod === 'method3' ? '#0c50ef' : null}
-              borderBottomWidth={activeMethod === 'method3' ? 2 : 0}
-              textAlign={'center'}
-              flex={1}>
-              Selesai
-            </Button>
+          <View mt={4}>
+            <View p={2} mx={4} flexDirection={'row'}>
+              <View alignItems={'flex-end'} flex={2}>
+                <Center borderRadius={20}>
+                  <TouchableOpacity onPress={() => setIsOpen(true)}>
+                    <Input
+                      bg={'white'}
+                      w={'100%'}
+                      borderRadius={10}
+                      borderWidth="0"
+                      py="1"
+                      px="1"
+                      isReadOnly={true}
+                      variant={'filled'}
+                      type="text"
+                      placeholder="Pilih Kategori"
+                      value={filterName ? filterName : 'Pending'}
+                      InputRightElement={
+                        <Icon
+                          as={<AntDesign name={'down'} />}
+                          size={4}
+                          mr="2"
+                          color={primaryColor?.primaryColor}
+                        />
+                      }
+                      InputLeftElement={
+                        <Icon
+                          as={<FontAwesome name={'filter'} />}
+                          size={4}
+                          ml="2"
+                          color={primaryColor?.primaryColor}
+                        />
+                      }
+                    />
+                  </TouchableOpacity>
+                </Center>
+              </View>
+            </View>
           </View>
           {orders.length > 0 ? (
             <FlatList
@@ -379,131 +429,44 @@ export const OrderScreen: React.FC = () => {
           )}
         </>
       ) : (
-        <ScrollView>
-          {cacheDataSubmissions && cacheDataSubmissions?.length !== 0 ? (
-            cacheDataSubmissions.map((item, index) => {
-              return (
-                <React.Fragment key={index}>
-                  <View mx={4}>
-                    <View>
-                      <View
-                        mt={4}
-                        mx={4}
-                        borderRadius={14}
-                        borderTopColor={'gray.200'}
-                        bg={'white'}>
-                        <View my={4} flexDirection={'row'}>
-                          <Text
-                            mx={4}
-                            fontSize={'lg'}
-                            flex={2}
-                            color={'black'}
-                            bold>
-                            {`No Transaksi Sementara : ${item?.invoiceNumber}`}
-                          </Text>
-                        </View>
-                        <Divider />
-                        <View mx={4} mt={4} bg="white">
-                          <View
-                            mx={4}
-                            flexDirection={'row'}
-                            justifyContent={'space-between'}>
-                            <View alignSelf={'flex-start'}>
-                              <Text mt={3}>Status</Text>
-                            </View>
-                            <View alignSelf={'flex-end'} mt={3}>
-                              <Text bold color={'black'}>
-                                Pending
-                              </Text>
-                            </View>
-                          </View>
-                          <View
-                            mx={4}
-                            flexDirection={'row'}
-                            justifyContent={'space-between'}>
-                            <View alignSelf={'flex-start'}>
-                              <Text mt={3}>Metode Pembayaran</Text>
-                            </View>
-                            <View alignSelf={'flex-end'} mt={3}>
-                              <Text bold color={'black'}>
-                                {item?.payment_method === 1
-                                  ? 'Tunai'
-                                  : 'Non Tunai'}
-                              </Text>
-                            </View>
-                          </View>
-                          <View
-                            mx={4}
-                            flexDirection={'row'}
-                            justifyContent={'space-between'}>
-                            <View alignSelf={'flex-start'}>
-                              <Text mt={3}>Waktu Pembayaran</Text>
-                            </View>
-                            <View alignSelf={'flex-end'} mt={3}>
-                              <Text bold color={'black'}>
-                                {item?.date}
-                              </Text>
-                            </View>
-                          </View>
-                          <View
-                            mx={4}
-                            flexDirection={'row'}
-                            justifyContent={'space-between'}>
-                            <View alignSelf={'flex-start'}>
-                              <Text mt={3}>Total Belanja</Text>
-                            </View>
-                            <View alignSelf={'flex-end'} mt={3}>
-                              <Text bold>
-                                {RupiahFormatter(item?.total_price)}
-                              </Text>
-                            </View>
-                          </View>
-                          {item?.table_no ? (
-                            <View
-                              mx={4}
-                              flexDirection={'row'}
-                              justifyContent={'space-between'}>
-                              <View alignSelf={'flex-start'}>
-                                <Text mt={3}>Keterangan Meja</Text>
-                              </View>
-                              <View alignSelf={'flex-end'} mt={3}>
-                                <Text bold>
-                                  as
-                                  {item?.table_no}
-                                </Text>
-                              </View>
-                            </View>
-                          ) : null}
-                          <View
-                            mx={4}
-                            flexDirection={'row'}
-                            justifyContent={'space-between'}>
-                            <View alignSelf={'flex-start'}>
-                              <Text mt={3}>Nama Kasir</Text>
-                            </View>
-                            <View alignSelf={'flex-end'} mt={3}>
-                              <Text mb={4} bold>
-                                {item?.cashierName}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </React.Fragment>
-              );
-            })
+        <>
+          {orders.length > 0 ? (
+            <FlatList
+              data={orders.map(transformProductToItem)}
+              renderItem={renderItem}
+              keyExtractor={item => item?.id.toString()}
+              ListFooterComponent={renderFooter}
+              onRefresh={handleRefresh}
+              refreshing={false}
+              onEndReached={
+                orders.length > 2 && emptyData === false ? newFetchData : null
+              }
+              onEndReachedThreshold={0}
+            />
+          ) : orders.length === 0 && searchResults ? (
+            <View mt={12} justifyContent={'center'} alignItems={'center'}>
+              <Text bold> Tidak Ada Data Ditemukan</Text>
+            </View>
           ) : (
-            <>
-              <View mt={4}>
-                <Text mt={4} bold fontSize={'3xl'} textAlign={'center'}>
-                  Belum ada data transaksi baru
+            <View mt={12} justifyContent={'center'} alignItems={'center'}>
+              <Image
+                source={shop}
+                alt={'logo-pemkab'}
+                w={'80%'}
+                resizeMode="contain"
+              />
+
+              <Center>
+                <Text bold fontSize={22} numberOfLines={2}>
+                  Yuk, Tambah Produk Jualanmu
                 </Text>
-              </View>
-            </>
+                <Text mt={2} numberOfLines={2} color={'#888888'} fontSize={16}>
+                  Semua produk yang kamu jual bisa diatur dari sini
+                </Text>
+              </Center>
+            </View>
           )}
-        </ScrollView>
+        </>
       )}
       {activeTab === 'Tab2' && cacheDataSubmissions?.length > 0 ? (
         <View
@@ -517,7 +480,7 @@ export const OrderScreen: React.FC = () => {
             isLoading={loading}
             isLoadingText={'loading'}
             borderRadius={20}
-            bg={'#0c50ef'}
+            bg={primaryColor?.primaryColor}
             onPress={() => submitPayment(cacheDataSubmissions)}>
             <Text
               bold
@@ -525,12 +488,86 @@ export const OrderScreen: React.FC = () => {
               textAlign={'center'}
               color="white"
               flex={2}>
-              <MaterialIcons name="save" size={20} color="white" />
+              <MaterialIcons name="send" size={20} color="white" />
               Kirim Semua Data Transaksi
             </Text>
           </Button>
         </View>
       ) : null}
+      <Center>
+        <Modal size={'full'} isOpen={isOpen} onClose={() => setIsOpen(false)}>
+          <Modal.Content mt={'auto'} maxWidth="400px">
+            <Modal.CloseButton />
+            <Modal.Header>
+              <Text bold fontSize={'2xl'}>
+                Etalase
+              </Text>
+            </Modal.Header>
+            <Modal.Body>
+              <Pressable
+                onPress={() => {
+                  setSelectedFilter('Pending');
+                }}>
+                <View flexDirection={'row'}>
+                  <Text flex={11} mb={2}>
+                    Pending
+                  </Text>
+                  <View flex={1} mb={2}>
+                    {selectedFilter === 'Pending' ? (
+                      <AntDesign
+                        name={'checkcircle'}
+                        size={20}
+                        color={primaryColor?.primaryColor}
+                      />
+                    ) : null}
+                  </View>
+                </View>
+              </Pressable>
+              <Divider />
+              <Pressable
+                mt={2}
+                onPress={() => {
+                  setSelectedFilter('Confirm');
+                }}>
+                <View flexDirection={'row'}>
+                  <Text flex={11} mb={2}>
+                    Confirm
+                  </Text>
+                  <View flex={1} mb={2}>
+                    {selectedFilter === 'Confirm' ? (
+                      <AntDesign
+                        name={'checkcircle'}
+                        size={20}
+                        color={primaryColor?.primaryColor}
+                      />
+                    ) : null}
+                  </View>
+                </View>
+              </Pressable>
+              <Divider />
+
+              <Button
+                mt={4}
+                onPress={() => {
+                  // handleCategory(selectedCategories);
+                  // filterOfflineProductsByCategory(selectedCategories);
+                  setFilterName(selectedFilter);
+                  fetchOrdersByStatus(selectedFilter, 'ONLINE');
+                  setIsOpen(false);
+                  // dispatch(setCategoryName(categoriesName));
+                }}
+                borderRadius={34}
+                alignItems={'center'}
+                justifyContent={'center'}
+                bg={primaryColor?.primaryColor}>
+                <Text fontSize={'lg'} color="white">
+                  Tampilkan
+                </Text>
+              </Button>
+            </Modal.Body>
+          </Modal.Content>
+        </Modal>
+      </Center>
     </>
   );
 };

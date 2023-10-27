@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
   Box,
   Button,
@@ -30,7 +30,7 @@ import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import useProductDetail from '../../Hooks/useProductDetail';
 import useEditPhoto from '../../Hooks/useEditPhoto';
 import useDeleteProduct from '../../Hooks/useDeleteProduct';
-import {useLoading} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
 
 interface addProductProps {
   navigation: any;
@@ -61,7 +61,7 @@ export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
   const {handleDeletedPhoto, handleSubmit} = useEditPhoto();
   const {handleSubmitDelete} = useDeleteProduct();
   const {loading} = useLoading();
-
+  const primaryColor = useContext(PrimaryColorContext);
   function deleteMedia(): void {
     setIsOpen(false);
     resetphotos();
@@ -221,7 +221,7 @@ export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
             ml={4}
             alignItems={'center'}
             justifyContent={'center'}
-            bg={'#0c50ef'}>
+            bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
               <MaterialIcons name="save" color="white" /> Simpan
             </Text>

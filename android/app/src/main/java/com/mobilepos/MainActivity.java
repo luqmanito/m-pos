@@ -1,4 +1,4 @@
-package com.mobilepos;
+package com.supalapos;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

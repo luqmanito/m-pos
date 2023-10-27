@@ -1,16 +1,17 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {View, Text} from 'native-base';
-import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
-import {StyleSheet} from 'react-native';
+// import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
+// import {StyleSheet} from 'react-native';
 import formattedDate from '../Date/Today';
 import {useReport} from '../../Hooks/useReport';
 import RupiahFormatter from '../Rupiah/Rupiah';
+import {PrimaryColorContext} from '../../Context';
 
 export const WavePatternComponent: React.FC = () => {
   const {reportDataTotal} = useReport();
   let totalPriceTransaction = 0;
   let totalTransaction = 0;
-
+  const primaryColor = useContext(PrimaryColorContext);
   if (reportDataTotal) {
     reportDataTotal.forEach(item => {
       totalPriceTransaction += Number(item.total);
@@ -25,16 +26,15 @@ export const WavePatternComponent: React.FC = () => {
         borderTopRadius={10}
         position={'relative'}
         overflow="hidden"
-        bg={'#0c50ef'}>
-        {/* First wave pattern */}
-        <Svg
+        bg={primaryColor?.primaryColor}>
+        {/* <Svg
           height="100%"
           width="100%"
           viewBox="0 0 1440 320"
           style={styles.wave}>
           <Defs>
             <LinearGradient id="gradient1" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#0c50ef" />
+              <Stop offset="0" stopColor={primaryColor?.primaryColor} />
               <Stop offset="1" stopColor="#00a1ff" />
             </LinearGradient>
           </Defs>
@@ -45,7 +45,6 @@ export const WavePatternComponent: React.FC = () => {
           />
         </Svg>
 
-        {/* Second wave pattern */}
         <Svg
           height="100%"
           width="100%"
@@ -64,7 +63,6 @@ export const WavePatternComponent: React.FC = () => {
           />
         </Svg>
 
-        {/* Third wave pattern */}
         <Svg
           height="100%"
           width="100%"
@@ -72,7 +70,7 @@ export const WavePatternComponent: React.FC = () => {
           style={styles.wave}>
           <Defs>
             <LinearGradient id="gradient3" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#0c50ef" />
+              <Stop offset="0" stopColor={primaryColor?.primaryColor} />
               <Stop offset="1" stopColor="#4d79ff" />
             </LinearGradient>
           </Defs>
@@ -81,7 +79,7 @@ export const WavePatternComponent: React.FC = () => {
             fillOpacity={1}
             d="M0,96C160,128,320,192,480,186.7C640,181,800,107,960,85.3C1120,64,1280,96,1360,112L1440,128L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,0,0L0,0Z"
           />
-        </Svg>
+        </Svg> */}
         <View position={'absolute'} mx={4} mt={3}>
           <Text color={'white'} bold>
             {`Pendapatan Hari Ini, ${formattedDate}`}
@@ -92,18 +90,17 @@ export const WavePatternComponent: React.FC = () => {
           <Text color={'white'}>{totalTransaction} Transaksi</Text>
         </View>
       </View>
-      {/* </View> */}
     </>
   );
 };
 
-const styles = StyleSheet.create({
-  wave: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  icon: {
-    marginLeft: 15,
-  },
-});
+// const styles = StyleSheet.create({
+//   wave: {
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//   },
+//   icon: {
+//     marginLeft: 15,
+//   },
+// });

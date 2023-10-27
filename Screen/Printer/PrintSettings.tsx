@@ -1,5 +1,5 @@
 import {Badge, ScrollView, Button, Text, View, useToast} from 'native-base';
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useContext} from 'react';
 import {BluetoothManager} from 'react-native-bluetooth-escpos-printer';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import ItemList from './Components/ItemList';
@@ -18,6 +18,7 @@ import {setBluetoohName, setBluetoohStatus} from '../../Redux/Reducers/button';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import ToastAlert from '../../Components/Toast/Toast';
+import {PrimaryColorContext} from '../../Context';
 
 const PrinterSetting = () => {
   const dispatch = useDispatch();
@@ -32,7 +33,7 @@ const PrinterSetting = () => {
     name: string;
     address: string;
   };
-
+  const primaryColor = useContext(PrimaryColorContext);
   const [pairedDevices, setPairedDevices] = useState<PairedProps[]>([]);
   const [foundDs, setFoundDs] = useState<{address: any}[]>([]);
   const [bleOpend, setBleOpend] = useState(false);
@@ -309,7 +310,7 @@ const PrinterSetting = () => {
                 value={item.address}
                 connected={item.address === bluetoothState}
                 actionText="Hubungkan"
-                color="#0c50ef"
+                color={primaryColor?.primaryColor}
               />
             );
           })}
@@ -319,13 +320,13 @@ const PrinterSetting = () => {
           isDisabled={bluetoothState?.length < 1 ? true : false}
           my={4}
           borderRadius={12}
-          bg={'#0c50ef'}
+          bg={primaryColor?.primaryColor}
           onPress={() => navigation.navigate('PrinterConfiguration')}>
           Pengaturan Printer
         </Button>
         <Button
           borderRadius={12}
-          bg={'#0c50ef'}
+          bg={primaryColor?.primaryColor}
           onPress={() => scanBluetoothDevice()}>
           Scan Bluetooth
         </Button>

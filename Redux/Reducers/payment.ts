@@ -7,7 +7,7 @@ export interface PaymentItem {
   exchangePayment: number;
   invoiceNumber: string;
   datePayment: string;
-  cashierName: string;
+  cashierName: string | undefined;
   products?: Product[];
 }
 

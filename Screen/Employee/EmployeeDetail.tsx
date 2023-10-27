@@ -1,9 +1,8 @@
-import React, {useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   View,
   Text,
   Pressable,
-  Divider,
   ScrollView,
   FormControl,
   Stack,
@@ -11,27 +10,44 @@ import {
   Radio,
   Icon,
   Button,
+  Center,
+  Modal,
 } from 'native-base';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+// import Ionicons from 'react-native-vector-icons/Ionicons';
 import NavBar from '../../Components/Navbar/Navbar';
-import useUserInfo from '../../Hooks/useUserInfo';
-import useDataEmployee from '../../Hooks/useDataEmployee';
+// import useUserInfo from '../../Hooks/useUserInfo';
+// import useDataEmployee from '../../Hooks/useDataEmployee';
 import {useDispatch} from 'react-redux';
-import {setNewEmployee} from '../../Redux/Reducers/employee';
+import {setNewEmployeeData} from '../../Redux/Reducers/employee';
 import cache from '../../Util/cache';
+import {PrimaryColorContext, useLoading} from '../../Context';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
+import useEmployee from '../../Hooks/useEmployee';
+import {NavigationModel} from '../../models/NavModel';
+import useRoles from '../../Hooks/useRoles';
 
-const EmployeeDetail = ({navigation}) => {
-  const {userData} = useUserInfo();
-  const {dataDetailEmployee} = useDataEmployee();
+const EmployeeDetail = (param: NavigationModel) => {
+  const {listRoles} = useRoles();
+  const navigation = useNavigation<NavigationProp<any>>();
+  const {loading} = useLoading();
+  const primaryColor = useContext(PrimaryColorContext);
   const dispatch = useDispatch();
-  console.log('ee', dataDetailEmployee);
+  const {
+    getDetailEmployee,
+    deleteEmployee,
+    handleChangeData,
+    editEmployee,
+    detailEmployee,
+  } = useEmployee();
+
   const [dataEmployee, setDataEmployee] = useState({
     name: null,
     mobile_number: null,
     email: null,
     role: null || '',
   });
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const isEmpty = Object.values(dataEmployee).some(
     value => value === null || value === '',
   );
@@ -42,10 +58,11 @@ const EmployeeDetail = ({navigation}) => {
     }));
   };
 
-  const submitNewEmployee = async () => {
-    const response = await cache.store('newEmployeeData', [dataEmployee]);
-    return response;
-  };
+  useEffect(() => {
+    getDetailEmployee(param?.route?.params);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <NavBar msg="Ubah Data Pegawai" />
@@ -56,26 +73,14 @@ const EmployeeDetail = ({navigation}) => {
             <Stack mx="4">
               <FormControl.Label>Nama Lengkap</FormControl.Label>
               <Input
-                value={dataDetailEmployee[0]?.name}
+                value={dataEmployee?.name || detailEmployee?.name}
                 borderRadius={10}
                 bg={'white'}
-                onChangeText={text => handleChange('name', text)}
+                onChangeText={text => {
+                  handleChangeData({name: 'name', value: text});
+                  handleChange('name', text);
+                }}
                 placeholder="Contoh: Suprapto"
-              />
-            </Stack>
-          </FormControl>
-          <FormControl mt={4} isRequired>
-            <Stack mx="4">
-              <FormControl.Label>No Handphone</FormControl.Label>
-              <Input
-                isDisabled={true}
-                isReadOnly={true}
-                value={dataDetailEmployee[0]?.mobile_number}
-                borderRadius={10}
-                bg={'white'}
-                onChangeText={text => handleChange('mobile_number', text)}
-                keyboardType={'number-pad'}
-                placeholder="Contoh: 0812345678"
               />
             </Stack>
           </FormControl>
@@ -85,10 +90,13 @@ const EmployeeDetail = ({navigation}) => {
               <Input
                 isDisabled={true}
                 isReadOnly={true}
-                value={dataDetailEmployee[0]?.email}
+                value={dataEmployee?.email || detailEmployee?.email}
                 borderRadius={10}
                 bg={'white'}
-                onChangeText={text => handleChange('email', text)}
+                onChangeText={text => {
+                  handleChangeData({name: 'email', value: text});
+                  handleChange('email', text);
+                }}
                 placeholder="Contoh: suprapto@gmail.com"
               />
             </Stack>
@@ -96,141 +104,143 @@ const EmployeeDetail = ({navigation}) => {
           <FormControl mt={4} isRequired>
             <Stack mx="4">
               <FormControl.Label>Peran Pegawai</FormControl.Label>
-              <Pressable
-                onPress={() => handleChange('role', 'one')}
-                mt={4}
-                borderRadius={10}
-                p={2}
-                bg={'white'}>
-                <View>
-                  <Radio.Group
-                    onChange={() => {
-                      handleChange('role', 'one');
+              {listRoles.map(role => {
+                return (
+                  <Pressable
+                    key={role?.id}
+                    onPress={() => {
+                      handleChangeData({name: 'role', value: role.role});
+                      handleChange('role', role?.value);
                     }}
-                    name="myRadioGroup"
-                    accessibilityLabel="favorite number"
-                    value={'one'}>
-                    <Radio
-                      icon={
-                        <Icon
-                          as={
-                            <AntDesign
-                              name="checkcircle"
-                              size={15}
-                              color="white"
+                    mt={4}
+                    borderRadius={10}
+                    p={2}
+                    bg={'white'}>
+                    <View>
+                      <Radio.Group
+                        onChange={() => {
+                          handleChange('role', role?.value);
+                        }}
+                        name="myRadioGroup"
+                        accessibilityLabel="favorite number"
+                        value={role?.value}>
+                        <Radio
+                          icon={
+                            <Icon
+                              as={
+                                <AntDesign
+                                  name="checkcircle"
+                                  size={15}
+                                  color="white"
+                                />
+                              }
                             />
                           }
-                        />
-                      }
-                      colorScheme={'blue'}
-                      // value={dataDetailEmployee[0]?.role}
-                      value={
-                        dataEmployee?.role.toString() ||
-                        dataDetailEmployee[0]?.role
-                      }
-                      my={1}>
-                      Admin
-                    </Radio>
-                  </Radio.Group>
-                </View>
-                <Text ml={8}>
-                  Dapat melakukan manajemen katalog, melihat semua laporan
-                  transaksi dan mengatur akses pegawai.
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => handleChange('role', 'two')}
-                mt={4}
-                borderRadius={10}
-                p={2}
-                bg={'white'}>
-                <View>
-                  <Radio.Group
-                    onChange={() => {
-                      handleChange('role', 'two');
-                    }}
-                    name="myRadioGroup"
-                    accessibilityLabel="favorite number"
-                    value={'two'}>
-                    <Radio
-                      icon={
-                        <Icon
-                          as={
-                            <AntDesign
-                              name="checkcircle"
-                              size={15}
-                              color="white"
-                            />
+                          colorScheme={'blue'}
+                          // value={dataEmployee.role}
+                          value={
+                            dataEmployee?.role
+                              ? dataEmployee?.role
+                              : detailEmployee?.role === 'ADMIN'
+                              ? 'admin'
+                              : detailEmployee?.role === 'USER'
+                              ? 'user'
+                              : detailEmployee?.role === 'KITCHEN'
+                              ? 'kitchen'
+                              : 'cashier'
                           }
-                        />
-                      }
-                      colorScheme={'blue'}
-                      // value={dataDetailEmployee[0]?.role}
-                      value={
-                        dataEmployee?.role.toString() ||
-                        dataDetailEmployee[0]?.role
-                      }
-                      my={1}>
-                      User
-                    </Radio>
-                  </Radio.Group>
-                </View>
-                <Text ml={8}>
-                  Terbatas hanya dapat melakukan transaksi dan lihat laporan
-                  pendapatan.
-                </Text>
-              </Pressable>
+                          my={1}>
+                          {role?.title}
+                        </Radio>
+                      </Radio.Group>
+                    </View>
+                    <Text ml={8}>{role?.description}</Text>
+                  </Pressable>
+                );
+              })}
             </Stack>
           </FormControl>
         </View>
+        <View px={8} my={4} alignSelf="center" w={'100%'}>
+          <Button
+            isLoading={loading}
+            // isDisabled={isEmpty}
+            isLoadingText={'loading'}
+            borderRadius={20}
+            bg={primaryColor?.primaryColor}
+            onPress={() => {
+              editEmployee(param?.route?.params);
+              // submitNewEmployee();
+              // dispatch(setNewEmployeeData(dataEmployee));
+              // navigation.navigate('NewEmployee');
+            }}>
+            <Text
+              bold
+              fontSize={'xl'}
+              textAlign={'center'}
+              color="white"
+              flex={2}>
+              Simpan Perubahan
+            </Text>
+          </Button>
+          <Button
+            mt={4}
+            isLoadingText={'loading'}
+            borderRadius={20}
+            bg={'#fadedb'}
+            onPress={() => {
+              setIsOpen(true);
+            }}>
+            <Text
+              bold
+              fontSize={'xl'}
+              textAlign={'center'}
+              color="#e14f4c"
+              flex={2}>
+              Hapus Pegawai
+            </Text>
+          </Button>
+        </View>
       </ScrollView>
 
-      <View
-        p={2}
-        position={'absolute'}
-        alignSelf="center"
-        w={'100%'}
-        bottom={18}>
-        <Button
-          isDisabled={isEmpty}
-          isLoadingText={'loading'}
-          borderRadius={20}
-          bg={'#0c50ef'}
-          onPress={() => {
-            submitNewEmployee();
-            dispatch(setNewEmployee(dataEmployee));
-            navigation.navigate('NewEmployee');
+      <Center>
+        <Modal
+          size={'lg'}
+          isOpen={isOpen}
+          onClose={() => {
+            // setDeleteProduct(false);
+            setIsOpen(false);
           }}>
-          <Text
-            bold
-            fontSize={'xl'}
-            textAlign={'center'}
-            color="white"
-            flex={2}>
-            Simpan Perubahan
-          </Text>
-        </Button>
-        <Button
-          mt={4}
-          // isDisabled={isEmpty}
-          isLoadingText={'loading'}
-          borderRadius={20}
-          bg={'#fadedb'}
-          onPress={() => {
-            submitNewEmployee();
-            dispatch(setNewEmployee(dataEmployee));
-            navigation.navigate('NewEmployee');
-          }}>
-          <Text
-            bold
-            fontSize={'xl'}
-            textAlign={'center'}
-            color="#e14f4c"
-            flex={2}>
-            Hapus Pegawai
-          </Text>
-        </Button>
-      </View>
+          <Modal.Content mb={0} maxWidth="400px">
+            <Modal.CloseButton />
+            <Modal.Header>Hapus Pegawai</Modal.Header>
+            <Text mx={4} mt={4}>
+              'Apakah Anda yakin akan menghapus pegawai ini ?'
+            </Text>
+            <Modal.Body flexDirection={'row'}>
+              <Button
+                flex={1}
+                mx={4}
+                isLoading={loading}
+                bg={'#ef4536'}
+                onPress={() => {
+                  deleteEmployee(param?.route?.params);
+                }}>
+                <Text color={'#fdecec'}>Ya</Text>
+              </Button>
+              <Button
+                flex={1}
+                bg={'#fdecec'}
+                isLoading={loading}
+                onPress={() => {
+                  setIsOpen(false);
+                }}>
+                <Text color={'#ef4536'}>Tidak</Text>
+              </Button>
+            </Modal.Body>
+          </Modal.Content>
+        </Modal>
+      </Center>
     </>
   );
 };

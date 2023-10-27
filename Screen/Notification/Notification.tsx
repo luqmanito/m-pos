@@ -1,12 +1,14 @@
 import {Button, Image, Text, View} from 'native-base';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import formattedDate from '../../Components/Date/Today';
 import NavBar from '../../Components/Navbar/Navbar';
 import Entypo from 'react-native-vector-icons/Entypo';
 import pushNotif from '../../Public/Assets/push-notif.jpg';
 import formattedTime from '../../Components/Time/TimeNow';
+import {PrimaryColorContext} from '../../Context';
 const NotificationScreen = () => {
   const [activeMethod, setActiveMethod] = useState('method1');
+  const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
       <NavBar msg="Notifikasi" />
@@ -17,7 +19,7 @@ const NotificationScreen = () => {
             _text={
               activeMethod === 'method1'
                 ? {
-                    color: '#0c50ef',
+                    color: primaryColor?.primaryColor,
                   }
                 : {
                     color: '#1F2937',
@@ -25,7 +27,9 @@ const NotificationScreen = () => {
             }
             onPress={() => setActiveMethod('method1')}
             variant="unstyled"
-            borderBottomColor={activeMethod === 'method1' ? '#0c50ef' : null}
+            borderBottomColor={
+              activeMethod === 'method1' ? primaryColor?.primaryColor : null
+            }
             borderBottomWidth={activeMethod === 'method1' ? 2 : 0}
             textAlign={'center'}>
             Semua
@@ -37,7 +41,7 @@ const NotificationScreen = () => {
             _text={
               activeMethod === 'method2'
                 ? {
-                    color: '#0c50ef',
+                    color: primaryColor?.primaryColor,
                   }
                 : {
                     color: '#1F2937',
@@ -45,7 +49,9 @@ const NotificationScreen = () => {
             }
             onPress={() => setActiveMethod('method2')}
             variant="unstyled"
-            borderBottomColor={activeMethod === 'method2' ? '#0c50ef' : null}
+            borderBottomColor={
+              activeMethod === 'method2' ? primaryColor?.primaryColor : null
+            }
             borderBottomWidth={activeMethod === 'method2' ? 2 : 0}
             textAlign={'center'}>
             Transaksi
@@ -57,7 +63,7 @@ const NotificationScreen = () => {
             _text={
               activeMethod === 'method3'
                 ? {
-                    color: '#0c50ef',
+                    color: primaryColor?.primaryColor,
                   }
                 : {
                     color: '#1F2937',
@@ -65,7 +71,9 @@ const NotificationScreen = () => {
             }
             onPress={() => setActiveMethod('method3')}
             variant="unstyled"
-            borderBottomColor={activeMethod === 'method3' ? '#0c50ef' : null}
+            borderBottomColor={
+              activeMethod === 'method3' ? primaryColor?.primaryColor : null
+            }
             borderBottomWidth={activeMethod === 'method3' ? 2 : 0}
             textAlign={'center'}>
             Pesan
@@ -80,7 +88,11 @@ const NotificationScreen = () => {
         <View borderRadius={10} mt={4} bg={'white'} mx={4}>
           <View flexDirection={'row'} mx={4} mt={2}>
             <View flex={1} justifyContent={'center'}>
-              <Entypo name="info-with-circle" size={20} color="#0c50ef" />
+              <Entypo
+                name="info-with-circle"
+                size={20}
+                color={primaryColor?.primaryColor}
+              />
             </View>
             <View flex={8} justifyContent={'center'}>
               <Text color={'#b0b4d8'}>Info</Text>

@@ -1,5 +1,6 @@
 export interface ProductListModel {
   data: ProductModel[];
+  dataCashier: ProductModel[];
 }
 
 export interface ProductModel {
