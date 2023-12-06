@@ -1,6 +1,5 @@
 import React, {useContext, useState} from 'react';
 import {
-  Box,
   Button,
   Center,
   FormControl,
@@ -12,7 +11,6 @@ import {
   ScrollView,
   Stack,
   Text,
-  TextArea,
   View,
   VStack,
 } from 'native-base';
@@ -31,34 +29,40 @@ import useProductDetail from '../../Hooks/useProductDetail';
 import useEditPhoto from '../../Hooks/useEditPhoto';
 import useDeleteProduct from '../../Hooks/useDeleteProduct';
 import {PrimaryColorContext, useLoading} from '../../Context';
+import {ParamListBase, RouteProp} from '@react-navigation/native';
+import BaseInput from '../../Components/Form/BaseInput';
+import useErrorHandler from '../../Hooks/useErrorHandler';
+import {formatPrice} from '../../Components/Rupiah/RupiahFormatter';
 
-interface addProductProps {
+export type YourNavigatorParamList = {
+  ProductDetail: {
+    productId: number;
+  };
+} & ParamListBase;
+
+type ProductDetailScreenProps = {
+  route: RouteProp<YourNavigatorParamList, 'ProductDetail'>;
   navigation: any;
-}
+};
 
-export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
+const ProductDetail: React.FC<ProductDetailScreenProps> = ({
+  navigation,
+  route,
+}) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [deleteProduct, setDeleteProduct] = useState<boolean>(false);
   const dispatch = useDispatch();
+  const productId =
+    route?.params?.productId === undefined ? null : route.params.productId;
   const dataCamera = useSelector(
     (state: RootState) => state.uploadSlice.dataCamera,
   );
   const categoryName = useSelector(
     (state: RootState) => state.productSlice?.categoryName,
   );
-  const {
-    name,
-    description,
-    code,
-    price,
-    photos,
-    resetphotos,
-    handlePriceChange,
-    handleCodeChange,
-    handleDescriptionChange,
-    handleNameChange,
-  } = useProductDetail();
-  const {handleDeletedPhoto, handleSubmit} = useEditPhoto();
+  const {photos, form, resetphotos, handleForm} = useProductDetail(productId);
+  const {handleDeletedPhoto, handleSubmit, handleAddSubmit} = useEditPhoto();
+  const {getFormError, clearFormErrors, isInvalid} = useErrorHandler();
   const {handleSubmitDelete} = useDeleteProduct();
   const {loading} = useLoading();
   const primaryColor = useContext(PrimaryColorContext);
@@ -99,7 +103,6 @@ export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
                     <MaterialIcons
                       onPress={() => {
                         dispatch(clearDataCamera());
-                        // setPhotos('');
                         setIsOpen(true);
                       }}
                       name="cancel"
@@ -113,76 +116,73 @@ export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
               )}
             </VStack>
           </HStack>
-          <FormControl isRequired>
-            <Stack mt={4}>
-              <FormControl.Label>Nama Produk</FormControl.Label>
+          <BaseInput
+            inputKey={'name'}
+            isRequired={true}
+            label={'Nama Produk'}
+            defaultValue={productId ? form.name : ''}
+            placeholder={'Contoh: Nasi Goreng'}
+            type={'text'}
+            isInvalid={isInvalid('name')}
+            warningMessage={getFormError('name')}
+            onChangeText={text => handleForm('name', text)}
+          />
+          <Stack mt={4}>
+            <FormControl.Label>Kategori</FormControl.Label>
+            <Pressable onPress={() => navigation.navigate('CategoryScreen')}>
               <Input
-                bg={'white'}
-                value={name}
                 borderRadius={10}
-                onChangeText={text => handleNameChange(text)}
+                isReadOnly={true}
                 type="text"
-                placeholder="Contoh: Nasi Goreng, Sepatu Lari"
+                placeholder="Pilih Kategori"
+                value={categoryName ? categoryName : ''}
+                InputRightElement={
+                  <Icon
+                    as={<Ionicons name={'chevron-forward'} />}
+                    size={6}
+                    mr="2"
+                    color="muted.400"
+                  />
+                }
               />
-            </Stack>
-            <Stack mt={4}>
-              <FormControl.Label>Code</FormControl.Label>
-              <Input
-                bg={'white'}
-                value={code}
-                borderRadius={10}
-                onChangeText={handleCodeChange}
-                type="text"
-                placeholder="Kode Produk"
-              />
-            </Stack>
-            <Stack mt={4}>
-              <FormControl.Label>Kategori</FormControl.Label>
-              <Pressable onPress={() => navigation.navigate('CategoryScreen')}>
-                <Input
-                  bg={'white'}
-                  borderRadius={10}
-                  isReadOnly={true}
-                  type="text"
-                  placeholder="Pilih Kategori"
-                  value={categoryName ? categoryName : ''}
-                  InputRightElement={
-                    <Icon
-                      as={<Ionicons name={'chevron-forward'} />}
-                      size={6}
-                      mr="2"
-                      color="muted.400"
-                    />
-                  }
-                />
-              </Pressable>
-            </Stack>
-            <Stack mt={4}>
-              <FormControl.Label>Deskripsi</FormControl.Label>
-              <Box alignItems="center" w="100%">
-                <TextArea
-                  onChangeText={handleDescriptionChange}
-                  h={20}
-                  value={description}
-                  bg={'white'}
-                  borderRadius={10}
-                  placeholder="Jelaskan apa yang spesial dari produkmu"
-                  autoCompleteType={undefined}
-                />
-              </Box>
-            </Stack>
-            <Stack mt={4}>
-              <FormControl.Label>Harga</FormControl.Label>
-              <Input
-                bg={'white'}
-                borderRadius={10}
-                value={price !== undefined ? RupiahFormatter(price) : ''}
-                onChangeText={handlePriceChange}
-                keyboardType={'numeric'}
-                placeholder="Masukkan Harga"
-              />
-            </Stack>
-          </FormControl>
+            </Pressable>
+          </Stack>
+          <BaseInput
+            inputKey={'code'}
+            isRequired={true}
+            label={'Kode'}
+            defaultValue={productId ? form.code : ''}
+            placeholder={'Kode Produk'}
+            type={'text'}
+            isInvalid={isInvalid('code')}
+            warningMessage={getFormError('code')}
+            onChangeText={text => handleForm('code', text)}
+          />
+          <BaseInput
+            inputKey={'description'}
+            isRequired={true}
+            label={'Deskripsi'}
+            defaultValue={productId ? form.description : ''}
+            placeholder={'Jelaskan apa yang spesial dari produkmu'}
+            type={'text'}
+            isInvalid={isInvalid('description')}
+            warningMessage={getFormError('description')}
+            onChangeText={text => handleForm('description', text)}
+          />
+          <BaseInput
+            inputKey={'price'}
+            isRequired={true}
+            label={'Harga'}
+            placeholder={'Masukkan Harga'}
+            type={'text'}
+            defaultValue={
+              form.price !== undefined ? RupiahFormatter(form.price) : ''
+            }
+            keyboardType="numeric"
+            isInvalid={isInvalid('price')}
+            warningMessage={getFormError('price')}
+            onChangeText={text => handleForm('price', formatPrice(text))}
+          />
         </View>
         <View mx={4} bottom={0} my={4} flexDirection={'row'}>
           <View
@@ -207,12 +207,30 @@ export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
             flex={1}
             borderRadius={34}
             isDisabled={
-              !name || !code || !categoryName || !description || !price
+              !form.name ||
+              !form.code ||
+              !categoryName ||
+              !form.description ||
+              !form.price
                 ? true
                 : false
             }
             onPress={() => {
-              handleSubmit({name, code, description, price});
+              clearFormErrors();
+              productId !== null
+                ? handleSubmit({
+                    name: form.name,
+                    code: form.code,
+                    description: form.description,
+                    price: form.price,
+                    productId,
+                  })
+                : handleAddSubmit({
+                    name: form.name,
+                    code: form.code,
+                    description: form.description,
+                    price: form.price,
+                  });
               setIsOpen(false);
             }}
             isLoading={loading ? true : false}
@@ -274,3 +292,4 @@ export const ProductDetail: React.FC<addProductProps> = ({navigation}) => {
     </>
   );
 };
+export default ProductDetail;

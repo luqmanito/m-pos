@@ -12,6 +12,7 @@ import {
   setPaymentMethodId,
 } from '../../Redux/Reducers/button';
 import {PrimaryColorContext} from '../../Context';
+import usePaymentMethod from '../../Hooks/usePaymentMethod';
 
 interface CategoryScreenProps {
   navigation: any;
@@ -21,14 +22,16 @@ const PaymentMethodScreen: FunctionComponent<CategoryScreenProps> = ({
   navigation,
 }) => {
   const dispatch = useDispatch();
-  // const {paymentMethod} = usePaymentMethod();
-  const paymentMethod = useSelector(
-    (state: RootState) => state.paymentMethodSlice,
-  );
-  const filteredData = paymentMethod.filter(item => item.pivot.status === 1);
+  const {paymentMethod} = usePaymentMethod();
+  // const paymentMethod = useSelector(
+  //   (state: RootState) => state.paymentMethodSlice,
+  // );
+  // const filteredData = paymentMethod.filter(item => item.pivot.status === 1);
   const paymentMethodCode = useSelector(
     (state: RootState) => state.buttonSlice?.payment_methodId,
   );
+  console.log(paymentMethod);
+
   const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
@@ -76,7 +79,7 @@ const PaymentMethodScreen: FunctionComponent<CategoryScreenProps> = ({
           </HStack>
         </Pressable>
       ) : (
-        filteredData?.map(payment => {
+        paymentMethod?.map(payment => {
           return (
             <Pressable
               key={payment?.id}

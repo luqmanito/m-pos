@@ -1,39 +1,87 @@
-import {Divider, ScrollView, Text, View} from 'native-base';
+import {Button, Divider, ScrollView, Text, View} from 'native-base';
 import React, {createElement, useContext} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import noImage from '../../Public/Assets/no-Image.jpg';
 import {Pressable} from 'react-native';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import {settingsData} from '../../Util/data';
 import useUserInfo from '../../Hooks/useUserInfo';
 import {PrimaryColorContext} from '../../Context';
+import FastImage from 'react-native-fast-image';
+import {StyleSheet} from 'react-native';
+import {Linking} from 'react-native';
+import {useAuth} from '../../Contexts/Auth';
 
 const SettingScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const {userData} = useUserInfo();
+  const authContext = useAuth();
   const primaryColor = useContext(PrimaryColorContext);
+
+  const goToLocation = async () => {
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${userData?.business?.lat},${userData?.business?.lng}`;
+
+    const isChromeAvailable = await Linking.canOpenURL('googlechrome://');
+
+    if (isChromeAvailable) {
+      await Linking.openURL(`googlechrome://navigate?url=${mapUrl}`);
+    } else {
+      await Linking.openURL(mapUrl);
+    }
+  };
+
+  const logout = () => {
+    authContext.signOut();
+    navigation.navigate('LogoutScreen');
+  };
   return (
     <>
       <NavBar msg="Pengaturan" />
       <ScrollView>
         <View borderRadius={10} p={4} bg={'white'} mx={4} my={4}>
           <View
+            flexDirection={'row'}
+            alignItems={'center'}
             mx={4}
+            p={4}
             borderRadius={14}
             borderTopColor={'gray.200'}
             bg={'#4d5161'}>
-            <View my={4}>
-              <Text mx={4} fontSize={'lg'} color={'white'} bold>
-                {userData?.business?.name}
-              </Text>
-              <Text color={'#abafcc'} mx={4}>
-                <Ionicons name="location" size={15} color="#abafcc" />{' '}
-                {`${(userData?.business?.lat, userData?.business?.lng)}`}
-              </Text>
-            </View>
+            {userData?.business?.photo[0]?.original_url ? (
+              <View mr={2} overflow={'hidden'}>
+                <FastImage
+                  style={styles.image}
+                  source={{
+                    uri: userData?.business?.photo[0]?.original_url,
+                    priority: FastImage.priority.normal,
+                  }}
+                  resizeMode={FastImage.resizeMode.contain}
+                  fallback={noImage}
+                />
+              </View>
+            ) : null}
+            <Text color={'white'} fontSize={'lg'} bold>
+              {userData?.business?.name}
+            </Text>
+            <Button
+              onPress={() => goToLocation()}
+              borderRadius={20}
+              bg={primaryColor?.primaryColor}
+              mx={4}>
+              <View flexDirection={'row'} alignItems={'center'}>
+                <Ionicons
+                  name="location"
+                  style={styles.icon}
+                  size={20}
+                  color="white"
+                />
+                <Text color={'white'}>Tempat Lokasi</Text>
+              </View>
+            </Button>
           </View>
           <View mt={4} flexDirection={'row'}>
             <View ml={4} justifyContent={'center'} alignItems={'flex-start'}>
@@ -147,7 +195,7 @@ const SettingScreen = () => {
         <Text bold mx={4} mt={4} fontSize={'xl'}>
           Lainnya
         </Text>
-        <Pressable onPress={() => navigation.navigate('LogoutScreen')}>
+        <Pressable onPress={logout}>
           <View borderRadius={10} p={4} bg={'white'} mx={4} my={2}>
             <View flexDirection={'row'}>
               <View justifyContent={'center'} alignItems={'flex-start'} ml={4}>
@@ -175,3 +223,16 @@ const SettingScreen = () => {
 };
 
 export default SettingScreen;
+
+const styles = StyleSheet.create({
+  image: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  icon: {
+    marginRight: 8,
+  },
+});

@@ -3,10 +3,10 @@ export interface NavigationModel {
   route: Route;
 }
 
-export interface Navigation {}
-
 export interface Route {
   key: string;
   name: string;
   params: number;
 }
+
+export interface Navigation {}

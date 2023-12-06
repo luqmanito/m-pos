@@ -1,4 +1,4 @@
-import {Button, useToast, View} from 'native-base';
+import {Button, Text, useToast, View} from 'native-base';
 import React, {useContext, useEffect} from 'react';
 import {StyleSheet} from 'react-native';
 import {BluetoothEscposPrinter} from 'react-native-bluetooth-escpos-printer';
@@ -38,7 +38,7 @@ const PrintReceipt = () => {
           borderRadius={12}
           mx={4}
           mt={4}
-          bg={primaryColor?.primaryColor}
+          bg={primaryColor?.secondaryColor}
           onPress={async () => {
             let columnWidths = [16, 16];
             try {
@@ -161,7 +161,7 @@ const PrintReceipt = () => {
               );
             }
           }}>
-          Cetak Struk
+          <Text bold>Cetak Struk</Text>
         </Button>
       </View>
     </>

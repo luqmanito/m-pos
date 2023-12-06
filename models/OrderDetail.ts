@@ -2,6 +2,7 @@ export interface OrderDetail {
   id: number;
   business_id: number;
   customer_id: any;
+  customer_name: string | null;
   status: any;
   order_code: string;
   created_by: CreatedBy;

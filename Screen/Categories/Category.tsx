@@ -1,92 +1,93 @@
-import React, {FunctionComponent, useContext, useEffect, useState} from 'react';
+import React, {FunctionComponent, useContext, useState} from 'react';
 import {Button, HStack, Radio, Text, View} from 'native-base';
 import NavBar from '../../Components/Navbar/Navbar';
-import {useNavigation} from '@react-navigation/native';
-import productNetwork from '../../Network/lib/product';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {setCategoryCode, setCategoryName} from '../../Redux/Reducers/product';
 import {Pressable} from 'react-native';
 import {RootState} from '../../Redux/store';
-import {CategoryModel, RootCategoryModel} from '../../models/CategoryModel';
-import {PrimaryColorContext} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
+import useCategories from '../../Hooks/useCategory';
 
 interface CategoryScreenProps {}
 
 const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
   const [value, setValue] = useState<string | undefined>('');
-  const [categories, setCategories] = useState<CategoryModel[]>([]);
-  const navigation = useNavigation();
+  const {categories} = useCategories();
+  const {loading} = useLoading();
+  const navigation = useNavigation<NavigationProp<any>>();
   const dispatch = useDispatch();
   const categoryCode = useSelector(
     (state: RootState) => state.productSlice?.categoryCode,
   );
   const primaryColor = useContext(PrimaryColorContext);
-  const fetchProducts = async (): Promise<RootCategoryModel> => {
-    try {
-      const response = await productNetwork.categoryList({
-        page: 1,
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetchProducts();
-        const categoryList = response.data;
-        setCategories(categoryList);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    };
-    fetchData();
-  }, []);
-
   return (
     <>
       <NavBar msg={'Pilih Kategori'} />
-      {categories.map(category => {
-        return (
-          <Pressable
-            key={category?.id}
+      {loading ? (
+        <View mt={12} justifyContent={'center'} alignItems={'center'}>
+          <Text bold fontSize={'xl'}>
+            Loading...
+          </Text>
+        </View>
+      ) : categories.length === 0 && !loading ? (
+        <View mt={12} justifyContent={'center'} alignItems={'center'}>
+          <Text bold> Belum Menambahkan Kategori</Text>
+          <Button
+            bg={primaryColor?.primaryColor}
             onPress={() => {
-              setValue(category?.id.toString());
-              dispatch(setCategoryCode(category?.id));
-              dispatch(setCategoryName(category?.name));
-            }}>
-            <HStack
+              navigation.navigate('AddCategoryScreen');
+            }}
+            mt={4}>
+            Tambah Kategori
+          </Button>
+        </View>
+      ) : (
+        categories.map(category => {
+          return (
+            <Pressable
               key={category?.id}
-              bg={'white'}
-              borderRadius={10}
-              mx={4}
-              mt={4}>
-              <View justifyContent={'center'} h={10} flex={10}>
-                <Text ml={2}>{category?.name}</Text>
-              </View>
-              <View justifyContent={'center'} flex={1}>
-                <Radio.Group
-                  name="myRadioGroup"
-                  accessibilityLabel="favorite number"
-                  value={`${categoryCode}`}
-                  onChange={nextValue => {
-                    setValue(nextValue);
-                    dispatch(setCategoryCode(category?.id));
-                    dispatch(setCategoryName(category?.name));
-                  }}>
-                  <Radio value={category?.id.toString()} my={1}>
-                    {''}
-                  </Radio>
-                </Radio.Group>
-              </View>
-            </HStack>
-          </Pressable>
-        );
-      })}
+              onPress={() => {
+                setValue(category?.id.toString());
+                dispatch(setCategoryCode(category?.id));
+                dispatch(setCategoryName(category?.name));
+              }}>
+              <HStack
+                key={category?.id}
+                bg={'white'}
+                borderRadius={10}
+                flexDirection={'row'}
+                mx={4}
+                mt={4}>
+                <View justifyContent={'center'} h={10} flex={1}>
+                  <Text ml={2}>{category?.name}</Text>
+                </View>
+                <View
+                  justifyContent={'center'}
+                  alignItems={'flex-end'}
+                  mr={2}
+                  flex={1}>
+                  <Radio.Group
+                    name="myRadioGroup"
+                    accessibilityLabel="favorite number"
+                    value={`${categoryCode}`}
+                    onChange={nextValue => {
+                      setValue(nextValue);
+                      dispatch(setCategoryCode(category?.id));
+                      dispatch(setCategoryName(category?.name));
+                    }}>
+                    <Radio value={category?.id.toString()} my={1}>
+                      {''}
+                    </Radio>
+                  </Radio.Group>
+                </View>
+              </HStack>
+            </Pressable>
+          );
+        })
+      )}
+      {/* {} */}
       <Button
         borderRadius={34}
         onPress={() => navigation.goBack()}

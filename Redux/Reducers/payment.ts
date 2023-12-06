@@ -2,8 +2,8 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {Product} from '../../models/OrderDetail';
 
 export interface PaymentItem {
-  totalPrice: number | string;
-  totalPayment: number;
+  totalPrice: number | string | undefined;
+  totalPayment: number | null | undefined;
   exchangePayment: number;
   invoiceNumber: string;
   datePayment: string;

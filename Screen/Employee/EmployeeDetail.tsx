@@ -27,7 +27,7 @@ import useEmployee from '../../Hooks/useEmployee';
 import {NavigationModel} from '../../models/NavModel';
 import useRoles from '../../Hooks/useRoles';
 
-const EmployeeDetail = (param: NavigationModel) => {
+const EmployeeDetail = (param: NavigationModel | {}) => {
   const {listRoles} = useRoles();
   const navigation = useNavigation<NavigationProp<any>>();
   const {loading} = useLoading();

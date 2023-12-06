@@ -4,6 +4,10 @@ import axiosClient from '../axiosClient';
 
 export default {
   userProfile(): Promise<AxiosResponse<UserModel>> {
-    return axiosClient.get('api/me?load=business.modules,business.photo');
+    return axiosClient.get('api/me', {
+      params: {
+        load: 'business.modules,business.photo',
+      },
+    });
   },
 };

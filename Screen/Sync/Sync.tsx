@@ -9,8 +9,8 @@ import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 import cache from '../../Util/cache';
 
 const SyncDataScreen = () => {
-  const [dataSync, setDataSync] = useState([]);
   const {loading} = useLoading();
+  const [dataSync, setDataSync] = useState([]);
   const fetchDataSubmission = async (): Promise<void> => {
     let dataSubmissions = await cache.get('paymentSubmissions');
     setDataSync(dataSubmissions);

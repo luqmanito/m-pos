@@ -19,15 +19,20 @@ import {useReport} from '../../Hooks/useReport';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import formatDateYYYY_MM_DD from '../../Components/Date/FormatYYYY-MM-DD';
 import {dates} from '../../Components/Date/Today';
-import {PrimaryColorContext} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
+import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 
 const ReportScreen = () => {
-  const {handleChange, reportDataTotal, reportDataPayment} = useReport();
+  const {handleChange, reportDataTotal, pendingOrder, reportDataPayment} =
+    useReport();
   const [selectedRange, setSelectedRange] = useState(1);
   const [selectedRangeName, setSelectedRangeName] = useState('Hari ini');
   const [selectedStartDate, setSelectedStartDate] = useState('');
   const [rangeName, setRangeName] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const {loading} = useLoading();
+  const {submitPayment} = usePaymentSubmit();
+
   const primaryColor = useContext(PrimaryColorContext);
   let totalPriceTransaction = 0;
   let totalTransaction = 0;
@@ -83,6 +88,28 @@ const ReportScreen = () => {
           </Pressable>
         </View>
         <View mt={4} borderRadius={10} bg={'white'} mx={4}>
+          <View px={4} mt={4} mb={2} flexDirection={'row'}>
+            <View justifyContent="center" flex={1}>
+              <Text bold>
+                Info Transaksi Pending :{' '}
+                {pendingOrder?.length ? pendingOrder?.length : '0'}
+              </Text>
+            </View>
+            <View flex={1} alignItems={'flex-end'}>
+              <Button
+                isLoading={loading}
+                isLoadingText={'loading...'}
+                onPress={() => submitPayment(pendingOrder)}
+                isDisabled={pendingOrder?.length ? false : true}
+                borderRadius={20}
+                bg={primaryColor?.primaryColor}>
+                Kirim Transaksi
+              </Button>
+            </View>
+          </View>
+          <View px={4}>
+            <Divider />
+          </View>
           <View flexDirection={'row'} mt={4}>
             <Text ml={4} bold>
               Total Transaksi

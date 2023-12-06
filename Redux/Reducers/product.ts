@@ -1,7 +1,7 @@
 import {createSlice} from '@reduxjs/toolkit';
 
 export interface ProductState {
-  productId: number;
+  imageID: number;
   categoryCode: string;
   categoryName: string;
 }
@@ -9,7 +9,7 @@ export interface ProductState {
 const initialState: ProductState = {
   categoryCode: '',
   categoryName: '',
-  productId: 0,
+  imageID: 0,
 };
 
 const productSlice = createSlice({
@@ -28,10 +28,10 @@ const productSlice = createSlice({
         categoryName: action.payload,
       };
     },
-    setProductId: (state, action) => {
+    setDetailImageId: (state, action) => {
       return {
         ...state,
-        productId: action.payload,
+        imageID: action.payload,
       };
     },
 
@@ -39,7 +39,7 @@ const productSlice = createSlice({
       return {
         categoryCode: '',
         categoryName: '',
-        productId: 0,
+        imageID: 0,
       };
     },
   },
@@ -47,7 +47,7 @@ const productSlice = createSlice({
 
 export const {
   setCategoryCode,
-  setProductId,
+  setDetailImageId,
   setCategoryName,
   clearStateProduct,
 } = productSlice.actions;

@@ -12,16 +12,20 @@ import {clearCart} from '../../Redux/Reducers/cart';
 import {clearStateButton} from '../../Redux/Reducers/button';
 import PrintReceipt from '../Printer/Components/PrintReceipt';
 import {PrimaryColorContext} from '../../Context';
+import formatDate from '../../Components/Date/Date';
 
 type PaymentProps = {
   navigation: any; // If you are using react-navigation, replace any with the correct navigation type
 };
 
-export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
+const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
   navigation,
 }) => {
   const dispatch = useDispatch();
 
+  const routes = navigation.getState()?.routes;
+  const prevRoute = routes[routes.length - 4];
+  const isKitchenScreen = prevRoute?.name === 'KitchenScreen';
   const paymentReceipt = useSelector(
     (state: RootState) => state.paymentSlice.items[0],
   );
@@ -87,7 +91,8 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
             Tanggal Pembayaran
           </Text>
           <Text bold mx={4} fontSize={'xl'}>
-            {paymentReceipt?.datePayment}
+            {/* {paymentReceipt?.datePayment} */}
+            {formatDate(paymentReceipt?.datePayment)}
           </Text>
           <Text mx={4} mt={2} fontSize={'xl'} color={'#9191a7'}>
             Nama Kasir
@@ -122,7 +127,10 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
             dispatch(clearCartPayment());
             dispatch(clearCart());
             dispatch(clearStateButton());
-            navigation.navigate('Dashboard', {screen: 'Cashier'});
+            navigation.navigate(
+              isKitchenScreen ? 'KitchenScreen' : 'Dashboard',
+              {screen: 'Cashier'},
+            );
           }}
           borderRadius={18}
           mx={4}
@@ -136,3 +144,4 @@ export const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
     </>
   );
 };
+export default SuccessfulPaymentScreen;

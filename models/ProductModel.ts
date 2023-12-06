@@ -1,6 +1,9 @@
+import {MetaModel} from './MetaModel';
+
 export interface ProductListModel {
   data: ProductModel[];
   dataCashier: ProductModel[];
+  meta?: MetaModel;
 }
 
 export interface ProductModel {

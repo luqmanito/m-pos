@@ -2,14 +2,13 @@ export interface RootReportModelTotalTransaction {
   report: ReportModelTotalTransaction[];
 }
 
+export interface RootReportModelPaymentMethods {
+  report: ReportModelPaymentMethods[];
+}
 export interface ReportModelTotalTransaction {
   total: string;
   total_transaction: number;
   ref?: string;
-}
-
-export interface RootReportModelPaymentMethods {
-  report: ReportModelPaymentMethods[];
 }
 
 export interface ReportModelPaymentMethods {

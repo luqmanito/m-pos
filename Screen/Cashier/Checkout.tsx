@@ -12,7 +12,6 @@ import {
   TextArea,
   FormControl,
   Stack,
-  WarningOutlineIcon,
 } from 'native-base';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -40,20 +39,21 @@ import {
   setTableNumber,
 } from '../../Redux/Reducers/button';
 import {screenWidth} from '../../App';
-import {PrimaryColorContext} from '../../Context';
+import {PrimaryColorContext, useLoading} from '../../Context';
 import usePaymentSubmit from '../../Hooks/useSubmitPayment';
+import useUserInfo from '../../Hooks/useUserInfo';
 
-export const CheckoutScreen: React.FC = () => {
+const CheckoutScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
   const filteredItems = cartItems.filter(item => item.quantity > 0);
   const [noteProduct, setNoteProduct] = useState<string>('');
   const primaryColor = useContext(PrimaryColorContext);
+  const {loading} = useLoading();
   const [isOpen, setIsOpen] = useState(false);
-  // const [name, setName] = useState<string | null>('');
-  // const [phone, setPhone] = useState<string | null>('');
-  // const [email, setEmail] = useState<string | null>('');
+  const {onlineModule} = useUserInfo();
+  const {singleSubmitPayment} = usePaymentSubmit();
   const table_number = useSelector(
     (state: RootState) => state.buttonSlice?.table_number,
   );
@@ -64,17 +64,13 @@ export const CheckoutScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log(table_number);
       dispatch(clearStateProduct());
       dispatch(clearDataCamera());
-    }, [dispatch, table_number]),
+    }, [dispatch]),
   );
   const navigation = useNavigation<NavigationProp<any>>();
-  // useEffect(() => {
   const routes = navigation.getState()?.routes;
   const prevRoute = routes[routes.length - 2];
-  // }, [navigation]);
-
   const noteState = useSelector((state: RootState) => state.buttonSlice?.note);
   const {updateOrder, confirmOrder} = usePaymentSubmit();
   const idState = useSelector(
@@ -110,7 +106,7 @@ export const CheckoutScreen: React.FC = () => {
     <>
       <NavBar
         msg={
-          prevRoute.name === 'EditOrderScreen'
+          prevRoute?.name === 'EditOrderScreen'
             ? 'Ubah Ringkasan Pesanan '
             : 'Ringkasan Pesanan'
         }
@@ -134,7 +130,7 @@ export const CheckoutScreen: React.FC = () => {
             />
           </Stack>
         </FormControl>
-        {prevRoute.name === 'EditOrderScreen' ? (
+        {prevRoute?.name === 'EditOrderScreen' ? (
           <Text mt={2} ml={4}>
             Nama Customer : {customer_name}
           </Text>
@@ -177,7 +173,7 @@ export const CheckoutScreen: React.FC = () => {
       </View>
 
       <View bottom={18} flexDirection={'row'} mx={4}>
-        {prevRoute.name === 'EditOrderScreen' ? null : (
+        {prevRoute?.name === 'EditOrderScreen' ? null : (
           <View
             w={50}
             h={50}
@@ -196,6 +192,8 @@ export const CheckoutScreen: React.FC = () => {
 
         <View flex={1}>
           <Button
+            isLoading={loading}
+            isLoadingText="loading. . ."
             onPress={
               () =>
                 prevRoute.name === 'EditOrderScreen'
@@ -207,7 +205,7 @@ export const CheckoutScreen: React.FC = () => {
             ml={4}
             bg={primaryColor?.primaryColor}>
             <Text fontSize={'lg'} color="white">
-              {prevRoute.name === 'EditOrderScreen' ? 'Confirm' : 'Tagih'}
+              {prevRoute?.name === 'EditOrderScreen' ? 'Confirm' : 'Tagih'}
             </Text>
           </Button>
         </View>
@@ -258,6 +256,9 @@ export const CheckoutScreen: React.FC = () => {
                 colorScheme="blueGray"
                 onPress={() => {
                   setModalVisible(false);
+                  onlineModule === true
+                    ? singleSubmitPayment()
+                    : navigation.navigate('PaymentMethodScreen');
                 }}>
                 Lewati
               </Button>
@@ -265,6 +266,9 @@ export const CheckoutScreen: React.FC = () => {
                 onPress={() => {
                   setModalVisible(false);
                   navigation.navigate('PaymentMethodScreen');
+                  onlineModule === true
+                    ? singleSubmitPayment()
+                    : navigation.navigate('PaymentMethodScreen');
                 }}>
                 Simpan
               </Button>
@@ -308,13 +312,13 @@ export const CheckoutScreen: React.FC = () => {
           <Modal.Content mb={0} mt={'auto'} maxWidth="400px">
             <Modal.CloseButton />
             <Modal.Header>
-              {prevRoute.name === 'EditOrderScreen'
+              {prevRoute?.name === 'EditOrderScreen'
                 ? 'Konfirmasi Pesanan'
                 : 'Hapus Pesanan ?'}
             </Modal.Header>
             <Modal.Body>
               <Text mb={4}>
-                {prevRoute.name === 'EditOrderScreen'
+                {prevRoute?.name === 'EditOrderScreen'
                   ? 'Pastikan pesanan sudah benar ?'
                   : 'Pastikan pesanan yang akan dihapus sudah dibatalkan pembeli'}
               </Text>
@@ -322,7 +326,7 @@ export const CheckoutScreen: React.FC = () => {
                 mb={4}
                 bg={'#f04438'}
                 onPress={() => {
-                  prevRoute.name === 'EditOrderScreen'
+                  prevRoute?.name === 'EditOrderScreen'
                     ? handleConfirm()
                     : navigation.goBack();
                   dispatch(clearCart());
@@ -330,7 +334,7 @@ export const CheckoutScreen: React.FC = () => {
                 leftIcon={
                   <MaterialCommunityIcons
                     name={
-                      prevRoute.name === 'EditOrderScreen'
+                      prevRoute?.name === 'EditOrderScreen'
                         ? 'cart-check'
                         : 'delete-outline'
                     }
@@ -338,7 +342,7 @@ export const CheckoutScreen: React.FC = () => {
                     color="white"
                   />
                 }>
-                {prevRoute.name === 'EditOrderScreen' ? 'Konfirmasi' : 'Hapus'}
+                {prevRoute?.name === 'EditOrderScreen' ? 'Konfirmasi' : 'Hapus'}
               </Button>
               <Button
                 bg={'#fadedb'}
@@ -355,3 +359,5 @@ export const CheckoutScreen: React.FC = () => {
     </>
   );
 };
+
+export default CheckoutScreen;

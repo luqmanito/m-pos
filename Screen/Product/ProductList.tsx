@@ -1,38 +1,19 @@
 import {ScrollView, Text, View} from 'native-base';
 import React, {FunctionComponent, useEffect, useState} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
-// import productNetwork from '../../Network/lib/product';
 import Product from '../../Components/Product/Product';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import {ProductModel} from '../../models/ProductModel';
-// import useCategories from '../../Hooks/useCategory';
 import useProducts from '../../Hooks/useProducts';
 
 const ProductList: FunctionComponent = () => {
   const [products, setProducts] = useState<ProductModel[]>([]);
   const categoryState = useSelector((state: RootState) => state.productSlice);
-  // const {categories} = useCategories();
-  const {product} = useProducts('Catalogue');
+
+  const {product} = useProducts('catalogue');
 
   useEffect(() => {
-    // const fetchData = async () => {
-    //   try {
-    //     const response = await productNetwork.productCategoryList();
-    //     if (categoryState?.categoryCode) {
-    //       const productsFiltered = response.data.filter(
-    //         product =>
-    //           product?.category_id ===
-    //           parseInt(categoryState?.categoryCode, 10),
-    //       );
-    //       setProducts(productsFiltered);
-    //     } else {
-    //       setProducts(response.data);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error fetching products:', error);
-    //   }
-    // };
     const fetchData = () => {
       try {
         if (categoryState?.categoryCode) {

@@ -5,7 +5,7 @@ export interface CartItem {
   quantity: number;
   subTotal: number;
   name: string | undefined;
-  note: string;
+  note: string | undefined;
   photos: string | undefined;
   basePrice: number;
 }
@@ -44,9 +44,7 @@ const cartSlice = createSlice({
         });
       }
     },
-    clearCart(state) {
-      state.items = [];
-    },
+    clearCart: () => initialState,
   },
 });
 

@@ -7,8 +7,14 @@ import {
   FlatList,
   Pressable,
   Image,
+  Button,
+  // Button,
 } from 'native-base';
-import {HeaderComponent} from '../../Components/Header/Header';
+// import messaging, {
+//   FirebaseMessagingTypes,
+// } from '@react-native-firebase/messaging';
+// import notifee from '@notifee/react-native';
+import HeaderComponent from '../../Components/Header/Header';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -28,12 +34,16 @@ import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import {useReport} from '../../Hooks/useReport';
 
 import {PrimaryColorContext} from '../../Context';
+// import usePaymentSubmit from '../../Hooks/useSubmitPayment';
+// import cache from '../../Util/cache';
+// import {useIsFocused} from '@react-navigation/native';
+
 // import {PrimaryColorContext} from '../../LoadingContext';
 
 interface HomeProps {
   navigation: any;
 }
-export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
+const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
   const primaryColor = useContext(PrimaryColorContext);
 
   const {reportDataTotal} = useReport();
@@ -48,6 +58,34 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
   //     },
   //   ],
   // };
+
+  // function Screen() {
+  // async function onDisplayNotification() {
+  //   // Request permissions (required for iOS)
+  //   await notifee.requestPermission();
+
+  //   // Create a channel (required for Android)
+  //   const channelId = await notifee.createChannel({
+  //     id: 'default',
+  //     name: 'Default Channel',
+  //   });
+
+  //   // Display a notification
+  //   await notifee.displayNotification({
+  //     title: 'Notification Title',
+  //     body: 'Main body content of the notification',
+  //     android: {
+  //       channelId,
+  //       smallIcon: 'ic_launcher', // optional, defaults to 'ic_launcher'.
+  //       // pressAction is needed if you want the notification to open the app when pressed
+  //       pressAction: {
+  //         id: 'default',
+  //       },
+  //     },
+  //   });
+  // }
+  // }
+
   const dataFlat = [
     {
       key: '1',
@@ -114,17 +152,29 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
             {userData?.name}
           </Text>
           <Text>Anda sebagai {userData?.role} </Text>
+          {/* <Button onPress={() => onDisplayNotification()}>tes</Button> */}
           <Divider mt={2} />
-          <View mt={4} flexDirection={'row'}>
-            <View flex={1}>
-              <Text>Total Poin Kasir</Text>
+          {/* <View mt={4} flexDirection={'row'}>
+            <View justifyContent="center" flex={1}>
+              <Text>
+                Info Transaksi Pending :{' '}
+                {dataSync?.length ? dataSync?.length : '0'}
+              </Text>
             </View>
             <View flex={1} alignItems={'flex-end'}>
-              <Text>Belum ada poin</Text>
+              <Button
+                isLoading={loading}
+                isLoadingText={'loading...'}
+                onPress={() => submitPayment(dataSync)}
+                isDisabled={dataSync?.length ? false : true}
+                borderRadius={20}
+                bg={primaryColor?.primaryColor}>
+                Kirim Transaksi
+              </Button>
             </View>
-          </View>
+          </View> */}
         </View>
-        <View
+        {/* <View
           borderRadius={20}
           flexDirection={'row'}
           p={4}
@@ -144,7 +194,7 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
               hingga 10 juta.
             </Text>
           </View>
-        </View>
+        </View> */}
 
         <View borderRadius={10} p={4} bg={'white'} mx={4} my={4}>
           <Text>Mulai jualan di Hidup Merchant yuk !</Text>
@@ -318,15 +368,15 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
             </View>
           </Pressable>
         </View>
-        <View>
+        {/* <View>
           <FlatList
             data={dataFlat}
             horizontal
             renderItem={renderItem}
             keyExtractor={item => item.key}
           />
-        </View>
-        <View mx={4} my={4} flexDirection={'row'}>
+        </View> */}
+        {/* <View mx={4} my={4} flexDirection={'row'}>
           <View flex={1}>
             <Text bold>Pesanan Online</Text>
           </View>
@@ -338,12 +388,6 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
         </View>
         <View bg={'white'} mb={4} borderRadius={10} mx={4}>
           <View alignSelf={'center'}>
-            {/* <Image
-              source={orderOnline}
-              size="2xl"
-              resizeMode="contain"
-              alt="logo-pemkab"
-            /> */}
             <FastImage
               style={styles.online}
               source={orderOnline}
@@ -356,7 +400,7 @@ export const HomeScreen: React.FC<HomeProps> = ({navigation}) => {
           <Text mb={4} alignSelf={'center'}>
             Belum ada pembeli yang order di toko Anda
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
     </>
   );
@@ -372,3 +416,5 @@ const styles = StyleSheet.create({
     height: 250,
   },
 });
+
+export default HomeScreen;

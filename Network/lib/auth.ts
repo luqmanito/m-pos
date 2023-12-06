@@ -1,5 +1,8 @@
 import {AxiosResponse} from 'axios';
 import axiosClient from '../axiosClient';
+import {LoginModel} from '../../models/LoginModel';
+import {UserModel} from '../../models/UserModel';
+import {ErrorModel} from '../../models/ErrorModel';
 
 interface LoginCredentials {
   email: string;
@@ -17,18 +20,12 @@ type CheckCodeCredentials = {
   code: string;
 };
 
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: any;
-  token: string;
-}
-
-interface RegisterData extends FormData {}
-
 export default {
-  login({email, password}: LoginCredentials) {
-    return axiosClient.post<ApiResponse>('api/auth/login', {email, password});
+  login({
+    email,
+    password,
+  }: LoginCredentials): Promise<AxiosResponse<LoginModel>> {
+    return axiosClient.post('api/auth/login', {email, password});
   },
   forgot({email}: ForgotCredentials) {
     return axiosClient.post('api/auth/password/forgot', {email});
@@ -49,13 +46,23 @@ export default {
       password_confirmation,
     });
   },
-  register({data}: {data: RegisterData}): Promise<AxiosResponse> {
-    return axiosClient('api/auth/register', {
-      method: 'POST',
-      data: data,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+  register(formData: FormData): Promise<UserModel> {
+    return new Promise((resolve, reject) => {
+      axiosClient
+        .post<UserModel>('api/auth/register', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then(({data}) => {
+          resolve(data);
+        })
+        .catch(e => {
+          const err: ErrorModel | undefined = e.response.data;
+          console.log(err);
+
+          reject(err);
+        });
     });
   },
 };

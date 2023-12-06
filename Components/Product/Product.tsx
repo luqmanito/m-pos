@@ -1,4 +1,4 @@
-import {HStack, Image, Switch, Text, View} from 'native-base';
+import {HStack, Image, Switch, Text, useToast, View} from 'native-base';
 import React, {FunctionComponent, useContext} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FastImage from 'react-native-fast-image';
@@ -10,11 +10,12 @@ import {useDispatch, useSelector} from 'react-redux';
 import {updateCartItemQuantity} from '../../Redux/Reducers/cart';
 import {RootState} from '../../Redux/store';
 import {setActiveId, setNote} from '../../Redux/Reducers/button';
-import useNetworkInfo from '../../Hooks/useNetworkInfo';
+import ProductNetwork from '../../Network/lib/product';
 import {PrimaryColorContext} from '../../Context';
-
+import Toast from '../../Components/Toast/Toast';
 type ProductProps = {
   name: string | undefined;
+  code?: string | undefined;
   price: number;
   basePrice: number | undefined;
   quantity?: number;
@@ -31,6 +32,7 @@ type ProductProps = {
 
 const Product: FunctionComponent<ProductProps> = ({
   name,
+  code,
   price,
   id,
   photos,
@@ -45,7 +47,8 @@ const Product: FunctionComponent<ProductProps> = ({
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const detailQty = cartItems.find(item => item.productId === id);
-  const isConnected = useNetworkInfo().isConnected;
+  // const isConnected = useNetworkInfo().isConnected;
+  const toast = useToast();
   const primaryColor = useContext(PrimaryColorContext);
   const handleIncreaseQuantity = (productId: number) => {
     const cartItem = cartItems.find(item => item.productId === productId);
@@ -103,28 +106,28 @@ const Product: FunctionComponent<ProductProps> = ({
     }
   };
 
+  const changeStatusProduct = (status: boolean) => {
+    console.log(status);
+    if (!id) {
+      return;
+    }
+    if (!status) {
+      ProductNetwork.deleteProduct({id}).then(() => {
+        Toast(toast, 'sukses', 'item deleted successfully');
+      });
+    } else {
+      ProductNetwork.restoreProduct({id}).then(() => {
+        Toast(toast, 'sukses', 'item restored successfully');
+      });
+    }
+  };
+
   return (
-    <React.Fragment key={id}>
-      <View minW={350} mx={4} mt={4} bg="white" borderRadius={15}>
-        <HStack mx={4}>
+    <React.Fragment key={`product-id-${id}`}>
+      <View bg="white" borderRadius={10}>
+        <HStack>
           <View>
-            {photos && !isConnected ? (
-              // <FastImage
-              //   style={styles.image}
-              //   source={{
-              //     uri: photos,
-              //     priority: FastImage.priority.normal,
-              //   }}
-              //   resizeMode={FastImage.resizeMode.contain}
-              //   fallback={noImage}
-              // />
-              <Image
-                source={noImage}
-                alt={'foto-produk'}
-                style={styles.image}
-                resizeMode="contain"
-              />
-            ) : photos && isConnected ? (
+            {photos ? (
               <FastImage
                 style={styles.image}
                 source={{
@@ -145,7 +148,7 @@ const Product: FunctionComponent<ProductProps> = ({
           </View>
           <View mx={4} my={4}>
             <Text>
-              {name}
+              #{code} - {name}
               <Text fontWeight={'light'}>
                 {onCheckout ? ` ( ${quantity} barang)` : null}
               </Text>
@@ -159,9 +162,9 @@ const Product: FunctionComponent<ProductProps> = ({
               justifyContent={'flex-end'}
               alignItems={'flex-end'}>
               <Switch
-                disabled={true}
                 defaultIsChecked={active}
-                colorScheme={'emerald'}
+                colorScheme={'primary'}
+                onValueChange={value => changeStatusProduct(value)}
                 size="lg"
               />
             </View>
@@ -174,7 +177,7 @@ const Product: FunctionComponent<ProductProps> = ({
               flexDirection={'row'}
               alignItems={'flex-end'}>
               <Pressable
-                disabled={detailQty?.quantity === 0 ? true : false}
+                disabled={detailQty?.quantity === 0}
                 onPress={() => {
                   if (id !== undefined) {
                     handleDecreaseQuantity(id);

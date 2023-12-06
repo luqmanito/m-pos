@@ -14,6 +14,7 @@ import {PaymentMethodModel} from '../models/PaymentMethod';
 import {VisitState} from './Reducers/isProductVisited';
 // import {OrderModel, RootOrderModel} from '../models/OrderModel';
 import {OrderState} from './Reducers/orders';
+import {ReportState} from './Reducers/report';
 
 // RootState type to define the global state type
 export interface RootState {
@@ -28,6 +29,7 @@ export interface RootState {
   productListSlice: ProductListModel;
   paymentMethodSlice: PaymentMethodModel;
   isProductVisited: VisitState;
+  reportSlice: ReportState;
 }
 
 const persistConfig = {

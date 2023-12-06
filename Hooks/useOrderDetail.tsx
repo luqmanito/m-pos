@@ -1,13 +1,13 @@
 import {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-
+import {setOrderDetailState} from '../Redux/Reducers/orders';
 import {OrderDetail} from '../models/OrderDetail';
 import orderNetwork from '../Network/lib/order';
 import {createPayment} from '../Redux/Reducers/payment';
 import {RootState} from '../Redux/store';
 
 const useOrderDetails = () => {
-  const [orders, setOrders] = useState<OrderDetail>();
+  const [orders, setOrders] = useState<OrderDetail | null>();
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
 
@@ -36,6 +36,7 @@ const useOrderDetails = () => {
               }),
             );
             setOrders(response?.data);
+            dispatch(setOrderDetailState(response?.data));
           }
         }
       } catch (error) {
@@ -46,7 +47,7 @@ const useOrderDetails = () => {
     };
     fetchProducts();
   }, [dispatch, idState]);
-  return {orders, isLoading};
+  return {orders, isLoading, setOrders};
 };
 
 export default useOrderDetails;

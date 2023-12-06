@@ -1,41 +1,32 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 export interface AuthState {
-  // Define your state properties here
   code: string;
   email: string;
-  // Other properties if you have them
 }
 
 const initialState: AuthState = {
   code: '',
   email: '',
-  // Other initial state properties if you have them
 };
 
+const createSetter =
+  <K extends keyof AuthState>(key: K) =>
+  (state: AuthState, action: PayloadAction<AuthState[K]>) => {
+    return {
+      ...state,
+      [key]: action.payload,
+    };
+  };
+
 const authSlice = createSlice({
-  name: 'AuthSlice',
+  name: 'ButtonSlice',
   initialState,
   reducers: {
-    setCode: (state, action) => {
-      return {
-        ...state,
-        code: action.payload,
-      };
-    },
-    setEmailUser: (state, action) => {
-      return {
-        ...state,
-        email: action.payload,
-      };
-    },
+    setCode: createSetter('code'),
+    setEmailUser: createSetter('email'),
 
-    clearStateAuth: () => {
-      return {
-        code: '',
-        email: '',
-      };
-    },
+    clearStateAuth: () => initialState,
   },
 });
 

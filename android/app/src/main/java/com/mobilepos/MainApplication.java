@@ -1,4 +1,4 @@
-package com.supalapos;
+package id.ezpos;
 import androidx.multidex.MultiDexApplication;
 import io.invertase.firebase.app.ReactNativeFirebaseAppPackage;
 import android.app.Application;

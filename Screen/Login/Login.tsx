@@ -1,48 +1,44 @@
-import React, {useContext, useState} from 'react';
-import cashier from '../../Public/Assets/cashier.png';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {useState} from 'react';
+import bg_small from '../../Public/Assets/bg_small.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
-import userNetwork from '../../Network/lib/user';
-import firebaseNetwork from '../../Network/lib/firebase';
-import messaging from '@react-native-firebase/messaging';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AuthNetwork from '../../Network/lib/auth';
-import cache from '../../Util/cache';
 import {
   Center,
   Image,
-  Box,
-  FormControl,
-  Input,
-  Button,
   Text,
   Pressable,
-  Stack,
-  useToast,
-  WarningOutlineIcon,
   Icon,
   View,
-  KeyboardAvoidingView,
   ScrollView,
 } from 'native-base';
-import ToastAlert from '../../Components/Toast/Toast';
-import {PrimaryColorContext} from '../../Context';
+import {useDispatch} from 'react-redux';
+import {setPayments} from '../../Redux/Reducers/paymentMethod';
+import {clearCart} from '../../Redux/Reducers/cart';
+import {clearStateButton} from '../../Redux/Reducers/button';
+import {clearStateVisited} from '../../Redux/Reducers/isProductVisited';
+import {useAuth} from '../../Contexts/Auth';
+import Role from '../../Consts/Role';
+import BaseInput from '../../Components/Form/BaseInput';
+import Container from '../../Components/Layout/Container';
+import BaseButton from '../../Components/Button/BaseButton';
+import useAlert from '../../Hooks/useAlert';
 
 type LoginScreenProps = {
   navigation: any; // If you are using react-navigation, replace any with the correct navigation type
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [show, setShow] = useState(false);
+  const alert = useAlert();
+  const dispatch = useDispatch();
+  dispatch(setPayments([]));
+  dispatch(clearCart());
+  dispatch(clearStateButton());
+  dispatch(clearStateVisited());
 
-  const primaryColor = useContext(PrimaryColorContext);
   const [auth, setAuth] = useState({
     email: '',
     password: '',
   });
-  const toast = useToast();
   const handleChange = (name: string, value: string) => {
     setAuth(prevAuth => ({
       ...prevAuth,
@@ -50,146 +46,94 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
     }));
   };
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      const response = await AuthNetwork.login({
-        email: auth?.email,
-        password: auth?.password,
-      });
-      if (response) {
-        await AsyncStorage.setItem('authToken', response?.data?.token);
-        try {
-          await messaging().registerDeviceForRemoteMessages();
-          const token = await messaging().getToken();
-          const userData = await userNetwork.userProfile();
-          if (
-            userData?.data?.role === 'KITCHEN' ||
-            userData?.data?.role === 'CASHIER'
-          ) {
-            const sendToken = await firebaseNetwork.sendDeviceToken(token);
-            if (sendToken) {
-              console.log('suskes kirim token');
-            }
-            ToastAlert(toast, 'sukses', 'Berhasil Masuk');
-            await cache.store('DataUser', userData.data);
-            navigation.navigate('KitchenScreen');
-          } else {
-            const sendToken = await firebaseNetwork.sendDeviceToken(token);
-            if (sendToken) {
-              console.log('suskes kirim token');
-            }
-            ToastAlert(toast, 'sukses', 'Berhasil Masuk');
-            navigation.navigate('Dashboard', {screen: 'Home'});
-          }
-        } catch (error) {
-          console.error('Error fetching data user:', error);
-          throw error;
+  const authContext = useAuth();
+
+  const handleSubmit = () => {
+    authContext.signIn(auth.email, auth.password).then(authData => {
+      if (authData) {
+        if (
+          authData.user.role === Role.KITCHEN ||
+          authData.user.role === Role.CASHIER
+        ) {
+          navigation.navigate('KitchenScreen');
+        } else if (
+          authData.user.role === Role.USER ||
+          authData.user.role === Role.ADMIN
+        ) {
+          navigation.navigate('Dashboard', {screen: 'Home'});
         }
+      } else {
+        alert.showAlert('warning', 'Check your email or password');
       }
-    } catch (error: any) {
-      console.log(error);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
-    <>
-      <KeyboardAvoidingView>
-        <ScrollView>
-          <Center my={4}>
-            <Image source={cashier} resizeMode="contain" alt="logo-login" />
-          </Center>
-          <Center>
-            <Text fontSize="md" bold>
-              Hai, Apa Kabar Hari Ini ?
-            </Text>
-            <Text mt={2} fontSize="sm">
-              Yuk, masuk dan mulai kejar cuan lagi.
-            </Text>
-
-            <Box w="100%" mt={4} alignItems="center">
-              <FormControl isRequired>
-                <Stack mx="4">
-                  <FormControl.Label>Alamat Email</FormControl.Label>
-                  <Input
-                    onChangeText={text => handleChange('email', text)}
-                    type="text"
-                    placeholder="Contoh: budi@mail.com"
-                  />
-                  <FormControl.ErrorMessage
-                    leftIcon={<WarningOutlineIcon size="xs" />}>
-                    Silakan Isi Email Anda.
-                  </FormControl.ErrorMessage>
-                </Stack>
-              </FormControl>
-            </Box>
-            <Box w="100%" marginTop={4} alignItems="center">
-              <FormControl isRequired>
-                <Stack mx="4">
-                  <FormControl.Label>Password</FormControl.Label>
-                  <Input
-                    onChangeText={text => handleChange('password', text)}
-                    type={show ? 'text' : 'password'}
-                    placeholder="Masukkan Password"
-                    InputRightElement={
-                      <Pressable onPress={() => setShow(!show)}>
-                        <Icon
-                          as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
-                          size={5}
-                          mr="2"
-                          color="muted.400"
-                        />
-                      </Pressable>
-                    }
-                  />
-                  <FormControl.ErrorMessage
-                    leftIcon={<WarningOutlineIcon size="xs" />}>
-                    Atleast 6 characters are required.
-                  </FormControl.ErrorMessage>
-                </Stack>
-              </FormControl>
-            </Box>
-          </Center>
-          <Pressable onPress={() => navigation.navigate('ForgotScreen')}>
-            <Text mx={4} textAlign={'right'} color={'blue.900'} bold mt={4}>
-              Lupa Password ?
-            </Text>
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <View alignSelf={'center'} position={'absolute'} bottom={18} w={'90%'}>
-        <Button
-          borderRadius={34}
-          isDisabled={!auth?.email || !auth?.password ? true : false}
-          onPress={handleSubmit}
-          isLoading={isLoading ? true : false}
-          isLoadingText="Loading"
-          w={'100%'}
-          marginTop={5}
-          bg={primaryColor?.primaryColor}>
-          <Text fontSize={'md'} color="white">
-            <Entypo name="login" size={15} color="white" /> Masuk
+    <Container>
+      <ScrollView>
+        <Center my={4}>
+          <Image source={bg_small} resizeMode="contain" alt="logo-login" />
+        </Center>
+        <Center>
+          <Text fontSize="md" bold>
+            Hai, Apa Kabar Hari Ini ?
           </Text>
-        </Button>
-
-        <Button
-          borderRadius={34}
-          onPress={() => navigation.navigate('RegisterScreen')}
-          isLoadingText="Loading"
-          w={'100%'}
-          marginTop={5}
-          bg={primaryColor?.primaryColor}>
-          <Text fontSize={'md'} color="white">
-            <MaterialIcons name="app-registration" size={15} color="white" />
-            Daftar Merchant
+          <Text mt={2} fontSize="sm">
+            Yuk, masuk dan mulai kejar cuan lagi.
           </Text>
-        </Button>
-      </View>
-    </>
+
+          <BaseInput
+            inputKey={'email'}
+            isRequired={true}
+            label={'Email'}
+            keyboardType={'email-address'}
+            placeholder={'example: ez@ezpos.id'}
+            type={'text'}
+            warningMessage={'Silakan Isi Email Anda.'}
+            onChangeText={text => handleChange('email', text)}
+          />
+          <BaseInput
+            inputKey={'password'}
+            isRequired={true}
+            label={'Password'}
+            type={show ? 'text' : 'password'}
+            placeholder="Masukkan Password"
+            warningMessage={'Atleast 6 characters are required.'}
+            onChangeText={text => handleChange('password', text)}
+            rightIcon={
+              <Pressable onPress={() => setShow(!show)}>
+                <Icon
+                  as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
+                  size={5}
+                  mr="2"
+                  color="muted.400"
+                />
+              </Pressable>
+            }
+          />
+        </Center>
+        <Pressable onPress={() => navigation.navigate('ForgotScreen')}>
+          <Text mx={4} textAlign={'right'} color={'blue.900'} bold mt={4}>
+            Lupa Password ?
+          </Text>
+        </Pressable>
+        <View w={'100%'} mt={4}>
+          <BaseButton
+            onPress={handleSubmit}
+            type={'primary'}
+            label={'Masuk'}
+            isDisabled={!auth?.email || !auth?.password}
+          />
+        </View>
+        <View w={'100%'} my={4}>
+          <BaseButton
+            onPress={() => navigation.navigate('RegisterScreen')}
+            type={'primary'}
+            label={'Daftar Merchant'}
+          />
+        </View>
+      </ScrollView>
+    </Container>
   );
 };
 

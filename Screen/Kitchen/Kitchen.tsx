@@ -4,7 +4,6 @@ import {
   Button,
   Text,
   Input,
-  Image,
   ScrollView,
   Divider,
   HStack,
@@ -13,6 +12,7 @@ import {
   Pressable,
   Skeleton,
   Modal,
+  useToast,
 } from 'native-base';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -28,22 +28,21 @@ import {StyleSheet} from 'react-native';
 import {clearStateProduct} from '../../Redux/Reducers/product';
 import {useDispatch, useSelector} from 'react-redux';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
-import noImage from '../../Public/Assets/no-Image.jpg';
 import formatDate from '../../Components/Date/Date';
 import {setActiveId} from '../../Redux/Reducers/button';
 import useOrders from '../../Hooks/useOrders';
 import {PrimaryColorContext, useLoading} from '../../Context';
 import {RenderFooter} from '../../Components/RenderFooter/RenderFooter';
 import {OrderModel} from '../../models/OrderModel';
-import FastImage from 'react-native-fast-image';
 import {screenWidth} from '../../App';
 import useNetworkInfo from '../../Hooks/useNetworkInfo';
-import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 import useOrderDetails from '../../Hooks/useOrderDetail';
 import {RenderSkeletonKitchen} from './Components/KitchenLoading';
 import useUserInfo from '../../Hooks/useUserInfo';
-import PrintReceipt from '../Printer/Components/PrintReceipt';
 import {RootState} from '../../Redux/store';
+import RupiahFormatter from '../../Components/Rupiah/Rupiah';
+import notifee from '@notifee/react-native';
+import ToastAlert from '../../Components/Toast/Toast';
 
 interface Product {
   product: any;
@@ -63,24 +62,39 @@ interface Props {
   item: Item;
 }
 
-export const KitchenScreen: React.FC = () => {
+const KitchenScreen: React.FC = () => {
   const skeletonItems = RenderSkeletonKitchen(screenWidth);
   const {loading} = useLoading();
   const dispatch = useDispatch();
-  const {orderReady, orderCompleted} = usePaymentSubmit();
   const [searchResults, setSearchResults] = useState('');
-  const {handleSearch, newFetchData, handleRefresh, emptyData} = useOrders();
+  const {handleSearch, newFetchData, handleRefresh, emptyData, orderReady} =
+    useOrders();
   const {userData} = useUserInfo();
-  const orderDetail = useOrderDetails()?.orders;
+  // const toast = useToast();
   const isLoading = useOrderDetails()?.isLoading;
   const debouncedFetchProducts = _.debounce(handleSearch, 300);
   const primaryColor = useContext(PrimaryColorContext);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isSelected, setIsSelected] = useState('');
   const orderItems = useSelector((state: RootState) => state.orderSlice.orders);
+  const navigation = useNavigation<NavigationProp<any>>();
+  const detailOrderItems = useSelector(
+    (state: RootState) => state.orderSlice.order_detail,
+  );
   useEffect(() => {
+    console.log('1s');
+
+    // const setupNotifications = async () => {
+    //   notifee.onForegroundEvent(async () => {
+    //     ToastAlert(toast, 'sukses', 'Ada Pesanan Baru oy!');
+    //     handleRefresh();
+    //   });
+    // };
+
+    // setupNotifications();
     debouncedFetchProducts(searchResults);
     return () => debouncedFetchProducts.cancel();
-  }, [debouncedFetchProducts, searchResults]);
+  }, [debouncedFetchProducts, handleRefresh, searchResults]);
 
   useFocusEffect(
     useCallback(() => {
@@ -121,16 +135,21 @@ export const KitchenScreen: React.FC = () => {
             <Skeleton p={3} minH="545" />
           ) : (
             <ScrollView w={'100%'}>
-              {orderDetail?.products?.map((item, index) => {
+              <Text mx={8} fontSize={'lg'} flex={2} bold color={'#848aac'}>
+                No Meja : {detailOrderItems?.table_no || '-'}
+              </Text>
+              {detailOrderItems?.products?.map((item, index) => {
                 return (
                   <View
                     key={item?.id}
-                    mb={index === orderDetail?.products?.length - 1 ? 8 : 0}
-                    mt={index === 0 ? 4 : 0}
-                    pb={4}
+                    mb={
+                      index === detailOrderItems?.products?.length - 1 ? 4 : 0
+                    }
+                    mt={index === 0 ? 2 : 0}
+                    // pb={4}
                     mx={4}
                     borderBottomRadius={
-                      index === orderDetail?.products?.length - 1 ? 10 : 0
+                      index === detailOrderItems?.products?.length - 1 ? 10 : 0
                     }
                     borderTopRadius={index === 0 ? 10 : 0}
                     borderTopColor={'gray.200'}
@@ -145,38 +164,32 @@ export const KitchenScreen: React.FC = () => {
                           bold>
                           Daftar Pesanan
                         </Text>
+                        <Text
+                          mx={4}
+                          fontSize={'lg'}
+                          flex={2}
+                          color={'black'}
+                          bold>
+                          Nama Pemesan : {detailOrderItems.customer_name || '-'}
+                        </Text>
                       </View>
                     ) : null}
-
                     <View
-                      mt={index === 0 ? 0 : 4}
-                      mb={index === 0 ? 0 : 4}
+                      mt={index === 0 ? 0 : 2}
+                      mb={index === 0 ? 0 : 2}
                       mx={4}>
-                      <HStack py={2} mx={4}>
-                        <View>
-                          {item?.product?.photos.length !== 0 ? (
-                            <FastImage
-                              style={styles.image}
-                              source={{
-                                uri: item?.product?.photos[0]?.original_url,
-                                priority: FastImage.priority.normal,
-                              }}
-                              resizeMode={FastImage.resizeMode.contain}
-                            />
-                          ) : (
-                            <Image
-                              source={noImage}
-                              alt={'foto-produk'}
-                              style={styles.image}
-                              resizeMode="contain"
-                            />
-                          )}
-                        </View>
-                        <View mx={4} my={4}>
+                      <HStack pb={1} mx={4}>
+                        <View mx={4} my={2}>
                           <Text bold>{item?.name}</Text>
-                          <Text color={'#848aac'} bold>
-                            {`${item?.quantity} Porsi`}
-                          </Text>
+                          {userData?.role === 'CASHIER' ? (
+                            <Text color={'#848aac'} bold>
+                              {`${RupiahFormatter(item?.price)}` +
+                                ' x' +
+                                ` ${item?.quantity}`}
+                            </Text>
+                          ) : (
+                            <Text>{`x ${item?.quantity} pcs`}</Text>
+                          )}
                         </View>
                       </HStack>
                       {item?.note ? (
@@ -194,36 +207,62 @@ export const KitchenScreen: React.FC = () => {
                         </View>
                       ) : null}
                     </View>
-                    {index === orderDetail?.products?.length - 1 ? null : (
+                    {index === detailOrderItems?.products?.length - 1 ? null : (
                       <Divider mx={4} w={'90%'} />
                     )}
                   </View>
                 );
               })}
+              {userData?.role === 'CASHIER' ? (
+                <View px={2} mx={4} flexDirection={'row'}>
+                  <Text flex={10} fontSize="xl" bold>
+                    Total Tagihan :
+                  </Text>
+                  <View flex={2} alignItems={'flex-end'}>
+                    <Text fontSize="xl" bold>
+                      {RupiahFormatter(detailOrderItems?.total)}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+
+              {/* </View> */}
+            </ScrollView>
+          )}
+          {detailOrderItems === null ? null : (
+            <View
+              position={'absolute'}
+              alignSelf="center"
+              bottom={'48'}
+              flex={1}
+              justifyContent="center"
+              flexDirection={'row'}>
               <Button
+                w={'45%'}
                 isLoading={loading}
                 isLoadingText="Loading"
                 onPress={() => {
                   userData?.role === 'CASHIER'
-                    ? (orderCompleted(), setModalVisible(false))
+                    ? (navigation.navigate('PaymentMethodScreen'),
+                      setModalVisible(false))
                     : (orderReady(), setModalVisible(false));
                 }}
+                // onPress={() => {
+                //   userData?.role === 'CASHIER'
+                //     ? (orderCompleted(), setModalVisible(false))
+                //     : (orderReady(), setModalVisible(false));
+                // }}
                 mx={4}
                 mb={4}
                 borderRadius={10}
                 bg={primaryColor?.primaryColor}>
                 <Text color={'white'} bold>
                   {userData?.role === 'CASHIER'
-                    ? 'Pesanan Selesai'
+                    ? 'Selesaikan Pesanan'
                     : 'Pesanan Siap'}
                 </Text>
               </Button>
-              {userData?.role === 'CASHIER' ? (
-                <View bg={'#f4f5fa'}>
-                  <PrintReceipt />
-                </View>
-              ) : null}
-            </ScrollView>
+            </View>
           )}
         </View>
       </>
@@ -242,16 +281,17 @@ export const KitchenScreen: React.FC = () => {
   const renderItem: React.FC<Props> = ({item}) => (
     <>
       <Pressable
+        w="100%"
         onPress={() => {
           dispatch(setActiveId(item?.id));
           screenWidth > 600 ? null : setModalVisible(true);
+          setIsSelected(item?.id);
         }}
         key={item?.id}
         my={4}
-        mx={4}
         borderRadius={10}
         borderTopColor={'gray.200'}
-        bg={'white'}>
+        bg={isSelected === item.id ? primaryColor?.secondaryColor : 'white'}>
         <View my={4} flexDirection={'row'}>
           <Text mx={4} fontSize={'lg'} flex={2} color={'#848aac'} bold>
             {item?.order_code}
@@ -269,9 +309,12 @@ export const KitchenScreen: React.FC = () => {
           </View>
         </View>
         <Divider />
-        <View mx={4} mt={4} bg="white">
+        <View
+          mx={4}
+          mt={4}
+          bg={isSelected === item.id ? primaryColor?.secondaryColor : 'white'}>
           <HStack mx={4}>
-            <View>
+            {/* <View>
               {item?.products[0]?.product?.photos.length !== 0 ? (
                 <FastImage
                   style={styles.image}
@@ -289,9 +332,11 @@ export const KitchenScreen: React.FC = () => {
                   resizeMode="contain"
                 />
               )}
-            </View>
-            <View mx={4} my={4}>
-              <Text bold>{item?.products[0]?.name}</Text>
+            </View> */}
+            <View mx={4} mb={4}>
+              <Text bold fontSize={'lg'}>
+                {item?.products[0]?.name}
+              </Text>
               <Text color={'#bfbfcf'}>{formatDate(item?.created_at)}</Text>
               <Text color={'#848aac'} bold>
                 {`${
@@ -306,6 +351,7 @@ export const KitchenScreen: React.FC = () => {
             onPress={() => {
               dispatch(setActiveId(item?.id));
               screenWidth > 600 ? null : setModalVisible(true);
+              setIsSelected(item?.id);
             }}
             mt={2}
             isLoading={loading}
@@ -322,7 +368,7 @@ export const KitchenScreen: React.FC = () => {
     </>
   );
   const isConnected = useNetworkInfo().isConnected;
-  const navigation = useNavigation<NavigationProp<any>>();
+
   return (
     <>
       <View
@@ -333,6 +379,27 @@ export const KitchenScreen: React.FC = () => {
         px={5}
         py={5}
         paddingTop={30}>
+        <View flexDirection={'row'} alignItems={'center'}>
+          {/* {userData?.business?.photo[0]?.original_url ? (
+            <View mr={2} overflow={'hidden'}>
+              <FastImage
+                style={styles.iconImage}
+                source={{
+                  uri: userData?.business?.photo[0]?.original_url,
+                  priority: FastImage.priority.normal,
+                }}
+                resizeMode={FastImage.resizeMode.contain}
+                fallback={noImage}
+              />
+            </View>
+          ) : null} */}
+          <Text color={'black'} fontSize={'lg'} bold>
+            {userData?.business?.name}
+          </Text>
+          <Text ml={2} color={'black'} fontSize={'lg'}>
+            {`(${userData?.name})`}
+          </Text>
+        </View>
         <View
           flexDirection={'row'}
           alignItems={'center'}
@@ -350,18 +417,19 @@ export const KitchenScreen: React.FC = () => {
           </View>
         </View>
         <View flexDirection={'row'}>
-          <Button
+          <Pressable
+            onPress={() => {
+              navigation.navigate('LogoutScreen');
+            }}>
+            <MaterialIcons name="logout" size={30} color={'#e85844'} />
+          </Pressable>
+          {/* <Button
             borderRadius={20}
             onPress={() => {
               navigation.navigate('LogoutScreen');
             }}
             alignSelf="center"
-            bg={'#e85844'}>
-            <Text fontSize={'md'} mx={2} bold color={'white'}>
-              <MaterialIcons name="logout" color={'white'} />
-              Logout
-            </Text>
-          </Button>
+            bg={'#e85844'}></Button> */}
         </View>
       </View>
 
@@ -398,8 +466,9 @@ export const KitchenScreen: React.FC = () => {
           <View mx={6} my={4} flexDirection={'row'} minHeight={200}>
             <View
               pb={'40'}
-              w={screenWidth > 600 ? '30%' : 'full'}
-              alignItems={'center'}>
+              px={4}
+              alignSelf={'center'}
+              w={screenWidth > 600 ? '30%' : 'full'}>
               {orderItems?.length > 0 ? (
                 <FlatList
                   data={orderItems?.map(transformProductToItem)}
@@ -454,6 +523,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
   },
+  iconImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'black',
+    // flex: 1,
+  },
   wifi: {
     marginLeft: 10,
     color: '#2dbf52',
@@ -463,3 +540,5 @@ const styles = StyleSheet.create({
     color: '#fc2b0c',
   },
 });
+
+export default KitchenScreen;

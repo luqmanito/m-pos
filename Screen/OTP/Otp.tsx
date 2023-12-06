@@ -1,7 +1,4 @@
-// screens/LoginScreen.tsx
-
 import React, {useState, useEffect} from 'react';
-
 import AuthNetwork from '../../Network/lib/auth';
 import {useSelector, useDispatch} from 'react-redux';
 import {

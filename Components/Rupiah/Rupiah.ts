@@ -1,4 +1,4 @@
-const RupiahFormatter = (value: number | string | null): string => {
+const RupiahFormatter = (value: number | string | null | undefined): string => {
   if (!value) {
     return '';
   } else {

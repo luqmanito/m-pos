@@ -1,7 +1,9 @@
+import {MetaModel} from './MetaModel';
+
 export interface RootOrderModel {
   data: OrderModel[];
   links: Links;
-  meta: Meta;
+  meta: MetaModel;
 }
 
 export interface OrderModel {

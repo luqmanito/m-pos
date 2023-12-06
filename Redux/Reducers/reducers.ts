@@ -5,6 +5,7 @@ import productSlice from './product';
 import cartSlice from './cart';
 import orderSlice from './orders';
 import employeeSlice from './employee';
+import reportSlice from './report';
 import buttonSlice from './button';
 import paymentSlice from './payment';
 import isProductVisited from './isProductVisited';
@@ -20,6 +21,7 @@ const reducer = combineReducers({
   cartSlice,
   buttonSlice,
   paymentSlice,
+  reportSlice,
   isProductVisited,
   paymentMethodSlice,
   employeeSlice,

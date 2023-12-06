@@ -1,8 +1,8 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 export interface ButtonState {
   note: boolean;
-  table_number: string;
+  table_number: string | undefined;
   activeId?: number;
   selectedId?: number;
   bluetoothStatus: string;
@@ -24,96 +24,36 @@ const initialState: ButtonState = {
   customerEmail: '',
   activeId: 0,
   selectedId: 0,
-  payment_methodId: null,
+  payment_methodId: 1,
   payment_method: null,
 };
+
+const createSetter =
+  <K extends keyof ButtonState>(key: K) =>
+  (state: ButtonState, action: PayloadAction<ButtonState[K]>) => {
+    return {
+      ...state,
+      [key]: action.payload,
+    };
+  };
 
 const buttonSlice = createSlice({
   name: 'ButtonSlice',
   initialState,
   reducers: {
-    setNote: (state, action) => {
-      return {
-        ...state,
-        note: action.payload,
-      };
-    },
-    setActiveId: (state, action) => {
-      return {
-        ...state,
-        activeId: action.payload,
-      };
-    },
-    setSelectedId: (state, action) => {
-      return {
-        ...state,
-        selectedId: action.payload,
-      };
-    },
-    setTableNumber: (state, action) => {
-      return {
-        ...state,
-        table_number: action.payload,
-      };
-    },
-    setBluetoohStatus: (state, action) => {
-      return {
-        ...state,
-        bluetoothStatus: action.payload,
-      };
-    },
-    setBluetoohName: (state, action) => {
-      return {
-        ...state,
-        bluetoothName: action.payload,
-      };
-    },
-    setCustomerName: (state, action) => {
-      return {
-        ...state,
-        customerName: action.payload,
-      };
-    },
-    setCustomerPhone: (state, action) => {
-      return {
-        ...state,
-        customerPhone: action.payload,
-      };
-    },
-    setCustomerEmail: (state, action) => {
-      return {
-        ...state,
-        customerEmail: action.payload,
-      };
-    },
-    setPaymentMethodId: (state, action) => {
-      return {
-        ...state,
-        payment_methodId: action.payload,
-      };
-    },
-    setPaymentMethod: (state, action) => {
-      return {
-        ...state,
-        payment_method: action.payload,
-      };
-    },
+    setNote: createSetter('note'),
+    setActiveId: createSetter('activeId'),
+    setSelectedId: createSetter('selectedId'),
+    setTableNumber: createSetter('table_number'),
+    setBluetoohStatus: createSetter('bluetoothStatus'),
+    setBluetoohName: createSetter('bluetoothName'),
+    setCustomerName: createSetter('customerName'),
+    setCustomerPhone: createSetter('customerPhone'),
+    setCustomerEmail: createSetter('customerEmail'),
+    setPaymentMethodId: createSetter('payment_methodId'),
+    setPaymentMethod: createSetter('payment_method'),
 
-    clearStateButton: () => {
-      return {
-        note: false,
-        activeId: 0,
-        selectedId: 0,
-        table_number: '',
-        bluetoothName: '',
-        bluetoothStatus: '',
-        customerName: '',
-        customerPhone: '',
-        customerEmail: '',
-        payment_methodId: null,
-        payment_method: null,
-      };
-    },
+    clearStateButton: () => initialState,
   },
 });
 

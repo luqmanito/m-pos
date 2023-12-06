@@ -19,13 +19,13 @@ const useUserInfo = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
     const fetchUserInfo = async (): Promise<void> => {
       try {
+        setLoading(true);
         const response = await userNetwork.userProfile();
         if (response) {
           const hasOrderOnlineModule = response.data.business.modules.some(
-            module => module.name === 'order online',
+            module => module.name.toLowerCase() === 'order online',
           );
           if (hasOrderOnlineModule) {
             setOnlineModule(true);
@@ -33,19 +33,17 @@ const useUserInfo = () => {
             setOnlineModule(false);
           }
           await cache.store('DataUser', response.data);
-          setLoading(false);
           setUserData(response.data);
         }
       } catch (error) {
-        setLoading(false);
         console.error('Error fetching products:', error);
         throw error;
+      } finally {
+        setLoading(false);
       }
     };
     const fetchUserCache = async (): Promise<void> => {
-      setLoading(true);
       const dataUser = await cache.get('DataUser');
-      setLoading(false);
       setUserData(dataUser);
     };
     if (isFocused && !isConnected) {
@@ -57,6 +55,7 @@ const useUserInfo = () => {
   }, [isFocused, isConnected, setLoading, fetchData]);
   return {
     userData,
+
     handleRefresh,
     onlineModule,
   };

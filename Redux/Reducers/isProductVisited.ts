@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 export interface VisitState {
   cashierVisited: boolean;
@@ -10,30 +10,23 @@ const initialState: VisitState = {
   catalogueVisited: false,
 };
 
+const createSetter =
+  <K extends keyof VisitState>(key: K) =>
+  (state: VisitState, action: PayloadAction<VisitState[K]>) => {
+    return {
+      ...state,
+      [key]: action.payload,
+    };
+  };
+
 const isProductVisitedSlice = createSlice({
   name: 'isProductVisitedSlice',
   initialState,
   reducers: {
-    setCashierVisited: (state, action) => {
-      return {
-        ...state,
-        cashierVisited: action.payload,
-      };
-    },
+    setCashierVisited: createSetter('cashierVisited'),
+    setCatalogueVisited: createSetter('catalogueVisited'),
 
-    setCatalogueVisited: (state, action) => {
-      return {
-        ...state,
-        catalogueVisited: action.payload,
-      };
-    },
-
-    clearStateVisited: () => {
-      return {
-        cashierVisited: false,
-        catalogueVisited: false,
-      };
-    },
+    clearStateVisited: () => initialState,
   },
 });
 

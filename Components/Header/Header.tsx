@@ -1,38 +1,22 @@
 import React, {useContext} from 'react';
 
 import {View, Text} from 'native-base';
-// import Svg, {Path, Defs, LinearGradient, Stop} from 'react-native-svg';
 import {StyleSheet} from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import useNetworkInfo from '../../Hooks/useNetworkInfo';
-// import cache from '../../Util/cache';
 import noImage from '../../Public/Assets/no-Image.jpg';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {PrimaryColorContext} from '../../Context';
-import useUserInfo from '../../Hooks/useUserInfo';
 import FastImage from 'react-native-fast-image';
+import {useAuth} from '../../Contexts/Auth';
 
-// import {usePrimaryColor} from '../../PrimaryColorContext';
-// import {PrimaryColorContext, usePrimaryColor} from '../../LoadingContext';
-
-export const HeaderComponent: React.FC = () => {
-  const {userData} = useUserInfo();
+const HeaderComponent: React.FC = () => {
+  const {authData} = useAuth();
   const navigation = useNavigation<NavigationProp<any>>();
   const primaryColor = useContext(PrimaryColorContext);
-  // const {primaryColor} = usePrimaryColor();
-  const deleteCache = async (): Promise<void> => {
-    navigation.navigate('KitchenScreen');
-    // const dataUser = await cache.removeItem('paymentSubmissions');
-    const allKeys = await AsyncStorage.getAllKeys();
-    // const data = await cache.get('paymentSubmissions');
-    console.log('All stored keys:', allKeys);
-    // console.log(data);
-    // return dataUser;
-  };
 
+  if (!authData) {
+    return null;
+  }
   return (
     <>
       <View
@@ -47,15 +31,13 @@ export const HeaderComponent: React.FC = () => {
           // alignSelf={'center'}
           flexDirection={'row'}
           alignItems={'center'}>
-          <Text color={'white'} fontSize={'lg'} bold>
-            {userData?.business?.name}
-          </Text>
-          {userData?.business?.photo[0]?.original_url ? (
-            <View ml={4} overflow={'hidden'}>
+          {authData.user.business.photo &&
+          authData.user.business.photo.length > 0 ? (
+            <View mr={2} overflow={'hidden'}>
               <FastImage
                 style={styles.image}
                 source={{
-                  uri: userData?.business?.photo[0]?.original_url,
+                  uri: authData.user.business.photo[0].original_url,
                   priority: FastImage.priority.normal,
                 }}
                 resizeMode={FastImage.resizeMode.contain}
@@ -63,25 +45,12 @@ export const HeaderComponent: React.FC = () => {
               />
             </View>
           ) : null}
-
-          {/* <View>
-            <MaterialCommunityIcons
-              name={isConnected ? 'wifi-check' : 'wifi-remove'}
-              size={24}
-              color="#fff"
-              style={isConnected ? styles.wifi : styles.wifi_off}
-            />
-          </View> */}
+          <Text color={'white'} fontSize={'lg'} bold>
+            {authData.user.business.name}
+          </Text>
         </View>
 
         <View flexDirection={'row'}>
-          <MaterialIcons
-            onPress={() => deleteCache()}
-            name="payments"
-            size={24}
-            color="#fff"
-            style={styles.icon}
-          />
           <FontAwesome
             onPress={() => navigation.navigate('NotificationScreen')}
             name="bell"
@@ -103,61 +72,8 @@ export const HeaderComponent: React.FC = () => {
         zIndex={-1}
         h={92}
         overflow="hidden"
-        bg={primaryColor?.primaryColor}>
-        {/* <Svg
-          height="100%"
-          width={screenWidth}
-          viewBox={`0 0 ${screenWidth} 320`}
-          style={styles.wave}>
-          <Defs>
-            <LinearGradient id="gradient1" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor={primaryColor?.primaryColor} />
-              <Stop offset="1" stopColor="#00a1ff" />
-            </LinearGradient>
-          </Defs>
-          <Path
-            fill="url(#gradient1)"
-            fillOpacity={1}
-            d="M0,160C160,192,320,224,480,202.7C640,181,800,107,960,85.3C1120,64,1280,96,1360,112L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,0,320L0,320Z"
-          />
-        </Svg>
-
-        <Svg
-          height="100%"
-          width="100%"
-          viewBox={`0 0 ${screenWidth} 320`}
-          style={styles.wave}>
-          <Defs>
-            <LinearGradient id="gradient2" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#33ccff" />
-              <Stop offset="1" stopColor="#00a1ff" />
-            </LinearGradient>
-          </Defs>
-          <Path
-            fill="url(#gradient2)"
-            fillOpacity={1}
-            d="M0,96C160,128,320,192,480,186.7C640,181,800,107,960,85.3C1120,64,1280,96,1360,112L1440,128L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,0,0L0,0Z"
-          />
-        </Svg>
-
-        <Svg
-          height="100%"
-          width="100%"
-          viewBox={`0 0 ${screenWidth} 320`}
-          style={styles.wave}>
-          <Defs>
-            <LinearGradient id="gradient3" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor={primaryColor?.primaryColor} />
-              <Stop offset="1" stopColor="#4d79ff" />
-            </LinearGradient>
-          </Defs>
-          <Path
-            fill="url(#gradient3)"
-            fillOpacity={1}
-            d="M0,96C160,128,320,192,480,186.7C640,181,800,107,960,85.3C1120,64,1280,96,1360,112L1440,128L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,0,0L0,0Z"
-          />
-        </Svg> */}
-      </View>
+        bg={primaryColor?.primaryColor}
+      />
     </>
   );
 };
@@ -174,6 +90,9 @@ const styles = StyleSheet.create({
   image: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
     // flex: 1,
   },
   wifi: {
@@ -185,3 +104,5 @@ const styles = StyleSheet.create({
     color: '#fc2b0c',
   },
 });
+
+export default HeaderComponent;

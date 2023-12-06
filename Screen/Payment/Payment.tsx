@@ -26,31 +26,46 @@ import {
 import {clearStateProduct} from '../../Redux/Reducers/product';
 import {useDispatch, useSelector} from 'react-redux';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
-// import orderNetwork from '../../Network/lib/order';
+import orderNetwork from '../../Network/lib/order';
 import {RootState} from '../../Redux/store';
 import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import NavBar from '../../Components/Navbar/Navbar';
 import ToastAlert from '../../Components/Toast/Toast';
 import {createPayment} from '../../Redux/Reducers/payment';
-import cache from '../../Util/cache';
+// import cache from '../../Util/cache';
 // import {generateInvoiceNumber} from '../../Components/Invoice/Invoice';
 import {dates} from '../../Components/Date/Today';
 import {useGenerateInvoiceNumber} from '../../Hooks/useInvoiceTemporary';
 import {getCurrentDateTime} from '../../Components/Date/Time';
 import useUserInfo from '../../Hooks/useUserInfo';
-import {PrimaryColorContext} from '../../Context';
-export const PaymentScreen: React.FC = () => {
+import {PrimaryColorContext, useLoading} from '../../Context';
+import usePaymentSubmit from '../../Hooks/useSubmitPayment';
+import cache from '../../Util/cache';
+const PaymentScreen: React.FC = () => {
   const paymentMethodCode = useSelector(
     (state: RootState) => state.buttonSlice?.payment_methodId,
   );
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
   const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const {loading} = useLoading();
   const filteredItems = cartItems.filter(item => item.quantity > 0);
+  const detailOrderItems = useSelector(
+    (state: RootState) => state.orderSlice.order_detail,
+  );
+  const totalSumCashier = detailOrderItems?.products.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+  const totalQtyCashier = detailOrderItems?.products.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+
   const navigation = useNavigation<NavigationProp<any>>();
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
-  const [nominal, setNominal] = useState<number>(0);
+  const [nominal, setNominal] = useState<number | undefined>(0);
   // const [temporaryInvoice, setTemporaryInvoice] = useState('');
   const [buttonValue, setButtonValue] = useState(50000);
   const [buttonValue2, setButtonValue2] = useState(100000);
@@ -66,6 +81,7 @@ export const PaymentScreen: React.FC = () => {
     }, [dispatch]),
   );
   const {userData} = useUserInfo();
+  const {submitCashierPayment} = usePaymentSubmit();
   const table_number = useSelector(
     (state: RootState) => state.buttonSlice?.table_number,
   );
@@ -77,12 +93,15 @@ export const PaymentScreen: React.FC = () => {
   };
   const primaryColor = useContext(PrimaryColorContext);
   const invoiceNumber = useGenerateInvoiceNumber();
+  const routes = navigation.getState()?.routes;
+  const prevRoute = routes[routes.length - 3];
+  const isKitchenScreen = prevRoute.name === 'KitchenScreen';
 
   useEffect(() => {
     if (paymentMethodCode === 2) {
       setFalseInput(false);
     } else {
-      if (nominal) {
+      if (nominal && !isKitchenScreen) {
         if (nominal >= totalSum) {
           setFalseInput(false);
           setExchange(nominal - totalSum);
@@ -91,15 +110,138 @@ export const PaymentScreen: React.FC = () => {
           setExchange(0);
         }
       }
+      if (nominal && isKitchenScreen && totalSumCashier) {
+        if (nominal >= totalSumCashier) {
+          setFalseInput(false);
+          setExchange(nominal - totalSumCashier);
+        } else {
+          setFalseInput(true);
+          setExchange(0);
+        }
+      }
     }
-    if (totalSum > buttonValue) {
-      const nextButtonValue = Math.ceil(totalSum / 50000) * 50000;
-      setButtonValue(nextButtonValue);
-      setButtonValue2(nextButtonValue + 50000);
+    if (isKitchenScreen && totalSumCashier) {
+      if (totalSumCashier > buttonValue) {
+        const nextButtonValue = Math.ceil(totalSumCashier / 50000) * 50000;
+        setButtonValue(nextButtonValue);
+        setButtonValue2(nextButtonValue + 50000);
+      }
+    } else if (!isKitchenScreen) {
+      if (totalSum > buttonValue) {
+        const nextButtonValue = Math.ceil(totalSum / 50000) * 50000;
+        setButtonValue(nextButtonValue);
+        setButtonValue2(nextButtonValue + 50000);
+      }
     }
-  }, [paymentMethodCode, nominal, buttonValue, totalSum]);
+  }, [
+    paymentMethodCode,
+    nominal,
+    buttonValue,
+    totalSum,
+    isKitchenScreen,
+    totalSumCashier,
+  ]);
 
   const submitPayment = async (): Promise<void> => {
+    // const paymentData = {
+    //   products: filteredItems.map(item => {
+    //     return {
+    //       id: item?.productId,
+    //       quantity: item?.quantity,
+    //       note: item?.note,
+    //     };
+    //   }),
+    //   table_no: table_number,
+    //   payment_method: paymentMethodCode,
+    //   total_paid: nominal,
+    //   ref: 'OFFLINE',
+    //   invoiceNumber,
+    //   date: getCurrentDateTime(),
+    //   total_price: totalSum,
+    //   cashierName: userData?.name,
+    //   name: globalState?.customerName,
+    //   phone: globalState?.customerPhone,
+    //   email: globalState?.customerEmail,
+    // };
+    try {
+      // FOR OFFLINE MODE
+      // let dataSubmissions = await cache.get('paymentSubmissions');
+      // if (dataSubmissions) {
+      //   dataSubmissions.push(paymentData);
+      //   await cache.store('paymentSubmissions', dataSubmissions);
+      //   ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+      //   navigation.navigate('SuccessfulPaymentScreen');
+      //   dispatch(
+      //     createPayment({
+      //       // products: filteredItems,
+      //       totalPrice: totalSum,
+      //       totalPayment: nominal,
+      //       exchangePayment: exchange,
+      //       invoiceNumber: invoiceNumber,
+      //       datePayment: dates,
+      //       cashierName: userData?.name,
+      //     }),
+      //   );
+      // } else {
+      //   dataSubmissions = [];
+      //   dataSubmissions.push(paymentData);
+      //   await cache.store('paymentSubmissions', dataSubmissions);
+      //   ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+      //   navigation.navigate('SuccessfulPaymentScreen');
+      //   dispatch(
+      //     createPayment({
+      //       // products: filteredItems,
+      //       totalPrice: totalSum,
+      //       totalPayment: nominal,
+      //       exchangePayment: exchange,
+      //       invoiceNumber: invoiceNumber,
+      //       datePayment: dates,
+      //       cashierName: userData?.name,
+      //     }),
+      //   );
+      // }
+
+      // FOR ONLINE MODE
+      const response = await orderNetwork.pay({
+        products: filteredItems.map(item => {
+          return {
+            id: item?.productId,
+            quantity: item?.quantity,
+            note: item?.note,
+          };
+        }),
+        table_no: table_number,
+        payment_method: paymentMethodCode,
+        total_paid: nominal,
+        ref: 'OFFLINE',
+        name: globalState?.customerName,
+        phone: globalState?.customerPhone,
+        email: globalState?.customerEmail,
+      });
+      if (response) {
+        dispatch(
+          createPayment({
+            products: response?.data?.products,
+            totalPrice: totalSum,
+            totalPayment: nominal,
+            exchangePayment: exchange,
+            invoiceNumber: response?.data?.order_code,
+            datePayment: response?.data?.created_at,
+            cashierName: userData?.name,
+          }),
+        );
+        ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+        navigation.navigate('SuccessfulPaymentScreen');
+      }
+    } catch (error: any) {
+      submitFailedPayment();
+      // ToastAlert(toast, 'error', error?.response?.data?.message);
+      // console.error('Error payment:', error);
+      throw error;
+    }
+  };
+
+  const submitFailedPayment = async (): Promise<void> => {
     const paymentData = {
       products: filteredItems.map(item => {
         return {
@@ -121,11 +263,12 @@ export const PaymentScreen: React.FC = () => {
       email: globalState?.customerEmail,
     };
     try {
+      // FOR OFFLINE MODE
       let dataSubmissions = await cache.get('paymentSubmissions');
       if (dataSubmissions) {
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
-        ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Tersimpan');
         navigation.navigate('SuccessfulPaymentScreen');
         dispatch(
           createPayment({
@@ -142,7 +285,7 @@ export const PaymentScreen: React.FC = () => {
         dataSubmissions = [];
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
-        ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Tersimpan');
         navigation.navigate('SuccessfulPaymentScreen');
         dispatch(
           createPayment({
@@ -156,36 +299,6 @@ export const PaymentScreen: React.FC = () => {
           }),
         );
       }
-
-      // const response = await orderNetwork.pay({
-      //   products: filteredItems.map(item => {
-      //     return {
-      //       id: item?.productId,
-      //       quantity: item?.quantity,
-      //       note: item?.note,
-      //     };
-      //   }),
-      //   table_no: table_number,
-      //   payment_method: paymentMethodCode,
-      //   total_paid: nominal,
-      //   ref: 'ONLINE',
-      // });
-
-      // if (response) {
-      //   dispatch(
-      //     createPayment({
-      //       products: response?.data?.products,
-      //       totalPrice: totalSum,
-      //       totalPayment: nominal,
-      //       exchangePayment: exchange,
-      //       invoiceNumber: response?.data?.order_code,
-      //       datePayment: response?.data?.created_at,
-      //       cashierName: 'admin',
-      //     }),
-      //   );
-      //   ToastAlert(toast, 'sukses', 'Berhasil Bayar');
-      //   navigation.navigate('SuccessfulPaymentScreen');
-      // }
     } catch (error: any) {
       ToastAlert(toast, 'error', error?.response?.data?.message);
       // console.error('Error payment:', error);
@@ -217,7 +330,7 @@ export const PaymentScreen: React.FC = () => {
             <VStack ml={2} flex={6}>
               <Text fontSize={'md'}>Total Tagihan</Text>
               <Text bold fontSize={'lg'}>
-                {RupiahFormatter(totalSum)}
+                {RupiahFormatter(totalSum || detailOrderItems?.total)}
               </Text>
             </VStack>
             <VStack
@@ -260,7 +373,11 @@ export const PaymentScreen: React.FC = () => {
                 w={'30%'}
                 bg={'white'}
                 borderRadius={20}
-                onPress={() => setNominal(totalSum)}
+                onPress={() =>
+                  setNominal(
+                    isKitchenScreen ? detailOrderItems?.total : totalSum,
+                  )
+                }
                 mt={4}>
                 <Text color={'gray.500'}>Uang Pas</Text>
               </Button>
@@ -306,9 +423,15 @@ export const PaymentScreen: React.FC = () => {
 
       <View bg={'#f4f5fa'} bottom={18} mx={4}>
         <Button
+          isLoading={loading}
+          isLoadingText={'loading...'}
           isDisabled={falseInput === false ? false : true}
           onPress={() => {
-            paymentMethodCode === 1 ? submitPayment() : setIsConfirm(true);
+            paymentMethodCode === 1 && !isKitchenScreen
+              ? submitPayment()
+              : paymentMethodCode === 1 && isKitchenScreen
+              ? submitCashierPayment(nominal)
+              : setIsConfirm(true);
           }}
           borderRadius={34}
           alignItems={'center'}
@@ -370,32 +493,61 @@ export const PaymentScreen: React.FC = () => {
             <Modal.CloseButton />
             <Modal.Header>{'Detail Tagihan'}</Modal.Header>
             <Modal.Body>
-              {filteredItems.map(item => {
-                return (
-                  <React.Fragment key={item.productId}>
-                    <Text>{item?.name}</Text>
-                    <View flexDirection={'row'}>
-                      <Text flex={6}>{'x' + item?.quantity}</Text>
-                      <View
-                        flex={6}
-                        alignItems={'flex-end'}
-                        justifyContent={'center'}>
-                        <Text mb={3}>
-                          {RupiahFormatter(item?.basePrice * item?.quantity)}
-                        </Text>
-                      </View>
-                    </View>
-                  </React.Fragment>
-                );
-              })}
+              {isKitchenScreen
+                ? detailOrderItems?.products.map(item => {
+                    return (
+                      <React.Fragment key={item.product_id}>
+                        <Text>{item?.name}</Text>
+                        <View flexDirection={'row'}>
+                          <Text flex={6}>{'x' + item?.quantity}</Text>
+                          <View
+                            flex={6}
+                            alignItems={'flex-end'}
+                            justifyContent={'center'}>
+                            <Text mb={3}>
+                              {RupiahFormatter(item?.price * item?.quantity)}
+                            </Text>
+                          </View>
+                        </View>
+                      </React.Fragment>
+                    );
+                  })
+                : filteredItems.map(item => {
+                    return (
+                      <React.Fragment key={item.productId}>
+                        <Text>{item?.name}</Text>
+                        <View flexDirection={'row'}>
+                          <Text flex={6}>{'x' + item?.quantity}</Text>
+                          <View
+                            flex={6}
+                            alignItems={'flex-end'}
+                            justifyContent={'center'}>
+                            <Text mb={3}>
+                              {RupiahFormatter(
+                                item?.basePrice * item?.quantity,
+                              )}
+                            </Text>
+                          </View>
+                        </View>
+                      </React.Fragment>
+                    );
+                  })}
               <Divider />
               <View mt={2} flexDirection={'row'}>
-                <Text flex={6}>{`Subtotal (${totalQty} Produk)`} </Text>
+                <Text flex={6}>
+                  {`Subtotal (${
+                    isKitchenScreen ? totalQtyCashier : totalQty
+                  } Produk)`}{' '}
+                </Text>
                 <View
                   flex={6}
                   alignItems={'flex-end'}
                   justifyContent={'center'}>
-                  <Text mb={2}>{RupiahFormatter(totalSum)}</Text>
+                  <Text mb={2}>
+                    {RupiahFormatter(
+                      isKitchenScreen ? totalSumCashier : totalSum,
+                    )}
+                  </Text>
                 </View>
               </View>
               <View flexDirection={'row'}>
@@ -411,7 +563,6 @@ export const PaymentScreen: React.FC = () => {
                   </Text>
                 </View>
               </View>
-
               <Button
                 mb={4}
                 borderRadius={20}
@@ -429,3 +580,4 @@ export const PaymentScreen: React.FC = () => {
     </>
   );
 };
+export default PaymentScreen;

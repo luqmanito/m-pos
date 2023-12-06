@@ -14,26 +14,33 @@ import categoryNetwork from '../../Network/lib/categories';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ToastAlert from '../../Components/Toast/Toast';
 import {PrimaryColorContext} from '../../Context';
+import {useDispatch, useSelector} from 'react-redux';
+import {setCatalogueVisited} from '../../Redux/Reducers/isProductVisited';
+import {RootState} from '../../Redux/store';
 
 interface CategoryScreenProps {}
 
 const AddCategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
   const toast = useToast();
-
+  const dispatch = useDispatch();
   const [name, setName] = useState<string | undefined>('');
   const [description, setDescription] = useState<string | undefined>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigation = useNavigation();
+  const isProductVisited = useSelector(
+    (state: RootState) => state.isProductVisited,
+  );
   const primaryColor = useContext(PrimaryColorContext);
   const postCategory = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await categoryNetwork.createCategory({
+      const response = await categoryNetwork.create({
         name: name,
         description: description,
       });
       if (response) {
         ToastAlert(toast, 'sukses', 'Kategori Berhasil Ditambahkan');
+        dispatch(setCatalogueVisited(!isProductVisited.catalogueVisited));
         setIsLoading(false);
         navigation.goBack();
       }

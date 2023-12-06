@@ -1,25 +1,41 @@
 import {useIsFocused, useRoute} from '@react-navigation/native';
+import {useToast} from 'native-base';
 import {useEffect, useState} from 'react';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
+import ToastAlert from '../Components/Toast/Toast';
 import {useLoading} from '../Context';
 import {OrderModel, RootOrderModel} from '../models/OrderModel';
-
 import orderNetwork from '../Network/lib/order';
-import {setOrderState} from '../Redux/Reducers/orders';
+import {resetOrderDetailState, setOrderState} from '../Redux/Reducers/orders';
+import {RootState} from '../Redux/store';
 import cache from '../Util/cache';
+import {MetaModel} from '../models/MetaModel';
 
 const useOrders = () => {
   const [orders, setOrders] = useState<OrderModel[]>([]);
-
+  const toast = useToast();
   const {setLoading} = useLoading();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [fetchData, setFetchData] = useState(false);
+  const orderId = useSelector(
+    (state: RootState) => state.buttonSlice?.activeId,
+  );
 
+  const numOrders = 10;
+  const [metaProduct, setMetaProduct] = useState<MetaModel>({
+    current_page: 0,
+    from: 0,
+    per_page: 0,
+    to: 0,
+    total: 0,
+    last_page: 0,
+  });
   const [emptyData, setEmptyData] = useState(false);
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
   const route = useRoute();
+
   const handleSearch = (newValue: string) => {
     return setSearchKeyword(newValue);
   };
@@ -36,26 +52,53 @@ const useOrders = () => {
 
   const handleNewFetchData = async (value: number) => {
     try {
+      const dataUser = await cache.get('DataUser');
       const newData = await orderNetwork.list({
         page: value,
         search: searchKeyword,
-        status: route?.name === 'KitchenScreen' ? 'confirm' : 'pending',
+        per_page: numOrders,
+        sort:
+          dataUser.role.toLowerCase() === 'cashier' ||
+          dataUser.role.toLowerCase() === 'kitchen'
+            ? 'created_at|asc'
+            : 'created_at|desc',
+        status:
+          route?.name.toLowerCase() === 'kitchenscreen' &&
+          dataUser.role.toLowerCase() === 'cashier'
+            ? 'ready'
+            : route?.name.toLowerCase() === 'kitchenscreen' &&
+              dataUser.role.toLowerCase() === 'kitchen'
+            ? 'confirm'
+            : 'pending',
       });
 
       if (newData) {
         setOrders([...orders, ...newData?.data?.data]);
-        if (newData?.data?.data.length === 0) {
-          setEmptyData(true);
-          const sortedData = newData?.data?.data.sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime(),
-          );
-          setOrders([...orders, ...sortedData]);
+        if (newData?.data?.data.length > 0) {
+          setOrders([...orders, ...newData?.data?.data]);
         }
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const orderReady = async () => {
+    setLoading(true);
+    try {
+      const response = await orderNetwork.orderReady(orderId);
+      if (response) {
+        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Disiapkan');
+      }
+      dispatch(resetOrderDetailState());
+      return response;
+    } catch (error: any) {
+      console.log(error);
+      ToastAlert(toast, 'error', error?.response?.data?.message);
+      throw error;
+    } finally {
+      handleRefresh();
+      setLoading(false);
     }
   };
 
@@ -68,6 +111,7 @@ const useOrders = () => {
     try {
       const response = await orderNetwork.list({
         search: searchKeyword,
+        per_page: numOrders,
         page: 1,
         status,
       });
@@ -89,46 +133,51 @@ const useOrders = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchOrders = async (): Promise<RootOrderModel[] | void> => {
-      setLoading(true);
-      setPage(1);
-      try {
-        const dataUser = await cache.get('DataUser');
-        const response = await orderNetwork.list({
-          search: searchKeyword,
-          page: 1,
-          status:
-            route?.name === 'KitchenScreen' && dataUser.role === 'CASHIER'
-              ? 'ready'
-              : route?.name === 'KitchenScreen' && dataUser.role === 'KITCHEN'
-              ? 'confirm'
-              : 'pending',
-        });
-        if (response) {
-          setEmptyData(false);
-          const sortedData = response.data.data.sort(
-            (a, b) =>
-              new Date(
-                route?.name === 'KitchenScreen' ? a.created_at : b.created_at,
-              ).getTime() -
-              new Date(
-                route?.name === 'KitchenScreen' ? b.created_at : a.created_at,
-              ).getTime(),
-          );
-          const filteredOrderList = sortedData.filter(
-            item => item.ref === 'ONLINE',
-          );
-          dispatch(setOrderState(filteredOrderList));
-          return setOrders(filteredOrderList);
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        throw error;
-      } finally {
-        setLoading(false);
+  const fetchOrders = async (): Promise<RootOrderModel[] | void> => {
+    setLoading(true);
+    try {
+      const dataUser = await cache.get('DataUser');
+      const response = await orderNetwork.list({
+        search: searchKeyword,
+        page: 1,
+        per_page: numOrders,
+        ref: 'ONLINE',
+        sort:
+          dataUser.role.toLowerCase() === 'cashier' ||
+          dataUser.role.toLowerCase() === 'kitchen'
+            ? 'created_at|asc'
+            : 'created_at|desc',
+        status:
+          route?.name.toLowerCase() === 'kitchenscreen' &&
+          dataUser.role.toLowerCase() === 'cashier'
+            ? 'ready'
+            : route?.name.toLowerCase() === 'kitchenscreen' &&
+              dataUser.role.toLowerCase() === 'kitchen'
+            ? 'confirm'
+            : 'pending',
+      });
+      if (response) {
+        setEmptyData(false);
+        setMetaProduct(response.data.meta);
+        dispatch(setOrderState(response?.data?.data));
+        return setOrders(response?.data?.data);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    // This effect will run after the state is updated
+    if (page <= metaProduct.last_page) {
+      handleNewFetchData(page);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  useEffect(() => {
     if (isFocused) {
       fetchOrders();
     }
@@ -137,6 +186,7 @@ const useOrders = () => {
   return {
     orders,
     handleSearch,
+    orderReady,
     handleRefresh,
     newFetchData,
     fetchOrdersByStatus,

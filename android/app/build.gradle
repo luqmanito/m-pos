@@ -84,14 +84,14 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.supalapos"
+    namespace "id.ezpos"
     defaultConfig {
-        applicationId "com.supalapos"
+        applicationId "id.ezpos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 10
         versionName "10.0"
-        resValue "string", "build_config_package", "com.supalapos"
+        resValue "string", "build_config_package", "id.ezpos"
         multiDexEnabled true
     }
     signingConfigs {

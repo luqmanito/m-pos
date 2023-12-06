@@ -1,26 +1,58 @@
-import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
 import {useLoading} from '../Context';
 import {CategoryModel} from '../models/CategoryModel';
-import productNetwork from '../Network/lib/product';
-import cache from '../Util/cache';
-import useNetworkInfo from './useNetworkInfo';
+import categoryNetwork from '../Network/lib/categories';
+import {MetaModel} from '../models/MetaModel';
 
 const useCategories = () => {
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const {setLoading} = useLoading();
-  const isConnected = useNetworkInfo().isConnected;
-  const [counter, setCounter] = useState(0);
-  const isFocused = useIsFocused();
-  const fetchCategories = async (): Promise<CategoryModel[] | void> => {
-    setLoading(true);
+  const [metaProduct, setMetaProduct] = useState<MetaModel>({
+    current_page: 0,
+    from: 0,
+    per_page: 0,
+    to: 0,
+    total: 0,
+    last_page: 0,
+  });
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  const searchCategory = (search: string) => {
+    setSearchKeyword(() => search);
+  };
+
+  const handleRefresh = () => {
+    fetchCategories();
+  };
+
+  const newFetchData = () => {
+    setPage(prevPage => prevPage + 1); // Use a function to update state based on the previous state
+  };
+
+  useEffect(() => {
+    // This effect will run after the state is updated
+    if (page <= metaProduct.last_page) {
+      handleNewFetchData(page);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [searchKeyword]);
+
+  const handleNewFetchData = async (page: number) => {
     try {
-      const response = await productNetwork.categoryList({
-        page: 1,
+      const response = await categoryNetwork.list({
+        page: page,
+        sort: 'name|asc',
+        per_page: perPage,
+        search: searchKeyword,
       });
-      if (response) {
-        await cache.store('DataCategory', response.data.data);
-        return setCategories(response.data.data);
+      if (response.data.data.length > 0) {
+        setMetaProduct(response.data.meta);
+        setCategories(prevState => [...prevState, ...response.data.data]);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -29,23 +61,34 @@ const useCategories = () => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    const fetchCategoriesCache = async (): Promise<void> => {
-      // setLoading(true);
-      const dataCategories = await cache.get('DataCategory');
+
+  const fetchCategories = async (): Promise<CategoryModel[] | void> => {
+    setLoading(true);
+    try {
+      const response = await categoryNetwork.list({
+        page: 1,
+        sort: 'name|asc',
+        per_page: perPage,
+        search: searchKeyword,
+      });
+      if (response) {
+        setMetaProduct(response.data.meta);
+        setCategories(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    } finally {
       setLoading(false);
-      setCategories(dataCategories);
-    };
-    if (isFocused && !isConnected) {
-      fetchCategoriesCache();
     }
-    if (isFocused && isConnected && counter === 0) {
-      fetchCategories();
-      setCounter(counter + 1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, setLoading]);
-  return {categories, fetchCategories};
+  };
+  return {
+    categories,
+    fetchCategories,
+    handleRefresh,
+    newFetchData,
+    searchCategory,
+  };
 };
 
 export default useCategories;
