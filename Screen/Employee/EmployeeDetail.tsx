@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -6,37 +6,40 @@ import {
   ScrollView,
   FormControl,
   Stack,
-  Input,
   Radio,
   Icon,
-  Button,
-  Center,
-  Modal,
 } from 'native-base';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import NavBar from '../../Components/Navbar/Navbar';
-// import useUserInfo from '../../Hooks/useUserInfo';
-// import useDataEmployee from '../../Hooks/useDataEmployee';
-import {useDispatch} from 'react-redux';
-import {setNewEmployeeData} from '../../Redux/Reducers/employee';
-import cache from '../../Util/cache';
-import {PrimaryColorContext, useLoading} from '../../Context';
-import {NavigationProp, useNavigation} from '@react-navigation/native';
+import {useLoading} from '../../Context';
+import {RouteProp} from '@react-navigation/native';
 import useEmployee from '../../Hooks/useEmployee';
-import {NavigationModel} from '../../models/NavModel';
 import useRoles from '../../Hooks/useRoles';
+import BaseInput from '../../Components/Form/BaseInput';
+import {RootStackParamList} from '../../Navigation/RootStackParamList';
+import DeleteEmployeeModal from './Components/DeleteEmployeeModal';
+import BaseButton from '../../Components/Button/BaseButton';
+import {useTranslation} from 'react-i18next';
 
-const EmployeeDetail = (param: NavigationModel | {}) => {
+type EmployeeDetailScreenProps = {
+  route: RouteProp<RootStackParamList, 'ProductDetailsScreen'>;
+};
+
+const EmployeeDetail: React.FC<EmployeeDetailScreenProps> = ({route}) => {
   const {listRoles} = useRoles();
-  const navigation = useNavigation<NavigationProp<any>>();
+  const id = route?.params?.id === undefined ? null : route.params.id;
   const {loading} = useLoading();
-  const primaryColor = useContext(PrimaryColorContext);
-  const dispatch = useDispatch();
+  const [show, setShow] = useState(false);
+
   const {
     getDetailEmployee,
-    deleteEmployee,
     handleChangeData,
+    form,
+    addEmployee,
+    getFormError,
+    isInvalid,
+    clearFormErrors,
     editEmployee,
     detailEmployee,
   } = useEmployee();
@@ -47,69 +50,103 @@ const EmployeeDetail = (param: NavigationModel | {}) => {
     email: null,
     role: null || '',
   });
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const isEmpty = Object.values(dataEmployee).some(
-    value => value === null || value === '',
-  );
   const handleChange = (key: string, data: string) => {
     setDataEmployee(prev => ({
       ...prev,
       [key]: data,
     }));
   };
-
+  const {t} = useTranslation();
   useEffect(() => {
-    getDetailEmployee(param?.route?.params);
+    getDetailEmployee(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
-      <NavBar msg="Ubah Data Pegawai" />
-
+      <NavBar msg={id ? t('change-employee') : t('add-employee')} />
       <ScrollView>
         <View mx={4}>
-          <FormControl mt={4} isRequired>
-            <Stack mx="4">
-              <FormControl.Label>Nama Lengkap</FormControl.Label>
-              <Input
-                value={dataEmployee?.name || detailEmployee?.name}
-                borderRadius={10}
-                bg={'white'}
-                onChangeText={text => {
-                  handleChangeData({name: 'name', value: text});
-                  handleChange('name', text);
-                }}
-                placeholder="Contoh: Suprapto"
+          <BaseInput
+            inputKey={'name'}
+            isRequired={true}
+            label={t('fullname')}
+            defaultValue={id ? form.name : ''}
+            placeholder={t('ex-name')}
+            type={'text'}
+            isInvalid={isInvalid('name')}
+            warningMessage={getFormError('name')}
+            onChangeText={text => handleChangeData('name', text)}
+          />
+          <BaseInput
+            inputKey={'email'}
+            isRequired={true}
+            label={t('email-address')}
+            placeholder={t('example-mail')}
+            defaultValue={id ? form.email : ''}
+            type={'text'}
+            isInvalid={isInvalid('email')}
+            warningMessage={getFormError('email')}
+            onChangeText={text => handleChangeData('email', text)}
+          />
+          {!id ? (
+            <>
+              <BaseInput
+                inputKey={'password'}
+                isRequired={true}
+                label={'Password'}
+                placeholder={'password'}
+                type={show ? 'text' : 'password'}
+                isInvalid={isInvalid('password')}
+                warningMessage={getFormError('password')}
+                onChangeText={text => handleChangeData('password', text)}
+                rightIcon={
+                  <Pressable onPress={() => setShow(!show)}>
+                    <Icon
+                      as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
+                      size={5}
+                      mr="2"
+                      color="muted.400"
+                    />
+                  </Pressable>
+                }
               />
-            </Stack>
-          </FormControl>
-          <FormControl mt={4} isRequired>
-            <Stack mx="4">
-              <FormControl.Label>Alamat Email</FormControl.Label>
-              <Input
-                isDisabled={true}
-                isReadOnly={true}
-                value={dataEmployee?.email || detailEmployee?.email}
-                borderRadius={10}
-                bg={'white'}
-                onChangeText={text => {
-                  handleChangeData({name: 'email', value: text});
-                  handleChange('email', text);
-                }}
-                placeholder="Contoh: suprapto@gmail.com"
+              <BaseInput
+                inputKey={'password_confirmation'}
+                isRequired={true}
+                label={t('repeat-password')}
+                placeholder={t('repeat-password')}
+                type={show ? 'text' : 'password'}
+                isInvalid={isInvalid('password_confirmation')}
+                warningMessage={getFormError('password_confirmation')}
+                onChangeText={text =>
+                  handleChangeData('password_confirmation', text)
+                }
+                rightIcon={
+                  <Pressable onPress={() => setShow(!show)}>
+                    <Icon
+                      as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
+                      size={5}
+                      mr="2"
+                      color="muted.400"
+                    />
+                  </Pressable>
+                }
               />
-            </Stack>
-          </FormControl>
-          <FormControl mt={4} isRequired>
+            </>
+          ) : null}
+
+          <FormControl mt={4}>
             <Stack mx="4">
-              <FormControl.Label>Peran Pegawai</FormControl.Label>
+              <FormControl.Label>{t('employee-roles')}</FormControl.Label>
               {listRoles.map(role => {
                 return (
                   <Pressable
                     key={role?.id}
                     onPress={() => {
-                      handleChangeData({name: 'role', value: role.role});
+                      handleChangeData('role', role.role);
                       handleChange('role', role?.value);
                     }}
                     mt={4}
@@ -137,7 +174,6 @@ const EmployeeDetail = (param: NavigationModel | {}) => {
                             />
                           }
                           colorScheme={'blue'}
-                          // value={dataEmployee.role}
                           value={
                             dataEmployee?.role
                               ? dataEmployee?.role
@@ -162,85 +198,43 @@ const EmployeeDetail = (param: NavigationModel | {}) => {
           </FormControl>
         </View>
         <View px={8} my={4} alignSelf="center" w={'100%'}>
-          <Button
+          <BaseButton
+            onPress={() => {
+              clearFormErrors();
+              id ? editEmployee(id) : addEmployee();
+            }}
             isLoading={loading}
-            // isDisabled={isEmpty}
-            isLoadingText={'loading'}
+            size="xl"
+            bold={true}
+            type="primary"
+            label={id ? t('save-changes') : t('add-employee')}
             borderRadius={20}
-            bg={primaryColor?.primaryColor}
-            onPress={() => {
-              editEmployee(param?.route?.params);
-              // submitNewEmployee();
-              // dispatch(setNewEmployeeData(dataEmployee));
-              // navigation.navigate('NewEmployee');
-            }}>
-            <Text
-              bold
-              fontSize={'xl'}
-              textAlign={'center'}
-              color="white"
-              flex={2}>
-              Simpan Perubahan
-            </Text>
-          </Button>
-          <Button
-            mt={4}
-            isLoadingText={'loading'}
-            borderRadius={20}
-            bg={'#fadedb'}
-            onPress={() => {
-              setIsOpen(true);
-            }}>
-            <Text
-              bold
-              fontSize={'xl'}
-              textAlign={'center'}
-              color="#e14f4c"
-              flex={2}>
-              Hapus Pegawai
-            </Text>
-          </Button>
+          />
+          {id ? (
+            <>
+              <View mt={4}>
+                <BaseButton
+                  onPress={() => {
+                    setIsOpen(true);
+                  }}
+                  isLoading={loading}
+                  size="xl"
+                  type="warning"
+                  bold={true}
+                  textColor="#e14f4c"
+                  label={t('delete-employee')}
+                  borderRadius={20}
+                />
+              </View>
+            </>
+          ) : null}
         </View>
       </ScrollView>
-
-      <Center>
-        <Modal
-          size={'lg'}
-          isOpen={isOpen}
-          onClose={() => {
-            // setDeleteProduct(false);
-            setIsOpen(false);
-          }}>
-          <Modal.Content mb={0} maxWidth="400px">
-            <Modal.CloseButton />
-            <Modal.Header>Hapus Pegawai</Modal.Header>
-            <Text mx={4} mt={4}>
-              'Apakah Anda yakin akan menghapus pegawai ini ?'
-            </Text>
-            <Modal.Body flexDirection={'row'}>
-              <Button
-                flex={1}
-                mx={4}
-                isLoading={loading}
-                bg={'#ef4536'}
-                onPress={() => {
-                  deleteEmployee(param?.route?.params);
-                }}>
-                <Text color={'#fdecec'}>Ya</Text>
-              </Button>
-              <Button
-                flex={1}
-                bg={'#fdecec'}
-                isLoading={loading}
-                onPress={() => {
-                  setIsOpen(false);
-                }}>
-                <Text color={'#ef4536'}>Tidak</Text>
-              </Button>
-            </Modal.Body>
-          </Modal.Content>
-        </Modal>
-      </Center>
+      <DeleteEmployeeModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        id={id}
+      />
     </>
   );
 };

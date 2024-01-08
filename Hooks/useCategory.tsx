@@ -3,6 +3,7 @@ import {useLoading} from '../Context';
 import {CategoryModel} from '../models/CategoryModel';
 import categoryNetwork from '../Network/lib/categories';
 import {MetaModel} from '../models/MetaModel';
+import {useIsFocused} from '@react-navigation/native';
 
 const useCategories = () => {
   const [categories, setCategories] = useState<CategoryModel[]>([]);
@@ -26,7 +27,7 @@ const useCategories = () => {
   const handleRefresh = () => {
     fetchCategories();
   };
-
+  const isFocused = useIsFocused();
   const newFetchData = () => {
     setPage(prevPage => prevPage + 1); // Use a function to update state based on the previous state
   };
@@ -36,11 +37,15 @@ const useCategories = () => {
     if (page <= metaProduct.last_page) {
       handleNewFetchData(page);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   useEffect(() => {
-    fetchCategories();
-  }, [searchKeyword]);
+    if (isFocused) {
+      fetchCategories();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchKeyword, isFocused]);
 
   const handleNewFetchData = async (page: number) => {
     try {

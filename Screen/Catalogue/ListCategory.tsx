@@ -8,12 +8,13 @@ import LoaderFooter from '../../Components/Footer/LoaderFooter';
 import {ListRenderItem} from 'react-native';
 import {CategoryModel} from '../../models/CategoryModel';
 import Search from '../../Components/Form/Search';
+import {useTranslation} from 'react-i18next';
 
 const ListCategory = () => {
   const {categories, newFetchData, handleRefresh, searchCategory} =
     useCategories();
   const {loading} = useLoading();
-
+  const {t} = useTranslation();
   const renderItem: ListRenderItem<CategoryModel> = ({item, index}) => (
     <View
       flex={1}
@@ -48,7 +49,7 @@ const ListCategory = () => {
           renderItem={renderItem}
           keyExtractor={item => `category-item-${item.id.toString()}`}
           numColumns={1}
-          ListFooterComponent={<LoaderFooter />}
+          ListFooterComponent={categories.length > 4 ? <LoaderFooter /> : null}
           onRefresh={handleRefresh}
           refreshing={false}
           onEndReached={newFetchData}
@@ -57,9 +58,9 @@ const ListCategory = () => {
         />
       ) : (
         <Empty
-          title={'Yuk, Tambah Kategori Jualanmu'}
+          title={t('empty-category')}
           showIMage={true}
-          subtitle={'Semua Kategori yang kamu miliki bisa diatur dari sini'}
+          subtitle={t('manage-category')}
         />
       )}
     </View>

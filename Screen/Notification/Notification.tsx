@@ -1,13 +1,15 @@
 import {Button, Image, Text, View} from 'native-base';
 import React, {useContext, useState} from 'react';
-import formattedDate from '../../Components/Date/Today';
 import NavBar from '../../Components/Navbar/Navbar';
 import Entypo from 'react-native-vector-icons/Entypo';
 import pushNotif from '../../Public/Assets/push-notif.jpg';
-import formattedTime from '../../Components/Time/TimeNow';
 import {PrimaryColorContext} from '../../Context';
+import formattedDate from '../../Util/Date/Today';
+import formattedTime from '../../Util/Time/TimeNow';
+import {useTranslation} from 'react-i18next';
 const NotificationScreen = () => {
   const [activeMethod, setActiveMethod] = useState('method1');
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
@@ -32,7 +34,7 @@ const NotificationScreen = () => {
             }
             borderBottomWidth={activeMethod === 'method1' ? 2 : 0}
             textAlign={'center'}>
-            Semua
+            {t('all')}
           </Button>
         </View>
         <View flex={1}>
@@ -54,7 +56,7 @@ const NotificationScreen = () => {
             }
             borderBottomWidth={activeMethod === 'method2' ? 2 : 0}
             textAlign={'center'}>
-            Transaksi
+            {t('transaction')}
           </Button>
         </View>
         <View flex={1}>
@@ -76,7 +78,7 @@ const NotificationScreen = () => {
             }
             borderBottomWidth={activeMethod === 'method3' ? 2 : 0}
             textAlign={'center'}>
-            Pesan
+            {t('msg')}
           </Button>
         </View>
       </View>
@@ -125,7 +127,7 @@ const NotificationScreen = () => {
             alt="logo-pemkab"
           />
           <Text position={'absolute'} color={'#b0b4d8'} bottom={200}>
-            Belum ada notifikasi
+            {t('no-notif')}
           </Text>
         </View>
       )}

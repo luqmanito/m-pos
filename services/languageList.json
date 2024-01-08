@@ -1,0 +1,10 @@
+{
+  "ina" :{
+    "name" : "Indonesia",
+    "nativeName" : "Bahasa Indonesia"
+  },
+  "en" :{
+    "name" : "English",
+    "nativeName" : "English"
+  }
+}

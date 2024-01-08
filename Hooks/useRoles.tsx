@@ -2,8 +2,6 @@ import {useEffect, useState} from 'react';
 import {useLoading} from '../Context';
 import roleNetwork from '../Network/lib/role';
 
-// import {RoleModel} from '../models/roleModel';
-
 export interface RoleModel {
   id: string;
   role: string;
@@ -23,13 +21,6 @@ const useRoles = () => {
     }[]
   >([]);
   const {setLoading} = useLoading();
-  // const [fetchData, setFetchData] = useState(false);
-  // const isFocused = useIsFocused();
-  // const isConnected = useNetworkInfo().isConnected;
-
-  // const handleRefresh = () => {
-  //   setFetchData(prevToggle => !prevToggle);
-  // };
 
   useEffect(() => {
     setLoading(true);

@@ -3,6 +3,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Input} from 'native-base';
 import {debounce} from 'lodash';
 import {PrimaryColorContext} from '../../Context';
+import {useTranslation} from 'react-i18next';
 
 type SearchProps = {
   placeHolder?: string;
@@ -12,6 +13,7 @@ type SearchProps = {
 const Search: FunctionComponent<SearchProps> = ({placeHolder, search}) => {
   const [searchResults, setSearchResults] = useState('');
   const primaryColor = useContext(PrimaryColorContext);
+  const {t} = useTranslation();
 
   const performSearch = (query: string) => {
     search(query);
@@ -20,7 +22,6 @@ const Search: FunctionComponent<SearchProps> = ({placeHolder, search}) => {
   const debouncedSearch = useMemo(() => debounce(performSearch, 2000), []);
 
   const handleSearchChange = (query: string) => {
-    // Call the debounced search function with the input query
     debouncedSearch(query);
     setSearchResults(query);
   };
@@ -28,7 +29,7 @@ const Search: FunctionComponent<SearchProps> = ({placeHolder, search}) => {
   return (
     <Input
       bg={'white'}
-      placeholder={!placeHolder ? 'Cari...' : placeHolder}
+      placeholder={!placeHolder ? t('search') : placeHolder}
       placeholderTextColor={'#888888'}
       variant="filled"
       value={searchResults}

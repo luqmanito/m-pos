@@ -1,53 +1,60 @@
 import React, {useState, useEffect} from 'react';
 import AuthNetwork from '../../Network/lib/auth';
-import {useSelector, useDispatch} from 'react-redux';
-import {
-  Center,
-  Box,
-  FormControl,
-  Input,
-  Text,
-  Pressable,
-  useToast,
-  Stack,
-  WarningOutlineIcon,
-  HStack,
-  Spinner,
-  Heading,
-} from 'native-base';
-import {RootState} from '../../Redux/store';
-import {setCode} from '../../Redux/Reducers/auth';
-import ToastAlert from '../../Components/Toast/Toast';
+import {Center, Text, Pressable, IconButton, Icon, View} from 'native-base';
+import Container from '../../Components/Layout/Container';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import BaseInput from '../../Components/Form/BaseInput';
+import BaseButton from '../../Components/Button/BaseButton';
+import useAlert from '../../Hooks/useAlert';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RouteProp} from '@react-navigation/native';
+import {RootStackParamList} from '../../Navigation/RootStackParamList';
+import {useTranslation} from 'react-i18next';
 
 type OtpScreenProps = {
-  navigation: any;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'OtpScreen'>;
+  route: RouteProp<RootStackParamList, 'OtpScreen'>;
 };
 
-export const OtpScreen: React.FC<OtpScreenProps> = ({navigation}) => {
+const OtpScreen: React.FC<OtpScreenProps> = ({navigation, route}) => {
   const [otp, setOtp] = useState('');
-  const emailUser = useSelector((state: RootState) => state.authSlice?.email);
+  const emailUser = route.params.email;
   const [isLoading, setIsLoading] = useState(false);
-  const [counter, setCounter] = useState(5);
-  const dispatch = useDispatch();
-  const toast = useToast();
+  const [counter, setCounter] = useState(60);
+  const alert = useAlert();
+  const {t} = useTranslation();
   function resendOtp(value: number): void {
     setCounter(value);
     handleSubmit();
   }
 
   const handleSubmit = async () => {
-    setIsLoading(true);
     try {
-      const response = await AuthNetwork.forgot({
+      await AuthNetwork.forgot({
         email: emailUser,
       });
-      if (response) {
-        setIsLoading(false);
-      }
     } catch (error) {
       console.log(error);
-      setIsLoading(false);
     }
+  };
+
+  const checkOTP = () => {
+    AuthNetwork.checkCode({
+      email: emailUser,
+      code: otp,
+    })
+      .then(() => {
+        navigation.navigate('PasswordScreen', {
+          email: emailUser,
+          otp: otp,
+        });
+      })
+      .catch(() => {
+        alert.showAlert('error', t('wrong-otp'));
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -58,88 +65,59 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({navigation}) => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const validationCheck = async () => {
-      setIsLoading(true);
-      try {
-        const response = await AuthNetwork.checkCode({
-          email: emailUser,
-          code: otp,
-        });
-        if (response) {
-          setIsLoading(false);
-          dispatch(setCode(otp));
-          navigation.navigate('PasswordScreen');
-        }
-      } catch (error) {
-        ToastAlert(toast, 'error', 'Kode OTP Salah!');
-        console.log(error);
-        setIsLoading(false);
-      }
-    };
-    if (otp.length === 6) {
-      validationCheck();
-    }
-  }, [otp, dispatch, toast, emailUser, navigation]);
+  const onClose = () => {
+    navigation.navigate('ForgotScreen');
+  };
 
   return (
     <>
-      <Center top={20}>
-        <Text fontSize="md" bold>
-          Masukkan Kode OTP
-        </Text>
-        <Text
-          numberOfLines={2}
-          textAlign={'center'}
-          mx={4}
-          mt={2}
-          fontSize="sm">
-          Kami sudah mengirimkan Email berisi kode OTP ke alamat email-mu.
-        </Text>
-
-        <Box w="100%" mt={30} alignItems="center">
-          <FormControl isRequired>
-            <Stack mx="4">
-              <FormControl.Label>Kode OTP</FormControl.Label>
-              <Input
-                onChangeText={text => setOtp(text)}
-                keyboardType="number-pad"
-                maxLength={6}
-                variant="underlined"
-                textAlign={'center'}
-                fontSize={30}
-              />
-              <FormControl.ErrorMessage
-                leftIcon={<WarningOutlineIcon size="xs" />}>
-                Kode OTP Salah.
-              </FormControl.ErrorMessage>
-            </Stack>
-          </FormControl>
-        </Box>
-      </Center>
-
-      <Center h={250}>
-        {counter === 0 ? (
-          <Pressable onPress={() => resendOtp(65)}>
-            <Text color={'blue.900'}>
-              Belum terima OTP? Kirim Ulang{' '}
-              {counter === 0 ? 'Sekarang' : `dalam ${counter} detik`}
+      <Container>
+        <View mt={5}>
+          <Center my={2}>
+            <Text fontSize="md" bold>
+              {t('otp-title')}
             </Text>
-          </Pressable>
-        ) : isLoading ? (
-          <HStack space={2} justifyContent="center">
-            <Spinner accessibilityLabel="Loading posts" />
-            <Heading color="primary.500" fontSize="md">
-              Loading
-            </Heading>
-          </HStack>
-        ) : (
-          <Text>
-            Belum terima OTP? Kirim Ulang{' '}
-            {counter === 0 ? 'Sekarang' : `dalam ${counter} detik`}
+            <Text mt={2} mb={4} fontSize="sm">
+              {t('otp-info')}
+            </Text>
+          </Center>
+          <IconButton
+            icon={<Icon as={MaterialIcons} name="close" />}
+            borderRadius="full"
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              padding: 8,
+            }}
+            onPress={onClose}
+          />
+        </View>
+        <BaseInput
+          inputKey={'email'}
+          isRequired={true}
+          label={t('otp-code')}
+          type={'text'}
+          keyboardType="number-pad"
+          onChangeText={text => setOtp(text)}
+        />
+        <BaseButton
+          type={'primary'}
+          mt={4}
+          onPress={checkOTP}
+          isLoading={isLoading}
+          label={t('submit')}
+        />
+        <Pressable mt={4} onPress={() => resendOtp(65)} disabled={counter > 0}>
+          <Text color={'blue.900'}>
+            {t('resend-otp')}{' '}
+            {counter === 0
+              ? t('resend-now')
+              : `${t('resend-time')} ${counter} ${t('resend-second')}`}
           </Text>
-        )}
-      </Center>
+        </Pressable>
+      </Container>
     </>
   );
 };
+export default OtpScreen;

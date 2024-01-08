@@ -1,80 +1,103 @@
 import {NavigationProp, useNavigation} from '@react-navigation/native';
-import {useToast} from 'native-base';
 import {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useDispatch} from 'react-redux';
-import ToastAlert from '../Components/Toast/Toast';
 import {useLoading} from '../Context';
 import {EmployeeDetailModel, ListEmployeeModel} from '../models/EmployeeModel';
+import {ErrorModel} from '../models/ErrorModel';
 import userNetwork from '../Network/lib/employee';
 import {setNewEmployeeData} from '../Redux/Reducers/employee';
-
-type PropsType = {
-  name: string;
-  value: string;
-};
+import useAlert from './useAlert';
 
 const useEmployee = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const {setLoading} = useLoading();
-  const toast = useToast();
+  const {t} = useTranslation();
+  const alert = useAlert();
   const dispatch = useDispatch();
+  const [errorBag, setErrorBag] = useState<ErrorModel | undefined>(undefined);
   const [listEmployee, setListEmployee] = useState<ListEmployeeModel>([]);
   const [detailEmployee, setDetailEmployee] = useState<EmployeeDetailModel>();
-  const [newEmployee, setNewEmployee] = useState({
-    name: null,
-    email: null,
-    role: null,
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    role: '',
     password: '',
     password_confirmation: '',
   });
 
-  const handleChangeData = ({name, value}: PropsType) => {
-    setNewEmployee({
-      ...newEmployee,
-      [name]: value,
-    });
+  const handleChangeData = (
+    key: string,
+    data: string | number | null,
+  ): void => {
+    setForm(prev => ({
+      ...prev,
+      [key]: data,
+    }));
+  };
+
+  const getFormError = (key: string): string => {
+    if (errorBag && errorBag.errors && errorBag.errors[key]) {
+      return errorBag.errors[key][0];
+    } else {
+      return '';
+    }
+  };
+
+  const isInvalid = (key: string): boolean => {
+    if (errorBag && errorBag.errors && errorBag.errors[key]) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const clearFormErrors = () => {
+    setErrorBag(undefined);
   };
 
   const addEmployee = async () => {
     setLoading(true);
-    try {
-      const response = await userNetwork.createUser({
-        name: newEmployee.name,
-        email: newEmployee.email,
-        password: newEmployee.password,
-        role: newEmployee.role,
-        password_confirmation: newEmployee.password_confirmation,
-      });
-      if (response) {
+    const formData = new FormData();
+    formData.append('name', form.name);
+    formData.append('email', form.email);
+    formData.append('password', form.password);
+    formData.append('password_confirmation', form.password_confirmation);
+    formData.append('role', form.role);
+    userNetwork
+      .createUser(formData)
+      .then(() => {
         dispatch(
           setNewEmployeeData({
-            name: newEmployee.name,
+            name: form.name,
             mobile_number: null,
-            email: newEmployee.email,
-            role: newEmployee.role,
+            email: form.email,
+            role: form.role,
           }),
         );
+        alert.showAlert('success', t('employee-added'));
         navigation.navigate('NewEmployee');
-        return response;
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+      })
+      .catch(err => {
+        setErrorBag(err);
+        alert.showAlert('error', err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const editEmployee = async (id: number) => {
+  const editEmployee = async (id: number | undefined | null) => {
     setLoading(true);
     try {
       const response = await userNetwork.updateUser({
-        name: newEmployee.name,
-        email: newEmployee.email,
-        role: newEmployee.role,
+        name: form.name,
+        email: form.email,
+        role: form.role,
         id,
       });
       if (response) {
-        ToastAlert(toast, 'sukses', 'Data Pegawai Berhasil diubah');
+        alert.showAlert('success', t('employee-edited'));
         navigation.navigate('SettingScreen');
         return response;
       }
@@ -85,24 +108,27 @@ const useEmployee = () => {
     }
   };
 
-  const getDetailEmployee = async (id: number | null) => {
-    setLoading(true);
-    try {
-      const response = await userNetwork.detailUser(id);
-      if (response) {
-        setDetailEmployee(response?.data);
-        setNewEmployee({
-          ...newEmployee,
-          ['name']: response?.data.name,
-          ['email']: response?.data.email,
-          ['role']: response?.data.role,
-        });
+  const getDetailEmployee = async (id: number | undefined | null) => {
+    if (id) {
+      try {
+        setLoading(true);
+        const response = await userNetwork.detailUser(id);
+        if (response) {
+          setDetailEmployee(response?.data);
+          setForm({
+            ...form,
+            ['name']: response?.data.name,
+            ['email']: response?.data.email,
+            ['role']: response?.data.role,
+          });
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
+    return null;
   };
   const restoreEmployee = async (id: number) => {
     setLoading(true);
@@ -117,12 +143,12 @@ const useEmployee = () => {
       setLoading(false);
     }
   };
-  const deleteEmployee = async (id: number) => {
+  const deleteEmployee = async (id: number | undefined | null) => {
     setLoading(true);
     try {
       const response = await userNetwork.deleteUser(id);
       if (response) {
-        ToastAlert(toast, 'sukses', 'Berhasil Menghapus Data Pegawai');
+        alert.showAlert('success', t('employee-deleted'));
         navigation.navigate('SettingScreen');
         return response;
       }
@@ -146,17 +172,24 @@ const useEmployee = () => {
         setLoading(false);
       }
     };
-    getListEmployee();
+    const routes = navigation.getState()?.routes;
+    const screenName = routes[routes.length - 1];
+    screenName.name === 'EmployeeDetail' ? null : getListEmployee();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setLoading]);
 
   return {
     handleChangeData,
     restoreEmployee,
+    errorBag,
+    clearFormErrors,
     listEmployee,
+    getFormError,
+    isInvalid,
     getDetailEmployee,
     detailEmployee,
     deleteEmployee,
-    newEmployee,
+    form,
     addEmployee,
     editEmployee,
   };

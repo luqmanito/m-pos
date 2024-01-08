@@ -1,5 +1,6 @@
 import {Pressable, Text, View} from 'native-base';
 import React from 'react';
+import {useTranslation} from 'react-i18next';
 
 type propsItems = {
   label: string;
@@ -18,6 +19,7 @@ const ItemList = ({
   color,
   actionText,
 }: propsItems) => {
+  const {t} = useTranslation();
   return (
     <View
       flexDirection={'row'}
@@ -33,7 +35,7 @@ const ItemList = ({
       </View>
       {connected && (
         <Text bold color={'emerald.500'}>
-          Terhubung
+          {t('connected')}
         </Text>
       )}
       {!connected && (

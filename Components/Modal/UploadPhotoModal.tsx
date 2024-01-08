@@ -2,7 +2,7 @@ import React from 'react';
 import {Modal, Button, Center} from 'native-base';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {useTranslation} from 'react-i18next';
 
 interface UploadPhotoModalProps {
   isOpen: boolean;
@@ -19,6 +19,7 @@ const UploadPhotoModal: React.FC<UploadPhotoModalProps> = ({
   openGallery,
   textHeader,
 }) => {
+  const {t} = useTranslation();
   return (
     <Center>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
@@ -36,30 +37,16 @@ const UploadPhotoModal: React.FC<UploadPhotoModalProps> = ({
                 />
               }
               onPress={openCamera}>
-              Ambil Foto Kamera
+              {t('take-photo')}
             </Button>
             <Button
               bg={'#29B9DC'}
               leftIcon={<Fontisto name="photograph" size={20} color="white" />}
               onPress={openGallery}
               mt={4}>
-              Via Gallery
+              {t('gallery')}
             </Button>
           </Modal.Body>
-          <Modal.Footer>
-            <Button.Group space={2}>
-              <Button
-                leftIcon={
-                  <MaterialIcons name="cancel" size={20} color="white" />
-                }
-                colorScheme="danger"
-                onPress={() => {
-                  setIsOpen(false);
-                }}>
-                Batalkan
-              </Button>
-            </Button.Group>
-          </Modal.Footer>
         </Modal.Content>
       </Modal>
     </Center>

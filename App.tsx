@@ -14,6 +14,9 @@ import {navigationRef, navigate} from './Network/rootNavigator';
 import NotificationHandler from './NotificationHandler';
 import {AuthProvider} from './Contexts/Auth';
 import {Router} from './Navigation/Router';
+import i18next from './services/i18next';
+import {I18nextProvider} from 'react-i18next';
+
 export const screenWidth = Dimensions.get('window').width;
 
 messaging().setBackgroundMessageHandler(async remoteMessage => {
@@ -30,7 +33,6 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     initFCMHandlers();
     setIsLoading(false);
@@ -67,6 +69,7 @@ const App = () => {
       secondary: {
         400: '#ffe96c',
       },
+      warning: '#fadedb',
       danger: '#FF5252',
     },
     config: {
@@ -76,29 +79,31 @@ const App = () => {
   });
 
   return (
-    <LoadingProvider>
-      <PrimaryColorProvider>
-        <AuthProvider>
-          <Provider store={store}>
-            <ReduxNetworkProvider
-              pingTimeout={1000}
-              pingServerUrl={'https://www.google.com/'}
-              shouldPing={false}
-              pingInterval={1000}
-              pingOnlyIfOffline={true}
-              pingInBackground={false}
-              httpMethod={'HEAD'}>
-              <NavigationContainer ref={navigationRef}>
-                <NativeBaseProvider theme={theme}>
-                  <Router />
-                  <NotificationHandler />
-                </NativeBaseProvider>
-              </NavigationContainer>
-            </ReduxNetworkProvider>
-          </Provider>
-        </AuthProvider>
-      </PrimaryColorProvider>
-    </LoadingProvider>
+    <I18nextProvider i18n={i18next}>
+      <LoadingProvider>
+        <PrimaryColorProvider>
+          <AuthProvider>
+            <Provider store={store}>
+              <ReduxNetworkProvider
+                pingTimeout={1000}
+                pingServerUrl={'https://www.google.com/'}
+                shouldPing={false}
+                pingInterval={1000}
+                pingOnlyIfOffline={true}
+                pingInBackground={false}
+                httpMethod={'HEAD'}>
+                <NavigationContainer ref={navigationRef}>
+                  <NativeBaseProvider theme={theme}>
+                    <Router />
+                    <NotificationHandler />
+                  </NativeBaseProvider>
+                </NavigationContainer>
+              </ReduxNetworkProvider>
+            </Provider>
+          </AuthProvider>
+        </PrimaryColorProvider>
+      </LoadingProvider>
+    </I18nextProvider>
   );
 };
 

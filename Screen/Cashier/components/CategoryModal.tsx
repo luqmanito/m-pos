@@ -14,6 +14,7 @@ import {PrimaryColorContext} from '../../../Context';
 import {useDispatch} from 'react-redux';
 import {setCategoryName} from '../../../Redux/Reducers/product';
 import useCategories from '../../../Hooks/useCategory';
+import {useTranslation} from 'react-i18next';
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const [categoriesName, setCategoriesName] = useState('');
   const [selectedCategories, setSelectedCategories] = useState(0);
   const {categories} = useCategories();
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   const dispatch = useDispatch();
 
@@ -45,18 +47,18 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
           <Modal.CloseButton />
           <Modal.Header>
             <Text bold fontSize={'2xl'}>
-              Etalase
+              {t('category')}
             </Text>
           </Modal.Header>
           <Modal.Body>
             <Pressable
               onPress={() => {
-                setCategoriesName('Semua Produk');
+                setCategoriesName(t('all-products'));
                 setSelectedCategories(0);
               }}>
               <View flexDirection={'row'}>
                 <Text flex={11} mb={2}>
-                  Semua Produk
+                  {t('all-products')}
                 </Text>
                 <View flex={1} mb={2}>
                   {selectedCategories === 0 ? (
@@ -106,7 +108,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               justifyContent={'center'}
               bg={color || primaryColor?.primaryColor}>
               <Text fontSize={'lg'} color="white">
-                Tampilkan
+                {t('set')}
               </Text>
             </Button>
           </Modal.Body>

@@ -12,11 +12,13 @@ import ReusableButton from '../../Components/Button/ReusableButton';
 import ProductList from './ListProduct';
 import ShoppingCartSummary from './components/ShoppingCartSummary';
 import CategoryModal from './components/CategoryModal';
+import {useTranslation} from 'react-i18next';
 
 export const CashierScreen: React.FC = () => {
   const primaryColor = useContext(PrimaryColorContext);
+  const {t} = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedCategories, setSelectedCategories] = React.useState(0);
+  const [selectedCategories, setSelectedCategories] = useState(0);
   const dispatch = useDispatch();
 
   const updateParentState = (newValue: boolean) => {
@@ -36,7 +38,7 @@ export const CashierScreen: React.FC = () => {
   return (
     <>
       <View ml={4} position={'relative'}>
-        <NetworkStatusHeader title={'Kasir'} />
+        <NetworkStatusHeader title={t('cashier')} />
         <View
           position={'absolute'}
           right={0}

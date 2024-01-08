@@ -4,7 +4,7 @@ import {ProductListModel, ProductModel} from '../../models/ProductModel';
 import {ErrorModel} from '../../models/ErrorModel';
 
 type productDetailProps = {
-  id: number | null;
+  id?: number | null;
 };
 
 export default {
@@ -57,7 +57,7 @@ export default {
   deleteImages({id}: {id: number}): Promise<AxiosResponse> {
     return axiosClient.delete(`api/media/${id}`);
   },
-  deleteProduct({id}: {id: number}): Promise<AxiosResponse> {
+  deleteProduct({id}: {id: number | null}): Promise<AxiosResponse> {
     return axiosClient.delete(`api/products/${id}`);
   },
   productList(data: any): Promise<AxiosResponse<ProductListModel>> {

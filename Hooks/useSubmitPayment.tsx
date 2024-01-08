@@ -3,16 +3,16 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../Redux/store';
 import cache from '../Util/cache';
 import orderNetwork from '../Network/lib/order';
-import ToastAlert from '../Components/Toast/Toast';
-import {useToast} from 'native-base';
 import {useLoading} from '../Context';
 import useUserInfo from './useUserInfo';
 import useOrders from './useOrders';
 import {createPayment} from '../Redux/Reducers/payment';
 import {useGenerateInvoiceNumber} from './useInvoiceTemporary';
-import {getCurrentDateTime} from '../Components/Date/Time';
-import {dates} from '../Components/Date/Today';
 import {useReport} from './useReport';
+import {getCurrentDateTime} from '../Util/Date/Time';
+import {dates} from '../Util/Date/Today';
+import useAlert from './useAlert';
+import {useTranslation} from 'react-i18next';
 
 export type Root = Root2[];
 
@@ -34,19 +34,14 @@ export interface Product {
 }
 
 const usePaymentSubmit = () => {
-  // const paymentMethodCode = useSelector(
-  //   (state: RootState) => state.buttonSlice?.payment_methodId,
-  // );
-
+  const alert = useAlert();
   const handleRefreshReport = useReport().handleRefresh;
   const dispatch = useDispatch();
+  const {t} = useTranslation();
   const {setLoading} = useLoading();
-  const toast = useToast();
   const {userData} = useUserInfo();
   const invoiceNumber = useGenerateInvoiceNumber();
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
-  // const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
-  // const [nominal, setNominal] = useState<number>(0);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
   const filteredItems = cartItems.filter(item => item.quantity > 0);
   const {handleRefresh} = useOrders();
@@ -85,12 +80,12 @@ const usePaymentSubmit = () => {
       });
 
       if (response) {
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Dikonfirmasi');
+        alert.showAlert('success', t('confirm-order'));
         navigation.navigate('Dashboard', {screen: 'Order'});
       }
     } catch (error: any) {
       console.log(error);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     } finally {
       setLoading(false);
@@ -105,7 +100,7 @@ const usePaymentSubmit = () => {
       return response;
     } catch (error: any) {
       console.log(error);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     } finally {
       setLoading(false);
@@ -117,14 +112,12 @@ const usePaymentSubmit = () => {
     try {
       const response = await orderNetwork.orderCompleted(orderId);
       if (response) {
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Diselesaikan');
-        // dispatch(clearCartPayment());
-        // dispatch(clearStateButton());
+        alert.showAlert('success', t('order-done'));
       }
       return response;
     } catch (error: any) {
       console.log(error);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     } finally {
       handleRefresh();
@@ -154,17 +147,13 @@ const usePaymentSubmit = () => {
             cashierName: userData?.name,
           }),
         );
-        // ToastAlert(toast, 'sukses', 'Berhasil Bayar');
         navigation.navigate('SuccessfulPaymentScreen');
-
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Diselesaikan');
-        // dispatch(clearCartPayment());
-        // dispatch(clearStateButton());
+        alert.showAlert('success', t('order-done'));
       }
       return response;
     } catch (error: any) {
       console.log(error);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     } finally {
       handleRefresh();
@@ -211,17 +200,17 @@ const usePaymentSubmit = () => {
       for (const response of responses) {
         completedResponses++;
         if (response) {
-          ToastAlert(toast, 'sukses', 'Data Berhasil Dikirim');
+          alert.showAlert('success', t('data-sent'));
         } else {
-          ToastAlert(toast, 'error', 'Gagal Mengirim Data');
+          alert.showAlert('error', t('send-data-fail'));
         }
         if (completedResponses === responses.length) {
           setLoading(false);
-          ToastAlert(toast, 'sukses', 'Data Berhasil Dikirim');
+          alert.showAlert('success', t('data-sent'));
         }
       }
     } catch (error: any) {
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     } finally {
       setLoading(false);
@@ -260,12 +249,12 @@ const usePaymentSubmit = () => {
             cashierName: userData?.name,
           }),
         );
-        ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+        alert.showAlert('success', t('pay-done'));
         navigation.navigate('SuccessfulPaymentScreen');
       }
     } catch (error: any) {
       submitFailedPayment();
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     }
   };
@@ -297,7 +286,7 @@ const usePaymentSubmit = () => {
       if (dataSubmissions) {
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Tersimpan');
+        alert.showAlert('success', t('offline-pay'));
         navigation.navigate('SuccessfulPaymentScreen');
         dispatch(
           createPayment({
@@ -314,7 +303,7 @@ const usePaymentSubmit = () => {
         dataSubmissions = [];
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Tersimpan');
+        alert.showAlert('success', t('offline-pay'));
         navigation.navigate('SuccessfulPaymentScreen');
         dispatch(
           createPayment({
@@ -329,8 +318,7 @@ const usePaymentSubmit = () => {
         );
       }
     } catch (error: any) {
-      ToastAlert(toast, 'error', error?.response?.data?.message);
-      // console.error('Error payment:', error);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     }
   };
@@ -338,7 +326,6 @@ const usePaymentSubmit = () => {
   return {
     submitPayment,
     singleSubmitPayment,
-    // orderReady,
     orderCompleted,
     submitFailedPayment,
     updateOrder,

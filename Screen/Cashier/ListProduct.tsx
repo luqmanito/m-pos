@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 
-import {View, FlatList, Text, Center} from 'native-base'; // Import your components
+import {View, FlatList, Center} from 'native-base';
 import useProducts from '../../Hooks/useProducts';
 import Product from '../../Components/Product/Product';
 import {ListRenderItem} from 'react-native';
@@ -14,6 +14,8 @@ import Search from '../../Components/Form/Search';
 import CategoryForm from './components/CategoryForm';
 import {RootState} from '../../Redux/store';
 import {useSelector} from 'react-redux';
+import {useTranslation} from 'react-i18next';
+import ContainerNav from '../../Components/Layout/ContainerNav';
 
 interface ChildProps {
   updateParentState: (newValue: boolean) => void;
@@ -24,6 +26,7 @@ const ProductList: React.FC<ChildProps> = ({
   updateParentState,
   selectedCategories,
 }) => {
+  const {t} = useTranslation();
   const {loading} = useLoading();
   const [searchResults, setSearchResults] = useState('');
   const categoryName = useSelector(
@@ -59,6 +62,10 @@ const ProductList: React.FC<ChildProps> = ({
     updateParentState(newValue);
   };
 
+  const isLastPage = useSelector(
+    (state: RootState) => state.buttonSlice.isLastPage,
+  );
+
   useEffect(() => {
     handleCategory(selectedCategories);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +85,7 @@ const ProductList: React.FC<ChildProps> = ({
         <Center px={2} w={'50%'} borderRadius={20}>
           <CategoryForm
             onPress={() => handleChange(true)}
-            placeholder="Pilih Kategori"
+            placeholder={t('set-category')}
             value={categoryName}
           />
         </Center>
@@ -93,22 +100,26 @@ const ProductList: React.FC<ChildProps> = ({
             renderItem={renderItem}
             keyExtractor={item => item.id.toString()}
             numColumns={numOfColumns()}
-            ListFooterComponent={<LoaderFooter />}
+            ListFooterComponent={
+              !isLastPage && product?.length > 4 ? <LoaderFooter /> : null
+            }
             onRefresh={handleRefresh}
             refreshing={false}
             onEndReached={newFetchData}
-            onEndReachedThreshold={10}
+            onEndReachedThreshold={0.5}
           />
         ) : product?.length === 0 && searchResults ? (
-          <View mt={12} justifyContent={'center'} alignItems={'center'}>
-            <Text bold> Tidak Ada Data Ditemukan</Text>
-          </View>
+          <Empty title={t('no-data-found')} showIMage={false} />
         ) : (
-          <Empty
-            title={'Yuk, Tambah Produk Jualanmu'}
-            showIMage={true}
-            subtitle={'Semua produk yang kamu jual bisa diatur dari sini'}
-          />
+          <ContainerNav>
+            <View mt={16}>
+              <Empty
+                title={t('empty-product')}
+                showIMage={true}
+                subtitle={t('all-product')}
+              />
+            </View>
+          </ContainerNav>
         )}
       </View>
     </>

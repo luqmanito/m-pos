@@ -10,11 +10,13 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {OrderScreen} from '../Screen/Order/Order';
 import ReportScreen from '../Screen/Report/Report';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {useTranslation} from 'react-i18next';
 const Tab = createBottomTabNavigator();
 
 type DashboardProps = {};
 const Dashboard: React.FC<DashboardProps> = () => {
   const primaryColor = useContext(PrimaryColorContext);
+  const {t} = useTranslation();
 
   return (
     <Tab.Navigator
@@ -39,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               color={focused ? color : '#999999'}
               textAlign={'center'}
               fontSize={'xs'}>
-              Home
+              {t('home')}
             </Text>
           ),
         }}
@@ -60,7 +62,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               color={focused ? color : '#999999'}
               textAlign={'center'}
               fontSize={'xs'}>
-              Katalog
+              {t('catalogue')}
             </Text>
           ),
         }}
@@ -81,7 +83,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               color={focused ? color : '#999999'}
               textAlign={'center'}
               fontSize={'xs'}>
-              Kasir
+              {t('cashier')}
             </Text>
           ),
         }}
@@ -102,7 +104,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               color={focused ? color : '#999999'}
               textAlign={'center'}
               fontSize={'xs'}>
-              Pesanan
+              {t('order')}
             </Text>
           ),
         }}
@@ -120,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
           ),
           tabBarLabel: ({focused, color}) => (
             <Text fontSize={'xs'} color={focused ? color : '#999999'}>
-              Laporan
+              {t('report')}
             </Text>
           ),
         }}

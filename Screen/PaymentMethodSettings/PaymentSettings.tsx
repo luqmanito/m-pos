@@ -16,17 +16,19 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import usePaymentMethod from '../../Hooks/usePaymentMethod';
 import useChangePaymentStatus from '../../Hooks/useChangePaymentStatus';
 import {PrimaryColorContext} from '../../Context';
+import {useTranslation} from 'react-i18next';
 
 const PaymentSettings = () => {
   const {paymentMethod} = usePaymentMethod();
   const submitChange = useChangePaymentStatus().submitChange;
   const [isOpen, setIsOpen] = useState(false);
+  const {t} = useTranslation();
   const [selectedPayment, setSelectedPayment] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<number | null>(null);
   const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
-      <NavBar msg="Metode Pembayaran" />
+      <NavBar msg={t('payment-method')} />
       <ScrollView>
         <View bg={'white'} mt={4} mx={4} borderRadius={10}>
           {paymentMethod.map((payment, index) => {
@@ -77,15 +79,14 @@ const PaymentSettings = () => {
         <Modal size={'full'} isOpen={isOpen} onClose={() => setIsOpen(false)}>
           <Modal.Content mb={0} mt={'auto'} maxWidth="400px">
             <Modal.CloseButton />
-            <Modal.Header>{'Konfirmasi Perubahan ?'}</Modal.Header>
+            <Modal.Header>{t('method-payment-modal-title')}</Modal.Header>
             <Modal.Body>
-              <Text>Apakah anda ingin mengubah status pembayaran ?</Text>
+              <Text>{t('method-payment-info')}</Text>
               <Button
                 mt={4}
                 bg={primaryColor?.primaryColor}
                 onPress={() => {
                   setIsOpen(false);
-                  // refreshPage();
                   submitChange({
                     payment_method_id: selectedPayment,
                     status: currentStatus,
@@ -93,7 +94,7 @@ const PaymentSettings = () => {
                 }}
                 leftIcon={<FontAwesome name="check" size={15} color="white" />}>
                 <Text bold color={primaryColor?.secondaryColor}>
-                  Iya
+                  {t('yes')}
                 </Text>
               </Button>
               <Button
@@ -108,7 +109,7 @@ const PaymentSettings = () => {
                   />
                 }>
                 <Text bold color={primaryColor?.primaryColor}>
-                  Batal
+                  {t('cancel')}
                 </Text>
               </Button>
             </Modal.Body>

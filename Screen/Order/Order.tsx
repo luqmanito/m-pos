@@ -7,9 +7,11 @@ import {clearDataCamera} from '../../Redux/Reducers/upload';
 import NetworkStatusHeader from '../../Components/Header/NetworkStatusHeader';
 import ListOrder from './Components/ListOrder';
 import OrderModal from './Components/OrderModal';
+import {useTranslation} from 'react-i18next';
 
 export const OrderScreen: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const {t} = useTranslation();
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('Pending');
   const dispatch = useDispatch();
@@ -33,7 +35,7 @@ export const OrderScreen: React.FC = () => {
   return (
     <>
       <View mx={4} flex={1}>
-        <NetworkStatusHeader title={'Pesanan'} />
+        <NetworkStatusHeader title={t('order')} />
         <ListOrder
           filterName={selectedFilter}
           updateFilter={updateStatusParent}

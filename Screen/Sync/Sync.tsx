@@ -1,12 +1,12 @@
 import {Button, Text, View} from 'native-base';
 import React, {useContext, useEffect, useState} from 'react';
 import {PrimaryColorContext, useLoading} from '../../Context';
-import {getCurrentDateTime} from '../../Components/Date/Time';
 import NavBar from '../../Components/Navbar/Navbar';
 import useCategories from '../../Hooks/useCategory';
-import useProducts from '../../Hooks/useProducts';
 import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 import cache from '../../Util/cache';
+import {getCurrentDateTime} from '../../Util/Date/Time';
+import {useTranslation} from 'react-i18next';
 
 const SyncDataScreen = () => {
   const {loading} = useLoading();
@@ -15,7 +15,7 @@ const SyncDataScreen = () => {
     let dataSubmissions = await cache.get('paymentSubmissions');
     setDataSync(dataSubmissions);
   };
-  // const {fetchAllProductsCache} = useProducts('cashier');
+  const {t} = useTranslation();
   const {fetchCategories} = useCategories();
   const {submitPayment} = usePaymentSubmit();
   const primaryColor = useContext(PrimaryColorContext);
@@ -29,15 +29,12 @@ const SyncDataScreen = () => {
       <View mx={4}>
         <View>
           <Text mt={4} bold fontSize={'3xl'}>
-            Transaksi
-            <Text fontSize={'xl'} italic>
-              {` (terakhir di update : ${getCurrentDateTime()})`}
-            </Text>
+            {t('transaction')}
           </Text>
           <Text fontSize={'xl'} mt={2}>
-            Terdapat
+            {t('there')}
             <Text bold> {dataSync?.length ? dataSync?.length : '0'} </Text>
-            transaksi tersimpan di local
+            {t('on-local')}
           </Text>
         </View>
         <View mt={4}>
@@ -46,40 +43,37 @@ const SyncDataScreen = () => {
             isLoadingText={'loading'}
             onPress={() => {
               submitPayment(dataSync);
-              // fetchAllProductsCache();
             }}
             isDisabled={dataSync === null || dataSync.length === 0}
             bg={primaryColor?.primaryColor}
             borderRadius={10}>
             <Text color={'white'} fontSize={'lg'}>
-              Kirim data transaksi
+              {t('send-data')}
             </Text>
           </Button>
         </View>
         <View>
           <Text mt={4} bold fontSize={'3xl'}>
-            Produk
+            {t('product')}
             <Text fontSize={'xl'} italic>
               {` (terakhir di update : ${getCurrentDateTime()})`}
             </Text>
           </Text>
           <Text fontSize={'xl'} mt={2}>
-            Ambil data produk dari server
+            {t('take-data')}
           </Text>
         </View>
         <View mt={4}>
           <Button
             isLoading={loading}
             isLoadingText={'loading'}
-            // isDisabled={}
             onPress={() => {
               fetchCategories();
-              // fetchAllProductsCache();
             }}
             bg={primaryColor?.primaryColor}
             borderRadius={10}>
             <Text color={'white'} fontSize={'lg'}>
-              Download data produk
+              {t('download-data')}
             </Text>
           </Button>
         </View>

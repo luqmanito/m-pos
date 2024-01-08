@@ -1,201 +1,121 @@
-import React, {useState, useEffect, useContext} from 'react';
-import {StyleSheet, Dimensions} from 'react-native';
-import pass from '../../Public/Assets/pass.png';
+import React, {useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
 import AuthNetwork from '../../Network/lib/auth';
-import {useSelector} from 'react-redux';
-import {
-  Center,
-  Image,
-  Box,
-  FormControl,
-  Input,
-  Button,
-  useToast,
-  Text,
-  Pressable,
-  Stack,
-  Icon,
-  View,
-  WarningOutlineIcon,
-} from 'native-base';
-import {RootState} from '../../Redux/store';
-import ToastAlert from '../../Components/Toast/Toast';
-import {PrimaryColorContext} from '../../Context';
+import {Center, Text, Pressable, Icon, View} from 'native-base';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../Navigation/RootStackParamList';
+import {RouteProp} from '@react-navigation/native';
+import Container from '../../Components/Layout/Container';
+import BaseInput from '../../Components/Form/BaseInput';
+import BaseButton from '../../Components/Button/BaseButton';
+import useErrorHandler from '../../Hooks/useErrorHandler';
+import useAlert from '../../Hooks/useAlert';
+import {ErrorModel} from '../../models/ErrorModel';
+import {useTranslation} from 'react-i18next';
 
 type PasswordScreenProps = {
-  navigation: any; // If you are using react-navigation, replace any with the correct navigation type
+  navigation: NativeStackNavigationProp<RootStackParamList, 'PasswordScreen'>;
+  route: RouteProp<RootStackParamList, 'PasswordScreen'>;
 };
 
-const {height} = Dimensions.get('window');
-export const PasswordScreen: React.FC<PasswordScreenProps> = ({navigation}) => {
+const PasswordScreen: React.FC<PasswordScreenProps> = ({navigation, route}) => {
   const [confirmPassword, setConfirmPassword] = useState('');
+  const {t} = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [strongPassword, setStrongPassword] = useState(false);
   const [show, setShow] = React.useState(false);
-  const toast = useToast();
-  const emailUser = useSelector((state: RootState) => state.authSlice?.email);
-  const otpCode = useSelector((state: RootState) => state.authSlice?.code);
-
-  function isStrongPassword(input: string): void {
-    const passwordPattern = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (passwordPattern.test(input) === true) {
-      setStrongPassword(true);
-    } else {
-      setStrongPassword(false);
-    }
-  }
-  const primaryColor = useContext(PrimaryColorContext);
-  useEffect(() => {
-    if (newPassword.length > 0) {
-      isStrongPassword(newPassword);
-    } else {
-      setStrongPassword(true);
-    }
-  }, [newPassword]);
+  const emailUser = route.params.email;
+  const otpCode = route.params.otp;
+  const {getFormError, clearFormErrors, setFormErrors, isInvalid} =
+    useErrorHandler();
+  const alert = useAlert();
 
   const handleSubmit = async () => {
-    if (newPassword === '' || confirmPassword === '') {
-    } else {
-      setIsLoading(true);
-      try {
-        const response = await AuthNetwork.passwordReset({
-          email: emailUser,
-          password: newPassword,
-          password_confirmation: confirmPassword,
-          code: otpCode,
-        });
-        if (response) {
-          setIsLoading(false);
-          navigation.navigate('LoginScreen');
-          ToastAlert(toast, 'sukses', 'Password Berhasil Diubah');
-        }
-      } catch (error: any) {
-        ToastAlert(toast, 'error', error?.response?.data?.errors?.password);
+    clearFormErrors();
+    setIsLoading(true);
+    AuthNetwork.passwordReset({
+      email: emailUser,
+      password: newPassword,
+      password_confirmation: confirmPassword,
+      code: otpCode,
+    })
+      .then(() => {
+        alert.showAlert('success', t('pwd-success'));
+        navigation.navigate('LoginScreen');
+      })
+      .catch(e => {
+        const err: ErrorModel | undefined = e.response.data;
+        setFormErrors(err);
+        alert.showAlert('error', 'check your form');
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    }
+      });
   };
 
   return (
     <>
-      <Center mb={-8} h={'40%'}>
-        <Image
-          source={pass}
-          style={styles.image}
-          width={'90%'}
-          resizeMode="contain"
-          alt="logo-pemkab"
-        />
-      </Center>
-      <Center>
-        <Text fontSize="md" bold>
-          Perbarui Password-mu Dulu, Yuk
-        </Text>
-        <Text mt={2} fontSize="sm">
-          Setelah diperbarui jangan sampai lupa, ya.
-        </Text>
-
-        <Box w="100%" mt={30} alignItems="center">
-          <FormControl
-            isInvalid={strongPassword === false ? true : false}
-            isRequired>
-            <Stack mx="4">
-              <FormControl.Label>Password Baru</FormControl.Label>
-              <Input
-                onChangeText={text => setNewPassword(text)}
-                type={show ? 'text' : 'password'}
-                placeholder="Masukkan Password Baru"
-                InputRightElement={
-                  <Pressable onPress={() => setShow(!show)}>
-                    <Icon
-                      as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
-                      size={5}
-                      mr="2"
-                      color="muted.400"
-                    />
-                  </Pressable>
-                }
-              />
-              {strongPassword === false ? (
-                <FormControl.ErrorMessage
-                  leftIcon={<WarningOutlineIcon size="xs" />}>
-                  Min 8 karakter dengan kombinasi min 1 huruf kapital dan angka.
-                </FormControl.ErrorMessage>
-              ) : null}
-            </Stack>
-          </FormControl>
-        </Box>
-        <Box w="100%" marginTop={4} alignItems="center">
-          <FormControl isRequired>
-            <Stack mx="4">
-              <FormControl.Label>Konfirmasi Password</FormControl.Label>
-              <Input
-                onChangeText={text => setConfirmPassword(text)}
-                type={show ? 'text' : 'password'}
-                placeholder="Ulangi Password"
-                InputRightElement={
-                  <Pressable onPress={() => setShow(!show)}>
-                    <Icon
-                      as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
-                      size={5}
-                      mr="2"
-                      color="muted.400"
-                    />
-                  </Pressable>
-                }
-              />
-            </Stack>
-          </FormControl>
-        </Box>
-      </Center>
-
-      <Center h={300}>
-        <View position={'absolute'} bottom={10} w={'90%'}>
-          <Button
-            borderRadius={34}
-            isDisabled={!newPassword || !confirmPassword ? true : false}
-            onPress={handleSubmit}
-            isLoading={isLoading ? true : false}
-            isLoadingText="Loading"
-            w={'100%'}
-            marginTop={5}
-            bg={primaryColor?.primaryColor}>
-            <Text fontSize={'md'} color="white">
-              <Entypo name="check" size={15} color="white" /> Perbarui Password
+      <Container>
+        <View mt={5}>
+          <Center my={2}>
+            <Text fontSize="md" bold>
+              {t('pwd-change')}
             </Text>
-          </Button>
+            <Text mt={2} mb={4} fontSize="sm">
+              {t('pwd-info')}
+            </Text>
+          </Center>
         </View>
-      </Center>
+        <BaseInput
+          inputKey={'password'}
+          isRequired={true}
+          label={'Password'}
+          placeholder={t('enter-pwd')}
+          type={show ? 'text' : 'password'}
+          isInvalid={isInvalid('password')}
+          warningMessage={getFormError('password')}
+          onChangeText={text => setNewPassword(text)}
+          rightIcon={
+            <Pressable onPress={() => setShow(!show)}>
+              <Icon
+                as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
+                size={5}
+                mr="2"
+                color="muted.400"
+              />
+            </Pressable>
+          }
+        />
+        <BaseInput
+          inputKey={'password_confirmation'}
+          isRequired={true}
+          label={t('repeat-password')}
+          placeholder={t('repeat-password')}
+          type={show ? 'text' : 'password'}
+          isInvalid={isInvalid('password_confirmation')}
+          warningMessage={getFormError('password_confirmation')}
+          onChangeText={text => setConfirmPassword(text)}
+          rightIcon={
+            <Pressable onPress={() => setShow(!show)}>
+              <Icon
+                as={<Ionicons name={show ? 'eye' : 'eye-off'} />}
+                size={5}
+                mr="2"
+                color="muted.400"
+              />
+            </Pressable>
+          }
+        />
+        <BaseButton
+          type={'primary'}
+          mt={4}
+          onPress={handleSubmit}
+          isLoading={isLoading}
+          isDisabled={isLoading}
+          label={t('new-pwd')}
+        />
+      </Container>
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  image: {
-    top: 10,
-  },
-  text: {
-    position: 'absolute',
-    bottom: 0,
-    fontSize: 14,
-    color: 'black',
-    height: height * 0.162,
-  },
-  text2: {
-    position: 'absolute',
-    bottom: 0,
-    fontSize: 14,
-    color: 'black',
-    height: height * 0.13,
-  },
-  textCiamis: {
-    position: 'absolute',
-    bottom: 0,
-    fontSize: 14,
-    color: 'black',
-    height: height * 0.1,
-  },
-});
+export default PasswordScreen;

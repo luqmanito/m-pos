@@ -7,7 +7,7 @@ export const screenWidth = Dimensions.get('window').width;
 
 const axiosClient = axios.create({
   baseURL: Config.API_URL,
-  timeout: 300,
+  timeout: 3000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -55,7 +55,7 @@ axiosClient.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       handleExpired();
     }
-    console.log(
+    console.error(
       '\x1b[42m',
       error.response.status,
       error.response.config.url,

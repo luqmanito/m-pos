@@ -10,28 +10,28 @@ import Tabs from '../../Components/Tab/Tabs';
 import FloatingButton from '../../Components/Button/FloatingButton';
 import ListProduct from './ListProduct';
 import ListCategory from './ListCategory';
-import Container from '../../Components/Layout/Container';
 import {useDispatch} from 'react-redux';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
 import {useLoading} from '../../Context';
+import ContainerNav from '../../Components/Layout/ContainerNav';
+import {useTranslation} from 'react-i18next';
 
 const CatalogueScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Tab1');
-
+  const {t} = useTranslation();
   const handleTabPress = (tabName: string) => {
     setActiveTab(tabName);
   };
 
   const navigation = useNavigation<NavigationProp<any>>();
   const tabs = [
-    {label: 'Produk', tab: 'Tab1'},
-    {label: 'Kategori', tab: 'Tab2'},
+    {label: t('product'), tab: 'Tab1'},
+    {label: t('category'), tab: 'Tab2'},
   ];
 
   const add = () => {
     navigation.navigate(
       activeTab === 'Tab1' ? 'ProductDetail' : 'AddCategoryScreen',
-      // activeTab === 'Tab1' ? 'AddProductScreen' : 'AddCategoryScreen',
     );
   };
   const dispatch = useDispatch();
@@ -47,14 +47,14 @@ const CatalogueScreen: React.FC = () => {
 
   return (
     <>
-      <Container>
-        <NetworkStatusHeader title={'Katalog'} />
+      <ContainerNav>
+        <NetworkStatusHeader title={t('catalogue')} />
         <Tabs tabs={tabs} onTabChange={value => handleTabPress(value)} />
         {activeTab === 'Tab1' ? <ListProduct /> : <ListCategory />}
-      </Container>
+      </ContainerNav>
       <FloatingButton
         onPress={add}
-        label={activeTab === 'Tab1' ? 'Tambah Produk' : 'Tambah Kategori'}
+        label={activeTab === 'Tab1' ? t('add-product') : t('add-category')}
         customIcon={<MaterialIcons name="add-circle" size={15} color="white" />}
       />
     </>

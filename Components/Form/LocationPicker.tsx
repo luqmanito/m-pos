@@ -4,6 +4,7 @@ import MapView, {Marker} from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import {PermissionsAndroid} from 'react-native';
 import BaseButton from '../Button/BaseButton';
+import {useTranslation} from 'react-i18next';
 
 type LocationPickerProps = {
   onLocationSelect: (
@@ -96,19 +97,19 @@ const LocationPicker: React.FC<LocationPickerProps> = ({onLocationSelect}) => {
     onLocationSelect(selectedLocation, address);
     toggleModal();
   };
-
+  const {t} = useTranslation();
   return (
     <View>
       <BaseButton
         type={'primary'}
         onPress={toggleModal}
-        label={'Select Location'}
+        label={t('select-location')}
       />
 
       <Modal isOpen={isModalVisible} onClose={toggleModal}>
         <Modal.Content maxWidth="100%">
           <Modal.CloseButton />
-          <Modal.Header>{'Select Location'}</Modal.Header>
+          <Modal.Header>{t('select-location')}</Modal.Header>
           <Modal.Body>
             <MapView
               style={{height: 400}}
@@ -134,12 +135,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({onLocationSelect}) => {
               <BaseButton
                 type={'primary'}
                 onPress={handleConfirm}
-                label={'Confirm'}
+                label={t('confirm')}
               />
               <BaseButton
                 type={'error'}
                 onPress={toggleModal}
-                label={'Cancel'}
+                label={t('cancel')}
               />
             </Button.Group>
           </Modal.Footer>

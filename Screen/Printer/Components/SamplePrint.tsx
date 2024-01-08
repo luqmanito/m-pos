@@ -1,16 +1,18 @@
-import {Button, useToast, View} from 'native-base';
+import {Button, View} from 'native-base';
 import React from 'react';
 import {StyleSheet} from 'react-native';
 import {BluetoothEscposPrinter} from 'react-native-bluetooth-escpos-printer';
 import {hsdLogo} from './dummy-logo';
-import ToastAlert from '../../../Components/Toast/Toast';
+import useAlert from '../../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 
 type SamplePrintProps = {
   status: boolean;
 };
 
 const SamplePrint = ({status}: SamplePrintProps) => {
-  const toast = useToast();
+  const alert = useAlert();
+  const {t} = useTranslation();
   return (
     <>
       <View style={styles.btn}>
@@ -49,7 +51,7 @@ const SamplePrint = ({status}: SamplePrintProps) => {
                   BluetoothEscposPrinter.ALIGN.LEFT,
                   BluetoothEscposPrinter.ALIGN.RIGHT,
                 ],
-                ['Customer', 'Prawito Hudoro'],
+                ['Customer', 'Luqman Grahito'],
                 {},
               );
               await BluetoothEscposPrinter.printColumn(
@@ -176,11 +178,7 @@ const SamplePrint = ({status}: SamplePrintProps) => {
               await BluetoothEscposPrinter.printText('\r\n\r\n\r\n', {});
               await BluetoothEscposPrinter.printText('\r\n\r\n\r\n', {});
             } catch (e: any) {
-              ToastAlert(
-                toast,
-                'error',
-                e.message ? 'Printer belum terhubung' : 'ERROR',
-              );
+              alert.showAlert('error', e.message ? t('disconnected') : 'ERROR');
             }
           }}>
           Test Print

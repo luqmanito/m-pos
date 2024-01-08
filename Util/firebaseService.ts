@@ -6,8 +6,6 @@ import notifee from '@notifee/react-native';
 async function onMessageReceived(
   message: FirebaseMessagingTypes.RemoteMessage,
 ) {
-  console.log(message, 'dari firebase');
-
   await notifee.requestPermission();
   const channelId = await notifee.createChannel({
     id: 'default',

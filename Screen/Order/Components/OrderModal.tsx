@@ -12,6 +12,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {PrimaryColorContext} from '../../../Context';
 import useOrders from '../../../Hooks/useOrders';
 import DetailItem from './DetailItem';
+import {useTranslation} from 'react-i18next';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
   const {fetchOrdersByStatus} = useOrders();
   const primaryColor = useContext(PrimaryColorContext);
   const [filter, setFilter] = useState('Pending');
-
+  const {t} = useTranslation();
   return (
     <Center>
       <Modal size={'full'} isOpen={isOpen} onClose={onClose}>
@@ -41,7 +42,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
           <Modal.CloseButton />
           <Modal.Header>
             <Text bold fontSize={'2xl'}>
-              Etalase
+              {t('category')}
             </Text>
           </Modal.Header>
           <Modal.Body>
@@ -100,7 +101,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
               justifyContent={'center'}
               bg={primaryColor?.primaryColor}>
               <Text fontSize={'lg'} color="white">
-                Tampilkan
+                {t('set')}
               </Text>
             </Button>
           </Modal.Body>
@@ -112,7 +113,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
         size={'full'}>
         <Modal.Content>
           <Modal.CloseButton />
-          <Modal.Header>Rincian</Modal.Header>
+          <Modal.Header>{t('detail')}</Modal.Header>
           <Modal.Body>
             <DetailItem onClose={() => onCloseConfirm()} />
           </Modal.Body>

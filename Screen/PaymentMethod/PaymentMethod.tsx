@@ -6,13 +6,13 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useDispatch, useSelector} from 'react-redux';
 import {Pressable, StyleSheet} from 'react-native';
 import {RootState} from '../../Redux/store';
-// import usePaymentMethod from '../../Hooks/usePaymentMethod';
 import {
   setPaymentMethod,
   setPaymentMethodId,
 } from '../../Redux/Reducers/button';
 import {PrimaryColorContext} from '../../Context';
 import usePaymentMethod from '../../Hooks/usePaymentMethod';
+import {useTranslation} from 'react-i18next';
 
 interface CategoryScreenProps {
   navigation: any;
@@ -23,19 +23,14 @@ const PaymentMethodScreen: FunctionComponent<CategoryScreenProps> = ({
 }) => {
   const dispatch = useDispatch();
   const {paymentMethod} = usePaymentMethod();
-  // const paymentMethod = useSelector(
-  //   (state: RootState) => state.paymentMethodSlice,
-  // );
-  // const filteredData = paymentMethod.filter(item => item.pivot.status === 1);
   const paymentMethodCode = useSelector(
     (state: RootState) => state.buttonSlice?.payment_methodId,
   );
-  console.log(paymentMethod);
-
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
-      <NavBar msg={'Metode Pembayaran'} />
+      <NavBar msg={t('payment-method')} />
       {paymentMethod.length === 0 ? (
         <Pressable
           onPress={() => {
@@ -131,57 +126,6 @@ const PaymentMethodScreen: FunctionComponent<CategoryScreenProps> = ({
           );
         })
       )}
-      {/* {filteredData?.map(payment => {
-        return (
-          <Pressable
-            key={payment?.id}
-            onPress={() => {
-              dispatch(setPaymentMethodId(payment?.id));
-              dispatch(setPaymentMethod(payment?.name));
-            }}>
-            <HStack
-              key={payment?.id}
-              bg={'white'}
-              borderRadius={10}
-              mx={4}
-              mt={4}>
-              <View justifyContent={'center'} h={10} flex={10}>
-                <View flexDirection={'row'}>
-                  <View>
-                    <Ionicons
-                      style={styles.icon}
-                      name={payment?.id === 1 ? 'cash' : 'card'}
-                      size={20}
-                      color="#8288b3"
-                    />
-                  </View>
-                  <View>
-                    <Text ml={2}>{payment?.name}</Text>
-                  </View>
-                </View>
-              </View>
-              <View
-                mr={4}
-                alignItems={'flex-end'}
-                justifyContent={'center'}
-                flex={1}>
-                <Radio.Group
-                  name="myRadioGroup"
-                  accessibilityLabel="favorite number"
-                  value={`${paymentMethodCode}`}
-                  onChange={() => {
-                    dispatch(setPaymentMethodId(payment?.id));
-                    dispatch(setPaymentMethod(payment?.name));
-                  }}>
-                  <Radio value={payment?.id.toString()} my={1}>
-                    {''}
-                  </Radio>
-                </Radio.Group>
-              </View>
-            </HStack>
-          </Pressable>
-        );
-      })} */}
       <Button
         borderRadius={34}
         onPress={() => navigation.navigate('PaymentScreen')}
@@ -192,7 +136,8 @@ const PaymentMethodScreen: FunctionComponent<CategoryScreenProps> = ({
         alignSelf="center"
         bg={primaryColor?.primaryColor}>
         <Text fontSize={'md'} color="white">
-          <MaterialIcons name="save" size={15} color="white" /> Pilih Pembayaran
+          <MaterialIcons name="save" size={15} color="white" />{' '}
+          {t('select-payment')}
         </Text>
       </Button>
     </>

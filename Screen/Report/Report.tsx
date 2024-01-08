@@ -16,23 +16,24 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import {useReport} from '../../Hooks/useReport';
-import RupiahFormatter from '../../Components/Rupiah/Rupiah';
-import formatDateYYYY_MM_DD from '../../Components/Date/FormatYYYY-MM-DD';
-import {dates} from '../../Components/Date/Today';
+
 import {PrimaryColorContext, useLoading} from '../../Context';
 import usePaymentSubmit from '../../Hooks/useSubmitPayment';
+import formatDateYYYY_MM_DD from '../../Util/Date/FormatYYYY-MM-DD';
+import RupiahFormatter from '../../Util/Rupiah/Rupiah';
+import {useTranslation} from 'react-i18next';
 
 const ReportScreen = () => {
   const {handleChange, reportDataTotal, pendingOrder, reportDataPayment} =
     useReport();
+  const {t} = useTranslation();
   const [selectedRange, setSelectedRange] = useState(1);
-  const [selectedRangeName, setSelectedRangeName] = useState('Hari ini');
+  const [selectedRangeName, setSelectedRangeName] = useState(t('today'));
   const [selectedStartDate, setSelectedStartDate] = useState('');
   const [rangeName, setRangeName] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const {loading} = useLoading();
   const {submitPayment} = usePaymentSubmit();
-
   const primaryColor = useContext(PrimaryColorContext);
   let totalPriceTransaction = 0;
   let totalTransaction = 0;
@@ -52,13 +53,14 @@ const ReportScreen = () => {
   const sevenDaysAgo = new Date(currentDate);
   sevenDaysAgo.setDate(currentDate.getDate() - 7);
 
+  const today = formatDateYYYY_MM_DD(currentDate);
   const formattedDate30 = formatDateYYYY_MM_DD(thirtyDaysAgo);
   const formattedDate7 = formatDateYYYY_MM_DD(sevenDaysAgo);
 
   return (
     <>
       <ScrollView>
-        <NavBar msg="Laporan" />
+        <NavBar msg={t('report')} />
         <View mx={4} mt={4}>
           <Pressable onPress={() => setIsOpen(true)}>
             <Input
@@ -66,7 +68,6 @@ const ReportScreen = () => {
               borderRadius={10}
               isReadOnly={true}
               type="text"
-              placeholder="Pilih Kategori"
               value={selectedRangeName}
               InputLeftElement={
                 <Icon
@@ -91,7 +92,7 @@ const ReportScreen = () => {
           <View px={4} mt={4} mb={2} flexDirection={'row'}>
             <View justifyContent="center" flex={1}>
               <Text bold>
-                Info Transaksi Pending :{' '}
+                {t('info-pending')} :{' '}
                 {pendingOrder?.length ? pendingOrder?.length : '0'}
               </Text>
             </View>
@@ -103,7 +104,7 @@ const ReportScreen = () => {
                 isDisabled={pendingOrder?.length ? false : true}
                 borderRadius={20}
                 bg={primaryColor?.primaryColor}>
-                Kirim Transaksi
+                {t('send-transaction')}
               </Button>
             </View>
           </View>
@@ -112,7 +113,7 @@ const ReportScreen = () => {
           </View>
           <View flexDirection={'row'} mt={4}>
             <Text ml={4} bold>
-              Total Transaksi
+              {t('total-transaction')}
             </Text>
             <View ml={2}>
               <Entypo name="info-with-circle" size={20} color="#b0b4d8" />
@@ -122,7 +123,7 @@ const ReportScreen = () => {
             {RupiahFormatter(totalPriceTransaction)}
           </Text>
           <Text mx={4} my={4} fontSize={'sm'}>
-            {totalTransaction} Transaksi
+            {totalTransaction} {t('transaction')}
           </Text>
           {reportDataTotal?.map((item, index) => {
             return (
@@ -145,7 +146,7 @@ const ReportScreen = () => {
                       {RupiahFormatter(item?.total)}
                     </Text>
                     <Text alignSelf={'flex-end'} color={'#b0b4d8'}>
-                      {item?.total_transaction + 'Transaksi'}
+                      {item?.total_transaction + t('transaction')}
                     </Text>
                   </View>
                 </View>
@@ -155,7 +156,7 @@ const ReportScreen = () => {
         </View>
         <View borderRadius={10} bg={'white'} mx={4} my={4}>
           <Text mx={4} my={4} bold>
-            Metode Pembayaran
+            {t('payment-method')}
           </Text>
           {reportDataPayment?.map((item, index) => {
             return (
@@ -180,7 +181,7 @@ const ReportScreen = () => {
                       {RupiahFormatter(item?.total)}
                     </Text>
                     <Text alignSelf={'flex-end'}>
-                      {item?.total_transaction} Transaksi
+                      {item?.total_transaction} {t('transaction')}
                     </Text>
                   </View>
                 </View>
@@ -200,19 +201,19 @@ const ReportScreen = () => {
             <Modal.CloseButton />
             <Modal.Header>
               <Text bold fontSize={'2xl'}>
-                Lihat Pendapatan
+                {t('income')}
               </Text>
             </Modal.Header>
             <Modal.Body>
               <Pressable
                 onPress={() => {
-                  setRangeName('Hari ini');
+                  setRangeName(t('today'));
                   setSelectedRange(1);
-                  setSelectedStartDate(dates);
+                  setSelectedStartDate(today);
                 }}>
                 <View flexDirection={'row'}>
                   <Text flex={11} mb={2}>
-                    Hari ini
+                    {t('today')}
                   </Text>
                   {selectedRange === 1 ? (
                     <View flex={1} mb={2}>
@@ -228,13 +229,13 @@ const ReportScreen = () => {
               <Divider />
               <Pressable
                 onPress={() => {
-                  setRangeName('7 hari terakhir');
+                  setRangeName(t('last7days'));
                   setSelectedRange(2);
                   setSelectedStartDate(formattedDate7);
                 }}>
                 <View>
                   <View flexDirection={'row'} my={2}>
-                    <Text flex={11}>7 hari terakhir</Text>
+                    <Text flex={11}>{t('last7days')}</Text>
                     <View flex={1}>
                       {selectedRange === 2 ? (
                         <AntDesign
@@ -250,13 +251,13 @@ const ReportScreen = () => {
               </Pressable>
               <Pressable
                 onPress={() => {
-                  setRangeName('30 hari terakhir');
+                  setRangeName(t('last30days'));
                   setSelectedRange(3);
                   setSelectedStartDate(formattedDate30);
                 }}>
                 <View>
                   <View flexDirection={'row'} my={2}>
-                    <Text flex={11}>30 hari terakhir</Text>
+                    <Text flex={11}>{t('last30days')}</Text>
                     {selectedRange === 3 ? (
                       <View flex={1}>
                         <AntDesign
@@ -282,7 +283,7 @@ const ReportScreen = () => {
                 justifyContent={'center'}
                 bg={primaryColor?.primaryColor}>
                 <Text fontSize={'lg'} color="white">
-                  Tampilkan
+                  {t('set')}
                 </Text>
               </Button>
             </Modal.Body>

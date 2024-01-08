@@ -1,4 +1,4 @@
-import {Badge, ScrollView, Button, Text, View, useToast} from 'native-base';
+import {Badge, ScrollView, Button, Text, View} from 'native-base';
 import React, {useState, useEffect, useCallback, useContext} from 'react';
 import {BluetoothManager} from 'react-native-bluetooth-escpos-printer';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
@@ -17,10 +17,13 @@ import NavBar from '../../Components/Navbar/Navbar';
 import {setBluetoohName, setBluetoohStatus} from '../../Redux/Reducers/button';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
-import ToastAlert from '../../Components/Toast/Toast';
 import {PrimaryColorContext} from '../../Context';
+import useAlert from '../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 
 const PrinterSetting = () => {
+  const {t} = useTranslation();
+  const alert = useAlert();
   const dispatch = useDispatch();
   const bluetoothState = useSelector(
     (state: RootState) => state.buttonSlice.bluetoothStatus,
@@ -38,7 +41,6 @@ const PrinterSetting = () => {
   const [foundDs, setFoundDs] = useState<{address: any}[]>([]);
   const [bleOpend, setBleOpend] = useState(false);
   const [loading, setLoading] = useState(true);
-  const toast = useToast();
   const navigation = useNavigation<NavigationProp<any>>();
 
   const deviceAlreadPaired = useCallback(
@@ -120,12 +122,11 @@ const PrinterSetting = () => {
     try {
       async function blueTooth() {
         const permissions = {
-          title: 'HSD bluetooth meminta izin untuk mengakses bluetooth',
-          message:
-            'HSD bluetooth memerlukan akses ke bluetooth untuk proses koneksi ke bluetooth printer',
-          buttonNeutral: 'Lain Waktu',
-          buttonNegative: 'Tidak',
-          buttonPositive: 'Boleh',
+          title: t('access-req'),
+          message: t('access-msg'),
+          buttonNeutral: t('access-later'),
+          buttonNegative: t('no'),
+          buttonPositive: t('granted'),
         };
 
         const bluetoothConnectGranted = await PermissionsAndroid.request(
@@ -148,6 +149,7 @@ const PrinterSetting = () => {
     } catch (err) {
       console.warn(err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanDevices]);
 
   useEffect(() => {
@@ -184,16 +186,14 @@ const PrinterSetting = () => {
       DeviceEventEmitter.addListener(
         BluetoothManager.EVENT_BLUETOOTH_NOT_SUPPORT,
         () => {
-          ToastAndroid.show(
-            'Device Not Support Bluetooth !',
-            ToastAndroid.LONG,
-          );
+          ToastAndroid.show(t('not-supported'), ToastAndroid.LONG);
         },
       );
     }
     if (pairedDevices.length < 1) {
       scan();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dispatch,
     bluetoothState,
@@ -218,7 +218,7 @@ const PrinterSetting = () => {
       },
       (e: any) => {
         setLoading(false);
-        ToastAlert(toast, 'error', e.message || 'ERROR');
+        alert.showAlert('error', e.message || 'ERROR');
       },
     );
   };
@@ -233,7 +233,7 @@ const PrinterSetting = () => {
       },
       (e: any) => {
         setLoading(false);
-        ToastAlert(toast, 'error', e.message || 'ERROR');
+        alert.showAlert('error', e.message || 'ERROR');
       },
     );
   };

@@ -20,7 +20,7 @@ const useErrorHandler = () => {
     }
   };
 
-  const setFormErrors = (errors: ErrorModel) => {
+  const setFormErrors = (errors: ErrorModel | undefined) => {
     setErrorBag(errors);
   };
 
@@ -30,6 +30,7 @@ const useErrorHandler = () => {
 
   return {
     getFormError,
+    errorBag,
     setFormErrors,
     clearFormErrors,
     isInvalid,

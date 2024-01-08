@@ -7,12 +7,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Foundation from 'react-native-vector-icons/Foundation';
 import {PrimaryColorContext} from '../../Context';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 
 const NewEmployee = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const dataEmployee = useSelector(
     (state: RootState) => state.employeeSlice.dataEmployee,
   );
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
@@ -21,10 +23,10 @@ const NewEmployee = () => {
       </View>
       <Center>
         <Text mt={4} fontSize={30}>
-          Pegawai Berhasil Ditambahkan
+          {t('success-employee')}
         </Text>
         <Text mt={4} fontSize={15} color={'#abafcc'}>
-          Pegawaimu sudah bisa mengakses fitur-fitur Hidup Merchant.
+          {t('success-employee-info')}
         </Text>
       </Center>
       <View mx={4} mt={4}>
@@ -59,13 +61,12 @@ const NewEmployee = () => {
             </View>
             <View>
               <Text bold fontSize={'lg'}>
-                Informasi
+                {t('information')}
               </Text>
             </View>
           </View>
           <Text mx={4} mb={4} fontSize={'md'}>
-            Akun pegawai berhasil dibuat. Silakan minta pegawai bersangkutan
-            untuk log in Hidup Merchant.
+            {t('employee-information')}
           </Text>
         </View>
       </View>

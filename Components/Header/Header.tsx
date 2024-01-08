@@ -27,10 +27,7 @@ const HeaderComponent: React.FC = () => {
         justifyContent={'space-between'}
         paddingX={5}
         paddingTop={30}>
-        <View
-          // alignSelf={'center'}
-          flexDirection={'row'}
-          alignItems={'center'}>
+        <View flexDirection={'row'} alignItems={'center'}>
           {authData.user.business.photo &&
           authData.user.business.photo.length > 0 ? (
             <View mr={2} overflow={'hidden'}>
@@ -51,13 +48,13 @@ const HeaderComponent: React.FC = () => {
         </View>
 
         <View flexDirection={'row'}>
-          <FontAwesome
+          {/* <FontAwesome
             onPress={() => navigation.navigate('NotificationScreen')}
             name="bell"
             size={24}
             color="#fff"
             style={styles.icon}
-          />
+          /> */}
           <FontAwesome
             onPress={() => navigation.navigate('SettingScreen')}
             name="gear"

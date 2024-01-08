@@ -1,23 +1,24 @@
-import {Button, Text, useToast, View} from 'native-base';
+import {Button, Text, View} from 'native-base';
 import React, {useContext, useEffect} from 'react';
 import {StyleSheet} from 'react-native';
 import {BluetoothEscposPrinter} from 'react-native-bluetooth-escpos-printer';
 import {useSelector} from 'react-redux';
-import formatDate from '../../../Components/Date/Date';
-import RupiahFormatter from '../../../Components/Rupiah/Rupiah';
-
 import {RootState} from '../../../Redux/store';
 import userNetwork from '../../../Network/lib/user';
 import {hsdLogo} from './dummy-logo';
-import ToastAlert from '../../../Components/Toast/Toast';
 import {PrimaryColorContext} from '../../../Context';
+import RupiahFormatter from '../../../Util/Rupiah/Rupiah';
+import formatDate from '../../../Util/Date/Date';
+import useAlert from '../../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 
 const PrintReceipt = () => {
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   const paymentReceipt = useSelector(
     (state: RootState) => state.paymentSlice.items[0],
   );
-  const toast = useToast();
+  const alert = useAlert();
   useEffect(() => {
     const fetchUserInfo = async (): Promise<[]> => {
       try {
@@ -154,14 +155,10 @@ const PrintReceipt = () => {
               await BluetoothEscposPrinter.printText('\r\n\r\n\r\n', {});
               await BluetoothEscposPrinter.printText('\r\n\r\n\r\n', {});
             } catch (e: any) {
-              ToastAlert(
-                toast,
-                'error',
-                e.message ? 'Printer belum terhubung' : 'ERROR',
-              );
+              alert.showAlert('error', e.message ? t('disconnected') : 'ERROR');
             }
           }}>
-          <Text bold>Cetak Struk</Text>
+          <Text bold>{t('print-receipt')}</Text>
         </Button>
       </View>
     </>

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import bg_small from '../../Public/Assets/bg_small.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
@@ -10,31 +10,29 @@ import {
   View,
   ScrollView,
 } from 'native-base';
-import {useDispatch} from 'react-redux';
-import {setPayments} from '../../Redux/Reducers/paymentMethod';
-import {clearCart} from '../../Redux/Reducers/cart';
-import {clearStateButton} from '../../Redux/Reducers/button';
-import {clearStateVisited} from '../../Redux/Reducers/isProductVisited';
 import {useAuth} from '../../Contexts/Auth';
 import Role from '../../Consts/Role';
 import BaseInput from '../../Components/Form/BaseInput';
 import Container from '../../Components/Layout/Container';
 import BaseButton from '../../Components/Button/BaseButton';
 import useAlert from '../../Hooks/useAlert';
+import indonesia from '../../Public/Assets/indonesia.png';
+import british from '../../Public/Assets/british.png';
+import {useTranslation} from 'react-i18next';
+import i18next from '../../services/i18next';
+import {useLoading} from '../../Context';
+import LanguageModal from '../../Components/Language/LanguageModal';
 
 type LoginScreenProps = {
-  navigation: any; // If you are using react-navigation, replace any with the correct navigation type
+  navigation: any;
 };
 
 const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
+  const {t} = useTranslation();
   const [show, setShow] = useState(false);
   const alert = useAlert();
-  const dispatch = useDispatch();
-  dispatch(setPayments([]));
-  dispatch(clearCart());
-  dispatch(clearStateButton());
-  dispatch(clearStateVisited());
-
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const {loading} = useLoading();
   const [auth, setAuth] = useState({
     email: '',
     password: '',
@@ -51,11 +49,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
   const handleSubmit = () => {
     authContext.signIn(auth.email, auth.password).then(authData => {
       if (authData) {
-        if (
-          authData.user.role === Role.KITCHEN ||
-          authData.user.role === Role.CASHIER
-        ) {
+        if (authData.user.role === Role.KITCHEN) {
           navigation.navigate('KitchenScreen');
+        } else if (authData.user.role === Role.CASHIER) {
+          navigation.navigate('TellerScreen');
         } else if (
           authData.user.role === Role.USER ||
           authData.user.role === Role.ADMIN
@@ -67,29 +64,58 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
       }
     });
   };
+  const currentLanguage = i18next.language;
+
+  const [lang, setLang] = useState(
+    i18next.language === 'ina' ? indonesia : british,
+  );
+  const [langKey, setLangKey] = useState(i18next.language);
+  useEffect(() => {
+    setLang(i18next.language === 'ina' ? indonesia : british);
+    setLangKey(i18next.language);
+  }, [currentLanguage]);
 
   return (
     <Container>
       <ScrollView>
-        <Center my={4}>
-          <Image source={bg_small} resizeMode="contain" alt="logo-login" />
-        </Center>
+        <View my={4} position="relative">
+          <Center>
+            <Image source={bg_small} resizeMode="contain" alt="logo-login" />
+          </Center>
+          <Pressable
+            flexDir={'row'}
+            onPress={() => setLanguageModalVisible(true)}
+            justifyContent={'center'}
+            alignItems={'center'}
+            position={'absolute'}
+            right={0}>
+            <Text mr={4}>{currentLanguage === 'en' ? 'EN' : 'INA'}</Text>
+            <Image
+              top={0}
+              source={lang}
+              alt={'icon'}
+              w={10}
+              h={10}
+              resizeMode="contain"
+              key={langKey}
+            />
+          </Pressable>
+        </View>
         <Center>
           <Text fontSize="md" bold>
-            Hai, Apa Kabar Hari Ini ?
+            {t('welcome_msg')}
           </Text>
           <Text mt={2} fontSize="sm">
-            Yuk, masuk dan mulai kejar cuan lagi.
+            {t('login-motto')}
           </Text>
-
           <BaseInput
             inputKey={'email'}
             isRequired={true}
             label={'Email'}
             keyboardType={'email-address'}
-            placeholder={'example: ez@ezpos.id'}
+            placeholder={t('example-mail')}
             type={'text'}
-            warningMessage={'Silakan Isi Email Anda.'}
+            warningMessage={t('warn-email')}
             onChangeText={text => handleChange('email', text)}
           />
           <BaseInput
@@ -97,7 +123,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
             isRequired={true}
             label={'Password'}
             type={show ? 'text' : 'password'}
-            placeholder="Masukkan Password"
+            placeholder={t('enter-pwd')}
             warningMessage={'Atleast 6 characters are required.'}
             onChangeText={text => handleChange('password', text)}
             rightIcon={
@@ -114,14 +140,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
         </Center>
         <Pressable onPress={() => navigation.navigate('ForgotScreen')}>
           <Text mx={4} textAlign={'right'} color={'blue.900'} bold mt={4}>
-            Lupa Password ?
+            {t('forgot')}
           </Text>
         </Pressable>
         <View w={'100%'} mt={4}>
           <BaseButton
             onPress={handleSubmit}
             type={'primary'}
-            label={'Masuk'}
+            label={t('login')}
+            isLoading={loading}
             isDisabled={!auth?.email || !auth?.password}
           />
         </View>
@@ -129,10 +156,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
           <BaseButton
             onPress={() => navigation.navigate('RegisterScreen')}
             type={'primary'}
-            label={'Daftar Merchant'}
+            label={t('register')}
           />
         </View>
       </ScrollView>
+      <LanguageModal
+        visible={languageModalVisible}
+        onClose={() => setLanguageModalVisible(false)}
+      />
     </Container>
   );
 };

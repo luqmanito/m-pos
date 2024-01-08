@@ -1,7 +1,6 @@
-import {useToast} from 'native-base';
 import {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useDispatch} from 'react-redux';
-import ToastAlert from '../Components/Toast/Toast';
 import {useLoading} from '../Context';
 import {ProductModel} from '../models/ProductModel';
 import {ValidationErrorModel} from '../models/ValidationErrorModel';
@@ -12,12 +11,12 @@ import {
   setDetailImageId,
 } from '../Redux/Reducers/product';
 import cache from '../Util/cache';
+import useAlert from './useAlert';
 import useNetworkInfo from './useNetworkInfo';
 
-const useProductDetail = (id: number | null) => {
-  const toast = useToast();
+const useProductDetail = (id?: number | null) => {
   const isConnected = useNetworkInfo().isConnected;
-
+  const {t} = useTranslation();
   const [form, setForm] = useState({
     name: '',
     code: '',
@@ -32,7 +31,7 @@ const useProductDetail = (id: number | null) => {
   const resetphotos = () => {
     return setPhotos('');
   };
-
+  const alert = useAlert();
   const handleForm = (key: string, data: string | number | null): void => {
     setForm(prev => ({
       ...prev,
@@ -42,6 +41,7 @@ const useProductDetail = (id: number | null) => {
 
   useEffect(() => {
     setLoading(true);
+
     const fetchData = async (): Promise<ProductModel | void> => {
       try {
         const data = await productNetwork.productDetail({id: id});
@@ -77,11 +77,7 @@ const useProductDetail = (id: number | null) => {
       const data = await cache.get(`DataProductId=${id}`);
       if (!data) {
         setLoading(true);
-        ToastAlert(
-          toast,
-          'error',
-          'Data belum tersedia, kunjungi kembali halaman ini sekali saat perangkat sudah Online',
-        );
+        alert.showAlert('error', t('no-available'));
       } else {
         setLoading(true);
         handleForm('name', data?.data?.name);
@@ -102,6 +98,8 @@ const useProductDetail = (id: number | null) => {
     if (!isConnected) {
       fetchDataDetailCache();
     } else {
+      console.log(id);
+
       id === undefined || id === null ? null : fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

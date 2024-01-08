@@ -6,11 +6,12 @@ import {useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import {ProductModel} from '../../models/ProductModel';
 import useProducts from '../../Hooks/useProducts';
+import {useTranslation} from 'react-i18next';
 
 const ProductList: FunctionComponent = () => {
   const [products, setProducts] = useState<ProductModel[]>([]);
   const categoryState = useSelector((state: RootState) => state.productSlice);
-
+  const {t} = useTranslation();
   const {product} = useProducts('catalogue');
 
   useEffect(() => {
@@ -37,10 +38,10 @@ const ProductList: FunctionComponent = () => {
       <NavBar msg={categoryState?.categoryName} />
       <View mx={4} my={4}>
         <Text fontSize={'lg'} color={'coolGray.700'}>
-          Daftar Produk
+          {t('list-product')}
         </Text>
         <Text fontSize={'sm'} color={'coolGray.500'}>
-          {products?.length} Produk
+          {products?.length} {t('product')}
         </Text>
       </View>
       <ScrollView mb={4}>

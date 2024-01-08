@@ -3,10 +3,13 @@ import {useLoading} from '../Context';
 import {ProductModel} from '../models/ProductModel';
 import productNetwork from '../Network/lib/product';
 import {MetaModel} from '../models/MetaModel';
+import {useDispatch} from 'react-redux';
+import {setLastPage} from '../Redux/Reducers/button';
+import {useIsFocused} from '@react-navigation/native';
 
 const useProducts = (screen: string) => {
   const [product, setProduct] = useState<ProductModel[]>([]);
-
+  const dispatch = useDispatch();
   const [metaProduct, setMetaProduct] = useState<MetaModel>({
     current_page: 0,
     from: 0,
@@ -41,7 +44,7 @@ const useProducts = (screen: string) => {
   const newFetchData = () => {
     setPage(prevPage => prevPage + 1); // Use a function to update state based on the previous state
   };
-
+  const isFocused = useIsFocused();
   useEffect(() => {
     // This effect will run after the state is updated
     if (page <= metaProduct.last_page) {
@@ -51,9 +54,13 @@ const useProducts = (screen: string) => {
   }, [page]);
 
   useEffect(() => {
-    fetchAllProducts();
+    if (isFocused) {
+      console.log('tes');
+
+      fetchAllProducts();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchKeyword, chooseCategory]);
+  }, [searchKeyword, isFocused, chooseCategory]);
 
   const handleNewFetchData = async (value: number) => {
     try {
@@ -79,8 +86,18 @@ const useProducts = (screen: string) => {
       }
 
       const newData = await productNetwork.productList(params);
-      if (newData.data.data.length > 0) {
-        setProduct(prevProducts => [...prevProducts, ...newData.data.data]);
+      if (newData) {
+        if (
+          newData.data.meta?.current_page &&
+          newData.data.meta?.current_page >= (newData.data.meta?.last_page || 1)
+        ) {
+          dispatch(setLastPage(true));
+        } else {
+          dispatch(setLastPage(false));
+        }
+        if (newData.data.data.length > 0) {
+          setProduct(prevProducts => [...prevProducts, ...newData.data.data]);
+        }
       }
     } catch (error) {
       console.error(error);

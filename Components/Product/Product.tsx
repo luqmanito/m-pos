@@ -1,18 +1,19 @@
-import {HStack, Image, Switch, Text, useToast, View} from 'native-base';
+import {HStack, Image, Switch, Text, View} from 'native-base';
 import React, {FunctionComponent, useContext} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FastImage from 'react-native-fast-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import noImage from '../../Public/Assets/no-Image.jpg';
 import {Pressable} from 'react-native';
-import RupiahFormatter from '../Rupiah/Rupiah';
 import {useDispatch, useSelector} from 'react-redux';
 import {updateCartItemQuantity} from '../../Redux/Reducers/cart';
 import {RootState} from '../../Redux/store';
 import {setActiveId, setNote} from '../../Redux/Reducers/button';
 import ProductNetwork from '../../Network/lib/product';
 import {PrimaryColorContext} from '../../Context';
-import Toast from '../../Components/Toast/Toast';
+import RupiahFormatter from '../../Util/Rupiah/Rupiah';
+import useAlert from '../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 type ProductProps = {
   name: string | undefined;
   code?: string | undefined;
@@ -47,8 +48,8 @@ const Product: FunctionComponent<ProductProps> = ({
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const detailQty = cartItems.find(item => item.productId === id);
-  // const isConnected = useNetworkInfo().isConnected;
-  const toast = useToast();
+  const alert = useAlert();
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   const handleIncreaseQuantity = (productId: number) => {
     const cartItem = cartItems.find(item => item.productId === productId);
@@ -113,18 +114,18 @@ const Product: FunctionComponent<ProductProps> = ({
     }
     if (!status) {
       ProductNetwork.deleteProduct({id}).then(() => {
-        Toast(toast, 'sukses', 'item deleted successfully');
+        alert.showAlert('success', t('del-item'));
       });
     } else {
       ProductNetwork.restoreProduct({id}).then(() => {
-        Toast(toast, 'sukses', 'item restored successfully');
+        alert.showAlert('error', t('del-item'));
       });
     }
   };
 
   return (
     <React.Fragment key={`product-id-${id}`}>
-      <View bg="white" borderRadius={10}>
+      <View bg="white" mb={4} py={4} borderRadius={10}>
         <HStack>
           <View>
             {photos ? (
@@ -150,7 +151,7 @@ const Product: FunctionComponent<ProductProps> = ({
             <Text>
               #{code} - {name}
               <Text fontWeight={'light'}>
-                {onCheckout ? ` ( ${quantity} barang)` : null}
+                {onCheckout ? ` ( ${quantity} ${t('item')})` : null}
               </Text>
             </Text>
             <Text>{RupiahFormatter(price)}</Text>
@@ -172,6 +173,7 @@ const Product: FunctionComponent<ProductProps> = ({
             <View
               flex={1}
               my={4}
+              mx={4}
               position={'relative'}
               justifyContent={'flex-end'}
               flexDirection={'row'}
@@ -217,7 +219,7 @@ const Product: FunctionComponent<ProductProps> = ({
                 size={15}
                 color={primaryColor?.primaryColor}
               />
-              Tambah Catatan
+              {` ${t('add-note')}`}
             </Text>
           </Pressable>
         ) : onCheckout && detailQty?.note ? (

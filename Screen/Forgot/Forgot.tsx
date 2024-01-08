@@ -1,127 +1,102 @@
-import React, {useContext, useState} from 'react';
-import forgotPic from '../../Public/Assets/otp.png';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, {useState} from 'react';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AuthNetwork from '../../Network/lib/auth';
-import {
-  Center,
-  Image,
-  useToast,
-  Box,
-  FormControl,
-  Input,
-  Button,
-  Text,
-  Stack,
-  WarningOutlineIcon,
-  View,
-  ScrollView,
-} from 'native-base';
-import {useDispatch} from 'react-redux';
-import {setEmailUser} from '../../Redux/Reducers/auth';
-import ToastAlert from '../../Components/Toast/Toast';
-import {PrimaryColorContext} from '../../Context';
+import {Center, View, ScrollView, IconButton, Icon, Text} from 'native-base';
+import Container from '../../Components/Layout/Container';
+import BaseInput from '../../Components/Form/BaseInput';
+import useAlert from '../../Hooks/useAlert';
+import BaseButton from '../../Components/Button/BaseButton';
+import {ErrorModel} from '../../models/ErrorModel';
+import useErrorHandler from '../../Hooks/useErrorHandler';
+import {NavigationProp} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 
 type ForgotScreenProps = {
-  navigation: any;
+  navigation: NavigationProp<any>;
 };
 
-export const ForgotScreen: React.FC<ForgotScreenProps> = ({navigation}) => {
-  const toast = useToast();
-  const primaryColor = useContext(PrimaryColorContext);
+const ForgotScreen: React.FC<ForgotScreenProps> = ({navigation}) => {
   const [email, setEmail] = useState('');
-  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
-
+  const alert = useAlert();
+  const {t} = useTranslation();
+  const {getFormError, clearFormErrors, setFormErrors, isInvalid} =
+    useErrorHandler();
   const handleSubmit = async () => {
     setIsLoading(true);
-    try {
-      const response = await AuthNetwork.forgot({
-        email: email,
-      });
-      if (response) {
+    clearFormErrors();
+    AuthNetwork.forgot({
+      email: email,
+    })
+      .then(() => {
+        navigation.navigate('OtpScreen', {
+          email: email,
+        });
+      })
+      .catch(e => {
+        const err: ErrorModel | undefined = e.response.data;
+        setFormErrors(err);
+        console.log(err);
+
+        alert.showAlert('error', e.response.data.message);
+      })
+      .finally(() => {
         setIsLoading(false);
-        dispatch(setEmailUser(email));
-        navigation.navigate('OtpScreen');
-      }
-    } catch (error) {
-      console.log(error);
-      ToastAlert(toast, 'error', 'Email salah atau belum terdaftar');
-      setIsLoading(false);
-    }
+      });
+  };
+
+  const onClose = () => {
+    navigation.navigate('LoginScreen');
   };
 
   return (
     <>
-      <ScrollView>
-        <Center my={4}>
-          <Image
-            source={forgotPic}
-            size={385}
-            resizeMode="contain"
-            alt="logo-pemkab"
-          />
-        </Center>
-        <Center flex={1}>
-          <Text fontSize="md" bold>
-            Masukkan Alamat Email yang Terdaftar
-          </Text>
-          <Text
-            numberOfLines={2}
-            textAlign={'center'}
-            mx={4}
-            mt={2}
-            fontSize="sm">
-            Kami akan mengirimkan OTP untuk me-reset password ke alamat
-            email-mu.
-          </Text>
-
-          <Box w="100%" mt={4} alignItems="center">
-            <FormControl isRequired>
-              <Stack mx="4">
-                <FormControl.Label>Alamat Email</FormControl.Label>
-                <Input
-                  onChangeText={text => setEmail(text)}
-                  type="text"
-                  placeholder="Contoh: budi@mail.com"
-                />
-                <FormControl.ErrorMessage
-                  leftIcon={<WarningOutlineIcon size="xs" />}>
-                  Silakan Isi Email Anda.
-                </FormControl.ErrorMessage>
-              </Stack>
-            </FormControl>
-          </Box>
-        </Center>
-      </ScrollView>
-
-      <View alignSelf={'center'} position={'absolute'} bottom={18} w={'90%'}>
-        <Button
-          borderRadius={34}
-          isDisabled={!email ? true : false}
-          onPress={handleSubmit}
-          isLoading={isLoading ? true : false}
-          isLoadingText="Loading"
-          w={'100%'}
-          marginTop={5}
-          bg={primaryColor?.primaryColor}>
-          <Text fontSize={'md'} color="white">
-            <MaterialCommunityIcons name="email-send" color="white" /> Kirim OTP
-          </Text>
-        </Button>
-
-        <Button
-          onPress={() => navigation.navigate('LoginScreen')}
-          borderRadius={34}
-          isLoadingText="Loading"
-          w={'100%'}
-          marginTop={5}
-          bg={primaryColor?.primaryColor}>
-          <Text fontSize={'md'} color="white">
-            <MaterialIcons name="cancel" color="white" /> Batal
-          </Text>
-        </Button>
-      </View>
+      <Container>
+        <ScrollView>
+          <View mt={5}>
+            <Center my={2}>
+              <Text fontSize="md" bold>
+                {t('forgot-title')}
+              </Text>
+              <Text mt={2} mb={4} fontSize="sm">
+                {t('forgot-info')}
+              </Text>
+            </Center>
+            <IconButton
+              icon={<Icon as={MaterialIcons} name="close" />}
+              borderRadius="full"
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                padding: 8,
+              }}
+              onPress={onClose}
+            />
+          </View>
+          <View>
+            <BaseInput
+              inputKey={'email'}
+              isRequired={true}
+              label={'Email'}
+              keyboardType={'email-address'}
+              placeholder={t('example-mail')}
+              type={'text'}
+              isInvalid={isInvalid('email')}
+              warningMessage={getFormError('email')}
+              onChangeText={text => setEmail(text)}
+            />
+            <BaseButton
+              type={'primary'}
+              mt={4}
+              onPress={handleSubmit}
+              isLoading={isLoading}
+              label={t('submit')}
+            />
+          </View>
+        </ScrollView>
+      </Container>
     </>
   );
 };
+export default ForgotScreen;

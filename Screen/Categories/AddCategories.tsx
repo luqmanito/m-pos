@@ -1,27 +1,21 @@
 import React, {FunctionComponent, useContext, useState} from 'react';
-import {
-  Button,
-  FormControl,
-  Input,
-  Stack,
-  Text,
-  useToast,
-  WarningOutlineIcon,
-} from 'native-base';
+import {Button, FormControl, Input, Stack, Text} from 'native-base';
 import NavBar from '../../Components/Navbar/Navbar';
 import {useNavigation} from '@react-navigation/native';
 import categoryNetwork from '../../Network/lib/categories';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import ToastAlert from '../../Components/Toast/Toast';
 import {PrimaryColorContext} from '../../Context';
 import {useDispatch, useSelector} from 'react-redux';
 import {setCatalogueVisited} from '../../Redux/Reducers/isProductVisited';
 import {RootState} from '../../Redux/store';
+import useAlert from '../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 
 interface CategoryScreenProps {}
 
 const AddCategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
-  const toast = useToast();
+  const alert = useAlert();
+  const {t} = useTranslation();
   const dispatch = useDispatch();
   const [name, setName] = useState<string | undefined>('');
   const [description, setDescription] = useState<string | undefined>('');
@@ -39,49 +33,43 @@ const AddCategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
         description: description,
       });
       if (response) {
-        ToastAlert(toast, 'sukses', 'Kategori Berhasil Ditambahkan');
+        alert.showAlert('success', t('category-msg'));
         dispatch(setCatalogueVisited(!isProductVisited.catalogueVisited));
         setIsLoading(false);
         navigation.goBack();
       }
     } catch (error: any) {
       setIsLoading(false);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     }
   };
 
   return (
     <>
-      <NavBar msg={'Tambah Kategori'} />
+      <NavBar msg={t('add-category')} />
       <FormControl isRequired>
         <Stack mx={4} mt={4}>
-          <FormControl.Label>Nama Kategori</FormControl.Label>
+          <FormControl.Label>{t('category-name')}</FormControl.Label>
           <Input
             bg={'white'}
             borderRadius={10}
             onChangeText={text => setName(text)}
             type="text"
             maxLength={30}
-            placeholder="Contoh: Makanan, Minuman"
+            placeholder={t('category-placeholder')}
           />
-          <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-            Silakan Isi Nama Anda.
-          </FormControl.ErrorMessage>
         </Stack>
         <Stack mx={4} mt={4}>
-          <FormControl.Label>Deskripsi Kategori</FormControl.Label>
+          <FormControl.Label>{t('category-description')}</FormControl.Label>
           <Input
             bg={'white'}
             borderRadius={10}
             onChangeText={text => setDescription(text)}
             type="text"
             maxLength={30}
-            placeholder="Contoh: Makanan khas dengan kearifan lokal"
+            placeholder={t('category-description-placeholder')}
           />
-          <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-            Silakan Isi Nama Anda.
-          </FormControl.ErrorMessage>
         </Stack>
       </FormControl>
       <Button
@@ -96,7 +84,7 @@ const AddCategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
         alignSelf="center"
         bg={primaryColor?.primaryColor}>
         <Text fontSize={'md'} color="white">
-          <MaterialIcons name="save" size={15} color="white" /> Simpan Kategori
+          <MaterialIcons name="save" size={15} color="white" /> {t('save')}
         </Text>
       </Button>
     </>

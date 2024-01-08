@@ -2,11 +2,12 @@ import {Badge, Divider, HStack, Image, Text, View} from 'native-base';
 import React from 'react';
 import FastImage from 'react-native-fast-image';
 import noImage from '../../../Public/Assets/no-Image.jpg';
-import formatDate from '../../../Components/Date/Date';
-import RupiahFormatter from '../../../Components/Rupiah/Rupiah';
 import {StyleSheet} from 'react-native';
 import {OrderModel} from '../../../models/OrderModel';
 import TabButton from './TabButton';
+import formatDate from '../../../Util/Date/Date';
+import RupiahFormatter from '../../../Util/Rupiah/Rupiah';
+import {useTranslation} from 'react-i18next';
 
 interface Props {
   item: OrderModel;
@@ -22,6 +23,7 @@ const OrderItem: React.FC<Props> = ({
   activeTab,
   updateConfirmParentModal,
 }) => {
+  const {t} = useTranslation();
   return (
     <>
       <View
@@ -75,7 +77,7 @@ const OrderItem: React.FC<Props> = ({
               <Text color={'#848aac'} bold>
                 {`${
                   item?.products.length > 1
-                    ? `+${item?.products?.length - 1} produk lainnya`
+                    ? `+${item?.products?.length - 1} ${t('other-item')}`
                     : ''
                 }`}
               </Text>
@@ -83,8 +85,9 @@ const OrderItem: React.FC<Props> = ({
           </HStack>
           <Text bold mb={2} mt={2} mx={4}>
             {RupiahFormatter(item?.total)}
-            <Text
-              color={'#848aac'}>{` (${item?.products.length} Produk)`}</Text>
+            <Text color={'#848aac'}>{` (${item?.products.length} ${t(
+              'product',
+            )} )`}</Text>
           </Text>
           {activeTab === 'Tab1' ? (
             <TabButton

@@ -13,6 +13,7 @@ import {
 } from 'react-native-image-picker';
 import {DataCamera, setDataCamera} from '../../Redux/Reducers/upload';
 import {PrimaryColorContext} from '../../Context';
+import {useTranslation} from 'react-i18next';
 
 interface UploadCompProps {
   position: string;
@@ -21,6 +22,7 @@ interface UploadCompProps {
 }
 
 export const UploadComp = ({position, title, size}: UploadCompProps) => {
+  const {t} = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
   const primaryColor = useContext(PrimaryColorContext);
@@ -40,8 +42,6 @@ export const UploadComp = ({position, title, size}: UploadCompProps) => {
           type: asset?.type,
           base64: asset?.base64,
         };
-        console.log(newDataCamera);
-
         dispatch(setDataCamera(newDataCamera));
       }
     });
@@ -58,7 +58,6 @@ export const UploadComp = ({position, title, size}: UploadCompProps) => {
           type: asset?.type,
           base64: asset?.base64,
         };
-        console.log(newDataCamera);
         dispatch(setDataCamera(newDataCamera));
       }
     });
@@ -82,7 +81,7 @@ export const UploadComp = ({position, title, size}: UploadCompProps) => {
                 bg={primaryColor?.primaryColor}
                 leftIcon={<FontAwesome name="camera" size={15} color="white" />}
                 onPress={() => openCamera()}>
-                Ambil Foto Kamera
+                {t('take-photo')}
               </Button>
               <Button
                 bg={primaryColor?.secondaryColor}
@@ -95,7 +94,7 @@ export const UploadComp = ({position, title, size}: UploadCompProps) => {
                 }
                 onPress={openGallery}
                 mt={4}>
-                <Text color={primaryColor?.primaryColor}>Via Gallery</Text>
+                <Text color={primaryColor?.primaryColor}>{t('gallery')}</Text>
               </Button>
             </Modal.Body>
           </Modal.Content>

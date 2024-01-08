@@ -50,7 +50,9 @@ const useUserInfo = () => {
       fetchUserCache();
     }
     if (isFocused && isConnected) {
-      fetchUserInfo();
+      setTimeout(() => {
+        fetchUserInfo();
+      }, 2000);
     }
   }, [isFocused, isConnected, setLoading, fetchData]);
   return {

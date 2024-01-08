@@ -5,8 +5,16 @@ type PrimaryButtonProps = {
   isDisabled?: boolean;
   onPress: () => void;
   isLoading?: boolean;
+  bold?: boolean;
   label?: string;
-  type: 'primary' | 'secondary' | 'error';
+  type: 'primary' | 'secondary' | 'error' | 'warning';
+  mt?: number;
+  mb?: number;
+  size?: string;
+  textColor?: string;
+  mx?: number;
+  borderRadius?: number;
+  my?: number;
 };
 
 const BaseButton: React.FC<PrimaryButtonProps> = ({
@@ -15,6 +23,14 @@ const BaseButton: React.FC<PrimaryButtonProps> = ({
   isLoading,
   label,
   type,
+  size,
+  borderRadius,
+  bold,
+  textColor,
+  mt,
+  mb,
+  mx,
+  my,
 }) => {
   const getColor = () => {
     var color = '';
@@ -28,19 +44,29 @@ const BaseButton: React.FC<PrimaryButtonProps> = ({
       case 'error':
         color = 'danger';
         break;
+      case 'warning':
+        color = 'warning';
+        break;
     }
 
     return color;
   };
   return (
     <Button
-      borderRadius={5}
+      borderRadius={borderRadius || 5}
       isDisabled={isDisabled}
       onPress={onPress}
       isLoading={isLoading}
       isLoadingText="Loading"
+      mt={mt}
+      mb={mb}
+      mx={mx}
+      my={my}
       bg={getColor()}>
-      <Text fontSize={'sm'} color="white">
+      <Text
+        bold={bold || false}
+        fontSize={size || 'sm'}
+        color={textColor || 'white'}>
         {isLoading ? 'Loading...' : label}
       </Text>
     </Button>

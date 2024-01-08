@@ -55,11 +55,8 @@ interface PrimaryColorProviderProps {
 export const PrimaryColorProvider: React.FC<PrimaryColorProviderProps> = ({
   children,
 }) => {
-  // const [primaryColor, setPrimaryColor] = useState<PrimaryColor>('#0c50ef'); // Default primary color
-  // const [secondaryColor, setSecondaryColor] = useState<PrimaryColor>('#e3e9ff'); // Default primary color
-  const [secondaryColor, setSecondaryColor] = useState<PrimaryColor>('#ffe96c'); // Default primary color
-  const [primaryColor, setPrimaryColor] = useState('#29B9DC'); // Default primary color
-  // const [darkMode, setDarkMode] = useState('black'); // Default primary color
+  const [secondaryColor, setSecondaryColor] = useState<PrimaryColor>('#ffe96c');
+  const [primaryColor, setPrimaryColor] = useState('#29B9DC');
 
   return (
     <PrimaryColorContext.Provider

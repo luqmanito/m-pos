@@ -17,25 +17,6 @@ const store = async (key: string, value: any) => {
   }
 };
 
-// const stores = async (key: string, newValue: any) => {
-//   try {
-//     // Retrieve the existing data associated with the key
-//     const storedItem = await AsyncStorage.getItem(prefix + key);
-
-//     // Parse the existing data or initialize an empty object if it doesn't exist
-//     const existingData = storedItem ? JSON.parse(storedItem) : {};
-
-//     // Modify or append the existing data as needed
-//     existingData.value = newValue;
-//     existingData.timeStamp = moment().valueOf();
-
-//     // Store the updated data back to AsyncStorage
-//     await AsyncStorage.setItem(prefix + key, JSON.stringify(existingData));
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
-
 const removeItem = async (key: string) => {
   try {
     await AsyncStorage.removeItem(prefix + key);

@@ -16,6 +16,8 @@ import {clearCart} from '../../Redux/Reducers/cart';
 import {clearStateButton} from '../../Redux/Reducers/button';
 import {clearStateVisited} from '../../Redux/Reducers/isProductVisited';
 import {clearOrderState} from '../../Redux/Reducers/orders';
+import {useTranslation} from 'react-i18next';
+import {useAuth} from '../../Contexts/Auth';
 
 type LogoutScreenProps = {
   navigation: any;
@@ -23,9 +25,10 @@ type LogoutScreenProps = {
 
 export const LogoutScreen: React.FC<LogoutScreenProps> = ({navigation}) => {
   const isFocused = useIsFocused();
+  const authContext = useAuth();
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
-
+  const {t} = useTranslation();
   const handleSubmit = async () => {
     try {
       navigation.navigate('LoginScreen');
@@ -36,6 +39,7 @@ export const LogoutScreen: React.FC<LogoutScreenProps> = ({navigation}) => {
       dispatch(clearStateVisited());
       const keys = await AsyncStorage.getAllKeys();
       await AsyncStorage.multiRemove(keys);
+      authContext.signOut();
     } catch (error) {
       console.log('Error removing item from AsyncStorage:', error);
     }
@@ -68,7 +72,7 @@ export const LogoutScreen: React.FC<LogoutScreenProps> = ({navigation}) => {
             },
           }}>
           <View justifyContent={'center'} alignItems={'center'}>
-            <Text fontSize={'xl'}>Apakah Anda Yakin Akan Keluar ?</Text>
+            <Text fontSize={'xl'}>{t('logout-msg')}</Text>
           </View>
           <VStack mt={4} justifyContent={'center'} alignItems={'center'}>
             <HStack space={4}>
@@ -77,15 +81,14 @@ export const LogoutScreen: React.FC<LogoutScreenProps> = ({navigation}) => {
                 size={'lg'}
                 bgColor={'#f9316b'}
                 onPress={() => handleSubmit()}>
-                Ya
+                {t('yes')}
               </Button>
               <Button
                 w={75}
                 size={'lg'}
                 colorScheme={'info'}
-                // colorScheme={'#'}
                 onPress={() => handleCancel()}>
-                Tidak
+                {t('no')}
               </Button>
             </HStack>
           </VStack>

@@ -1,11 +1,14 @@
 import LoginScreen from '../Screen/Login/Login';
-import {ForgotScreen} from '../Screen/Forgot/Forgot';
-import {OtpScreen} from '../Screen/OTP/Otp';
-import {PasswordScreen} from '../Screen/Password/Password';
-import {RegisterScreen} from '../Screen/Register/Register';
+import ForgotScreen from '../Screen/Forgot/Forgot';
+import OtpScreen from '../Screen/OTP/Otp';
+import PasswordScreen from '../Screen/Password/Password';
+import RegisterScreen from '../Screen/Register/Register';
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-const Stack = createNativeStackNavigator();
+import {RootStackParamList} from './RootStackParamList';
+import KitchenScreen from '../Screen/Kitchen/Kitchen';
+import TellerScreen from '../Screen/Teller/Teller';
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const stackScreens = [
   {name: 'LoginScreen', component: LoginScreen},
@@ -13,6 +16,8 @@ const stackScreens = [
   {name: 'OtpScreen', component: OtpScreen},
   {name: 'PasswordScreen', component: PasswordScreen},
   {name: 'RegisterScreen', component: RegisterScreen},
+  {name: 'KitchenScreen', component: KitchenScreen},
+  {name: 'TellerScreen', component: TellerScreen},
 ];
 
 const UnauthenticatedFlow = () => {
@@ -23,7 +28,7 @@ const UnauthenticatedFlow = () => {
       {stackScreens.map((screen, index) => (
         <Stack.Screen
           key={index}
-          name={screen.name}
+          name={screen.name as keyof RootStackParamList}
           component={screen.component}
         />
       ))}

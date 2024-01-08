@@ -39,7 +39,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
       }
     } catch (error) {
     } finally {
-      //loading finished
       setLoading(false);
     }
   }
@@ -61,11 +60,11 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         await messaging().registerDeviceForRemoteMessages();
         const token = await messaging().getToken();
         await firebaseNetwork.sendDeviceToken(token);
-        setLoading(false);
         return responseLogin.data;
       }
       return undefined;
     } catch (e) {
+      console.log(e);
       return undefined;
     } finally {
       setLoading(false);

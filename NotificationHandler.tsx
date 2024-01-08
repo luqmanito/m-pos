@@ -1,20 +1,17 @@
 import {useEffect} from 'react';
-import {NavigationProp, useNavigation} from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import cache from './Util/cache';
 import notifee from '@notifee/react-native';
-import ToastAlert from './Components/Toast/Toast';
-import {useToast} from 'native-base';
 import {navigate} from './Network/rootNavigator';
+import useAlert from './Hooks/useAlert';
 const NotificationHandler = () => {
-  const toast = useToast();
+  const alert = useAlert();
   useEffect(() => {
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
+    const unsubscribe = messaging().onMessage(async () => {
       const dataUser = await cache.get('DataUser');
-      console.log('tes fg', remoteMessage);
       const notification = await notifee.getTriggerNotificationIds();
       if (notification) {
-        ToastAlert(toast, 'sukses', 'Ada Pesanan Baru Masuk !');
+        alert.showAlert('success', 'Ada Pesanan Baru Masuk !');
       }
       if (dataUser?.role?.toLowerCase() === 'cashier') {
         navigate('KitchenScreen');
@@ -23,7 +20,6 @@ const NotificationHandler = () => {
         navigate('KitchenScreen');
       }
       if (dataUser?.role?.toLowerCase() === 'admin') {
-        console.log('jalan');
         navigate('Dashboard', {screen: 'Order'});
       }
     });
@@ -32,7 +28,7 @@ const NotificationHandler = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return null; // This component doesn't render anything
+  return null;
 };
 
 export default NotificationHandler;

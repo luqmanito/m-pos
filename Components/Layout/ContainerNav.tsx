@@ -7,7 +7,7 @@ type ContainerProps = {
 
 const ContainerNav: React.FC<ContainerProps> = ({children}) => {
   return (
-    <View flex={1} mb={150} mx={4}>
+    <View flex={1} mb={170} mx={4}>
       {children}
     </View>
   );

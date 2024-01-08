@@ -1,14 +1,11 @@
 import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
 import {useDispatch} from 'react-redux';
-
 import {useLoading} from '../Context';
-
 import {PaymentMethodModel, PaymentModelContent} from '../models/PaymentMethod';
 import paymentNetwork from '../Network/lib/payment';
 import {setPayments} from '../Redux/Reducers/paymentMethod';
 
-// import cache from '../Util/cache';
 import useNetworkInfo from './useNetworkInfo';
 
 const usePaymentMethod = () => {

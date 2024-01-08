@@ -3,7 +3,6 @@ import React, {FC, useContext} from 'react';
 import {GestureResponderEvent} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {PrimaryColorContext} from '../../../Context';
-// import {Input, Icon} from '@your-components-library'; // Import your component library
 
 interface TouchableInputProps {
   onPress: (event: GestureResponderEvent) => void;

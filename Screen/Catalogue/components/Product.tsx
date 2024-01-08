@@ -1,30 +1,32 @@
 import React, {FunctionComponent} from 'react';
 import {ProductModel} from '../../../models/ProductModel';
-import {HStack, Image, Switch, Text, useToast, View} from 'native-base';
+import {HStack, Image, Switch, Text, View} from 'native-base';
 import FastImage from 'react-native-fast-image';
 import noImage from '../../../Public/Assets/no-Image.jpg';
-import RupiahFormatter from '../../../Components/Rupiah/Rupiah';
 import ProductNetwork from '../../../Network/lib/product';
-import Toast from '../../../Components/Toast/Toast';
+import RupiahFormatter from '../../../Util/Rupiah/Rupiah';
+import useAlert from '../../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 
 type ProductProps = {
   product: ProductModel;
 };
 
 const Product: FunctionComponent<ProductProps> = ({product}) => {
-  const toast = useToast();
+  const alert = useAlert();
+  const {t} = useTranslation();
   const changeStatusProduct = (status: boolean) => {
     if (!status) {
       ProductNetwork.deleteProduct({
         id: product.id,
       }).then(() => {
-        Toast(toast, 'sukses', 'item deleted successfully');
+        alert.showAlert('success', t('del-item'));
       });
     } else {
       ProductNetwork.restoreProduct({
         id: product.id,
       }).then(() => {
-        Toast(toast, 'sukses', 'item restored successfully');
+        alert.showAlert('success', t('del-item'));
       });
     }
   };

@@ -12,6 +12,7 @@ export interface ButtonState {
   customerName: string | null;
   customerPhone: string | null;
   customerEmail: string | null;
+  isLastPage: boolean;
 }
 
 const initialState: ButtonState = {
@@ -26,6 +27,7 @@ const initialState: ButtonState = {
   selectedId: 0,
   payment_methodId: 1,
   payment_method: null,
+  isLastPage: false,
 };
 
 const createSetter =
@@ -52,6 +54,7 @@ const buttonSlice = createSlice({
     setCustomerEmail: createSetter('customerEmail'),
     setPaymentMethodId: createSetter('payment_methodId'),
     setPaymentMethod: createSetter('payment_method'),
+    setLastPage: createSetter('isLastPage'),
 
     clearStateButton: () => initialState,
   },
@@ -70,5 +73,6 @@ export const {
   setPaymentMethodId,
   setPaymentMethod,
   setBluetoohName,
+  setLastPage,
 } = buttonSlice.actions;
 export default buttonSlice.reducer;

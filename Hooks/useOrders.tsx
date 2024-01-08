@@ -1,25 +1,27 @@
-import {useIsFocused, useRoute} from '@react-navigation/native';
-import {useToast} from 'native-base';
 import {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-import ToastAlert from '../Components/Toast/Toast';
 import {useLoading} from '../Context';
 import {OrderModel, RootOrderModel} from '../models/OrderModel';
 import orderNetwork from '../Network/lib/order';
 import {resetOrderDetailState, setOrderState} from '../Redux/Reducers/orders';
 import {RootState} from '../Redux/store';
-import cache from '../Util/cache';
 import {MetaModel} from '../models/MetaModel';
+import {useAuth} from '../Contexts/Auth';
+import {clearStateButton, setLastPage} from '../Redux/Reducers/button';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
+import useAlert from './useAlert';
+import {useTranslation} from 'react-i18next';
 
 const useOrders = () => {
   const [orders, setOrders] = useState<OrderModel[]>([]);
-  const toast = useToast();
+  const {authData} = useAuth();
   const {setLoading} = useLoading();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [fetchData, setFetchData] = useState(false);
   const orderId = useSelector(
     (state: RootState) => state.buttonSlice?.activeId,
   );
+  const order = useSelector((state: RootState) => state.orderSlice.orders);
 
   const numOrders = 10;
   const [metaProduct, setMetaProduct] = useState<MetaModel>({
@@ -33,13 +35,14 @@ const useOrders = () => {
   const [emptyData, setEmptyData] = useState(false);
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
-  const isFocused = useIsFocused();
-  const route = useRoute();
-
+  const alert = useAlert();
   const handleSearch = (newValue: string) => {
     return setSearchKeyword(newValue);
   };
-
+  const navigation = useNavigation<NavigationProp<any>>();
+  const routes = navigation.getState()?.routes;
+  const routeName = routes[routes.length - 1];
+  const {t} = useTranslation();
   const handleRefresh = () => {
     setFetchData(prevToggle => !prevToggle);
   };
@@ -52,27 +55,30 @@ const useOrders = () => {
 
   const handleNewFetchData = async (value: number) => {
     try {
-      const dataUser = await cache.get('DataUser');
       const newData = await orderNetwork.list({
         page: value,
         search: searchKeyword,
         per_page: numOrders,
+        ref: 'ONLINE',
         sort:
-          dataUser.role.toLowerCase() === 'cashier' ||
-          dataUser.role.toLowerCase() === 'kitchen'
+          authData?.user?.role.toLowerCase() === 'cashier' ||
+          authData?.user?.role.toLowerCase() === 'kitchen'
             ? 'created_at|asc'
             : 'created_at|desc',
         status:
-          route?.name.toLowerCase() === 'kitchenscreen' &&
-          dataUser.role.toLowerCase() === 'cashier'
+          authData?.user?.role.toLowerCase() === 'cashier'
             ? 'ready'
-            : route?.name.toLowerCase() === 'kitchenscreen' &&
-              dataUser.role.toLowerCase() === 'kitchen'
+            : authData?.user?.role.toLowerCase() === 'kitchen'
             ? 'confirm'
             : 'pending',
       });
-
       if (newData) {
+        if (newData.data.meta.current_page >= newData.data.meta.last_page) {
+          dispatch(setLastPage(true));
+        } else {
+          dispatch(setLastPage(false));
+        }
+        dispatch(setOrderState([...order, ...newData?.data?.data]));
         setOrders([...orders, ...newData?.data?.data]);
         if (newData?.data?.data.length > 0) {
           setOrders([...orders, ...newData?.data?.data]);
@@ -88,13 +94,13 @@ const useOrders = () => {
     try {
       const response = await orderNetwork.orderReady(orderId);
       if (response) {
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Disiapkan');
+        alert.showAlert('success', t('change-status'));
       }
       dispatch(resetOrderDetailState());
       return response;
     } catch (error: any) {
       console.log(error);
-      ToastAlert(toast, 'error', error?.response?.data?.message);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     } finally {
       handleRefresh();
@@ -136,23 +142,20 @@ const useOrders = () => {
   const fetchOrders = async (): Promise<RootOrderModel[] | void> => {
     setLoading(true);
     try {
-      const dataUser = await cache.get('DataUser');
       const response = await orderNetwork.list({
         search: searchKeyword,
         page: 1,
         per_page: numOrders,
         ref: 'ONLINE',
         sort:
-          dataUser.role.toLowerCase() === 'cashier' ||
-          dataUser.role.toLowerCase() === 'kitchen'
+          authData?.user?.role.toLowerCase() === 'cashier' ||
+          authData?.user?.role.toLowerCase() === 'kitchen'
             ? 'created_at|asc'
             : 'created_at|desc',
         status:
-          route?.name.toLowerCase() === 'kitchenscreen' &&
-          dataUser.role.toLowerCase() === 'cashier'
+          authData?.user?.role.toLowerCase() === 'cashier'
             ? 'ready'
-            : route?.name.toLowerCase() === 'kitchenscreen' &&
-              dataUser.role.toLowerCase() === 'kitchen'
+            : authData?.user?.role.toLowerCase() === 'kitchen'
             ? 'confirm'
             : 'pending',
       });
@@ -169,21 +172,21 @@ const useOrders = () => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    // This effect will run after the state is updated
-    if (page <= metaProduct.last_page) {
-      handleNewFetchData(page);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
 
   useEffect(() => {
-    if (isFocused) {
-      fetchOrders();
+    if (routeName.name !== 'PaymentScreen') {
+      dispatch(resetOrderDetailState());
+      dispatch(clearStateButton());
     }
+
+    // delay fetching to await token are fully loaded
+    setTimeout(() => {
+      fetchOrders();
+    }, 2000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchKeyword, isFocused, fetchData, setLoading]);
+  }, [searchKeyword, fetchData]);
   return {
+    order,
     orders,
     handleSearch,
     orderReady,
@@ -191,6 +194,7 @@ const useOrders = () => {
     newFetchData,
     fetchOrdersByStatus,
     emptyData,
+    metaProduct,
   };
 };
 

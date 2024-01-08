@@ -8,7 +8,15 @@ import {
   Asset,
 } from 'react-native-image-picker';
 import AuthNetwork from '../../Network/lib/auth';
-import {Center, FormControl, Text, Pressable, Icon, View} from 'native-base';
+import {
+  Center,
+  FormControl,
+  Text,
+  Pressable,
+  Icon,
+  View,
+  IconButton,
+} from 'native-base';
 import Container from '../../Components/Layout/Container';
 import BaseInput from '../../Components/Form/BaseInput';
 import PhotoInput from '../../Components/Form/PhotoInput';
@@ -17,16 +25,20 @@ import LocationPicker from '../../Components/Form/LocationPicker';
 import BaseButton from '../../Components/Button/BaseButton';
 import useErrorHandler from '../../Hooks/useErrorHandler';
 import useAlert from '../../Hooks/useAlert';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../Navigation/RootStackParamList';
+import {useTranslation} from 'react-i18next';
 
 type RegisterScreenProps = {
-  navigation: any; // If you are using react-navigation, replace any with the correct navigation type
+  navigation: NativeStackNavigationProp<RootStackParamList, 'RegisterScreen'>;
 };
 type TLocation = {
   latitude: number;
   longitude: number;
 };
 
-export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
+const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -47,7 +59,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
   const {getFormError, clearFormErrors, setFormErrors, isInvalid} =
     useErrorHandler();
   const alert = useAlert();
-
+  const {t} = useTranslation();
   const handleForm = (key: string, data: string): void => {
     setForm(prev => ({
       ...prev,
@@ -139,23 +151,40 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
     );
   };
 
+  const onClose = () => {
+    navigation.navigate('LoginScreen');
+  };
+
   return (
     <Container>
       <ScrollView>
-        <Center my={2}>
-          <Text fontSize="md" bold>
-            Kelola Usaha Jadi Makin Mudah
-          </Text>
-          <Text mt={2} mb={4} fontSize="sm">
-            Kamu hanya perlu mengisi form registrasi dibawah.
-          </Text>
-        </Center>
+        <View>
+          <Center my={2}>
+            <Text fontSize="md" bold>
+              {t('manage-business')}
+            </Text>
+            <Text mt={2} mb={4} fontSize="sm">
+              {t('simple-form')}
+            </Text>
+          </Center>
+          <IconButton
+            icon={<Icon as={MaterialIcons} name="close" />}
+            borderRadius="full"
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              padding: 8,
+            }}
+            onPress={onClose}
+          />
+        </View>
         <Center>
           <BaseInput
             inputKey={'name'}
             isRequired={true}
-            label={'Nama'}
-            placeholder={'example: budi'}
+            label={t('name')}
+            placeholder={t('ex-name')}
             type={'text'}
             isInvalid={isInvalid('name')}
             warningMessage={getFormError('name')}
@@ -166,7 +195,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
             isRequired={true}
             label={'Email'}
             keyboardType={'email-address'}
-            placeholder={'example: budi@ezpos.id'}
+            placeholder={t('example-mail')}
             type={'text'}
             isInvalid={isInvalid('email')}
             warningMessage={getFormError('email')}
@@ -176,7 +205,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
             inputKey={'password'}
             isRequired={true}
             label={'Password'}
-            placeholder={'Masukkan Password'}
+            placeholder={t('enter-pwd')}
             type={show ? 'text' : 'password'}
             isInvalid={isInvalid('password')}
             warningMessage={getFormError('password')}
@@ -195,8 +224,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
           <BaseInput
             inputKey={'password_confirmation'}
             isRequired={true}
-            label={'Ulangi Password'}
-            placeholder={'Ulangi Password'}
+            label={t('repeat-password')}
+            placeholder={t('repeat-password')}
             type={show ? 'text' : 'password'}
             isInvalid={isInvalid('password_confirmation')}
             warningMessage={getFormError('password_confirmation')}
@@ -214,7 +243,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
           />
           <BaseInput
             isRequired={true}
-            label={'No Telepon'}
+            label={t('phone-number')}
             placeholder={'example: 628xxxxxxxx'}
             type={'text'}
             keyboardType={'number-pad'}
@@ -224,15 +253,18 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
           />
           <BaseInput
             isRequired={true}
-            label={'Nama Usaha'}
-            placeholder={'example: Kasir mart'}
+            label={t('business-name')}
+            placeholder={t('ex-business-name')}
             type={'text'}
             isInvalid={isInvalid('business_name')}
             warningMessage={getFormError('business_name')}
             onChangeText={text => handleForm('business_name', text)}
           />
           <FormControl mt={3} w="100%">
-            <FormControl.Label>Lokasi Usaha (Optional)</FormControl.Label>
+            <FormControl.Label>
+              {t('business-location')}
+              {` (${t('optional')})`}
+            </FormControl.Label>
             <LocationPicker onLocationSelect={onLocationSelect} />
             <Text>
               Lat {location?.latitude}, Lng {location?.longitude}
@@ -240,22 +272,24 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
           </FormControl>
           <BaseInput
             isRequired={true}
-            label={'Alamat Usaha'}
+            label={t('business-address')}
             type={'text'}
-            placeholder={'jl. jakarta '}
+            placeholder={t('ex-business-address')}
             isInvalid={isInvalid('business_address')}
             warningMessage={getFormError('business_address')}
             onChangeText={text => handleForm('business_address', text)}
           />
           <FormControl mt={3} w="100%">
-            <FormControl.Label>Logo Usaha (Optional)</FormControl.Label>
+            <FormControl.Label>
+              {`${t('business-logo')} (${t('optional')})`}
+            </FormControl.Label>
             <PhotoInput
               imageCamera={imageCamera}
               setImageCamera={setImageCamera}
               setIsOpen={setIsOpen}
             />
             <UploadPhotoModal
-              textHeader={'Foto Usaha'}
+              textHeader={t('business-logo')}
               isOpen={isOpen}
               setIsOpen={setIsOpen}
               openCamera={openCamera}
@@ -269,7 +303,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
               type={'primary'}
               onPress={handleSubmit}
               isLoading={isLoading}
-              label="Submit"
+              label={t('submit')}
             />
           </View>
         </Center>
@@ -277,3 +311,4 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({navigation}) => {
     </Container>
   );
 };
+export default RegisterScreen;

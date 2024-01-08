@@ -1,35 +1,31 @@
-import {useSelector} from 'react-redux';
 import {useLoading} from '../Context';
-import {RootState} from '../Redux/store';
 import ProductNetwork from '../Network/lib/product';
-import ToastAlert from '../Components/Toast/Toast';
-import {useToast} from 'native-base';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
+import useAlert from './useAlert';
+import {useTranslation} from 'react-i18next';
 
-const useDeleteProduct = () => {
-  const toast = useToast();
+const useDeleteProduct = (id: number | null) => {
+  const alert = useAlert();
+  const {t} = useTranslation();
   const navigation = useNavigation<NavigationProp<any>>();
-  const productID = useSelector(
-    (state: RootState) => state.productSlice?.productId,
-  );
   const {setLoading} = useLoading();
   const handleSubmitDelete = async () => {
     setLoading(true);
     try {
       const response = await ProductNetwork.deleteProduct({
-        id: productID,
+        id: id,
       });
       if (response) {
-        setLoading(false);
+        alert.showAlert('success', t('del-item'));
         navigation.navigate('Dashboard', {screen: 'Catalogue'});
         return response.data;
       }
     } catch (error) {
-      setLoading(false);
-      // setIsOpen(false);
       console.error('Error fetching products:', error);
-      ToastAlert(toast, 'error', 'Gagal Hapus Produk');
+      alert.showAlert('error', t('del-fail'));
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 

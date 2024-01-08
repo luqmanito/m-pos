@@ -22,11 +22,13 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
 import {PrimaryColorContext} from '../../Context';
+import {useTranslation} from 'react-i18next';
 
 const PrinterConfiguration = () => {
   const dataCamera = useSelector(
     (state: RootState) => state.uploadSlice.dataCamera,
   );
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   const [sizePaper, setSizePaper] = useState('');
   const [name, setName] = useState('');
@@ -37,7 +39,7 @@ const PrinterConfiguration = () => {
       <NavBar msg="Pengaturan Printer" />
       <FormControl mt={4}>
         <Stack mx="4">
-          <FormControl.Label>Nama Perangkat</FormControl.Label>
+          <FormControl.Label>{t('device-name')}</FormControl.Label>
           <Input
             onChangeText={text => setName(text)}
             type={'text'}
@@ -47,16 +49,16 @@ const PrinterConfiguration = () => {
       </FormControl>
       <FormControl mt={4}>
         <Stack mx="4">
-          <FormControl.Label>Ukuran Kertas</FormControl.Label>
+          <FormControl.Label>{t('paper-size')}</FormControl.Label>
           <Input
             onChangeText={text => setSizePaper(text)}
             type={'text'}
-            placeholder="Contoh : 48, 40, 38"
+            placeholder={`${t('example')} : 48, 40, 38`}
           />
         </Stack>
       </FormControl>
       <Text bold mx={4} mt={4}>
-        Logo Struk
+        {t('logo')}
       </Text>
       <HStack mt={2} space={3}>
         <VStack paddingLeft={4}>
@@ -67,11 +69,9 @@ const PrinterConfiguration = () => {
                   position={'relative'}
                   alignItems="flex-end"
                   source={{uri: dataCamera?.uri}}
-                  // source={store}
                   width={100}
                   height={120}
                   alt="logo-pemkab"
-                  // fallbackSource={noImage}
                 />
                 <View
                   position={'absolute'}
@@ -88,7 +88,11 @@ const PrinterConfiguration = () => {
                 </View>
               </View>
             ) : (
-              <UploadComp position="bottom" title="Foto Produk" size="full" />
+              <UploadComp
+                position="bottom"
+                title={t('product-photo')}
+                size="full"
+              />
             )}
           </Flex>
         </VStack>
@@ -97,14 +101,12 @@ const PrinterConfiguration = () => {
         <View position={'absolute'} bottom={10} w={'90%'}>
           <Button
             borderRadius={34}
-            // onPress={handleSubmit}
-            // isLoading={isLoading ? true : false}
             isLoadingText="Loading"
             w={'100%'}
             marginTop={5}
             bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
-              <Entypo name="save" size={15} color="white" /> Simpan Perubahan
+              <Entypo name="save" size={15} color="white" /> {t('save-changes')}
             </Text>
           </Button>
 
@@ -116,8 +118,8 @@ const PrinterConfiguration = () => {
             marginTop={5}
             bg={'#E9493F'}>
             <Text fontSize={'md'} color="white">
-              <AntDesign name="disconnect" size={15} color="white" /> Putuskan
-              koneksi
+              <AntDesign name="disconnect" size={15} color="white" />
+              {t('disconnect')}
             </Text>
           </Button>
         </View>

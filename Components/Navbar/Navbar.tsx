@@ -15,11 +15,7 @@ const NavBar: FunctionComponent<NavBarProps> = ({msg}) => {
   const navigation = useNavigation();
   return (
     <>
-      <View
-        flexDirection={'row'}
-        justifyContent={'space-between'}
-        alignItems={'center'}
-        paddingTop={30}>
+      <View flexDirection={'row'} alignItems={'center'} paddingTop={0}>
         <Pressable onPress={() => navigation.goBack()}>
           <MaterialIcons
             name="arrow-back"

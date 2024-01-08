@@ -2,7 +2,6 @@ import {Button, Text} from 'native-base';
 import React, {FC, ReactNode, useContext} from 'react';
 import {StyleProp, ViewStyle} from 'react-native';
 import {PrimaryColorContext} from '../../Context';
-// import {Button, Text} from '@your-components-library'; // Import your component library
 
 interface ReusableButtonProps {
   onPress: () => void;

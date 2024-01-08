@@ -1,5 +1,5 @@
 import {Button, Divider, ScrollView, Text, View} from 'native-base';
-import React, {createElement, useContext} from 'react';
+import React, {createElement, useContext, useState} from 'react';
 import NavBar from '../../Components/Navbar/Navbar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -8,20 +8,21 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import noImage from '../../Public/Assets/no-Image.jpg';
 import {Pressable} from 'react-native';
 import {useNavigation, NavigationProp} from '@react-navigation/native';
-import {settingsData} from '../../Util/data';
+import {settingsData, settingsEnData} from '../../Util/data';
 import useUserInfo from '../../Hooks/useUserInfo';
 import {PrimaryColorContext} from '../../Context';
 import FastImage from 'react-native-fast-image';
 import {StyleSheet} from 'react-native';
 import {Linking} from 'react-native';
-import {useAuth} from '../../Contexts/Auth';
+import {useTranslation} from 'react-i18next';
+import i18next from '../../services/i18next';
+import LanguageModal from '../../Components/Language/LanguageModal';
 
 const SettingScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const {userData} = useUserInfo();
-  const authContext = useAuth();
   const primaryColor = useContext(PrimaryColorContext);
-
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const goToLocation = async () => {
     const mapUrl = `https://www.google.com/maps/search/?api=1&query=${userData?.business?.lat},${userData?.business?.lng}`;
 
@@ -35,12 +36,15 @@ const SettingScreen = () => {
   };
 
   const logout = () => {
-    authContext.signOut();
     navigation.navigate('LogoutScreen');
   };
+  const {t} = useTranslation();
+  const currentLanguage = i18next.language;
+  const settingsToMap =
+    currentLanguage === 'en' ? settingsEnData : settingsData;
   return (
     <>
-      <NavBar msg="Pengaturan" />
+      <NavBar msg={t('settings')} />
       <ScrollView>
         <View borderRadius={10} p={4} bg={'white'} mx={4} my={4}>
           <View
@@ -79,7 +83,7 @@ const SettingScreen = () => {
                   size={20}
                   color="white"
                 />
-                <Text color={'white'}>Tempat Lokasi</Text>
+                <Text color={'white'}>{t('location')}</Text>
               </View>
             </Button>
           </View>
@@ -108,18 +112,19 @@ const SettingScreen = () => {
         </View>
 
         <Text bold mx={4} mb={2} fontSize={'xl'}>
-          Pengaturan Usaha
+          {t('business-setting')}
         </Text>
-
         <View bg={'white'} mx={4} borderRadius={10}>
-          {settingsData.map(item => {
+          {settingsToMap.map(item => {
             return (
               <Pressable
                 key={item?.id}
                 onPress={() =>
-                  item?.permission.includes(
-                    userData?.role ? userData?.role : '',
-                  )
+                  item?.icon === 'language'
+                    ? setLanguageModalVisible(true)
+                    : item?.permission.includes(
+                        userData?.role ? userData?.role : '',
+                      )
                     ? navigation.navigate(item?.screen)
                     : null
                 }>
@@ -193,7 +198,7 @@ const SettingScreen = () => {
         </View>
 
         <Text bold mx={4} mt={4} fontSize={'xl'}>
-          Lainnya
+          {t('other')}
         </Text>
         <Pressable onPress={logout}>
           <View borderRadius={10} p={4} bg={'white'} mx={4} my={2}>
@@ -204,8 +209,8 @@ const SettingScreen = () => {
                 </View>
               </View>
               <View ml={4} flex={8}>
-                <Text bold>Keluar</Text>
-                <Text>Pastikan aktifitasmu sudah selesai</Text>
+                <Text bold>{t('logout')}</Text>
+                <Text>{t('logout-info')}</Text>
               </View>
               <View justifyContent={'center'} alignItems={'center'} mr={4}>
                 <AntDesign
@@ -218,6 +223,10 @@ const SettingScreen = () => {
           </View>
         </Pressable>
       </ScrollView>
+      <LanguageModal
+        visible={languageModalVisible}
+        onClose={() => setLanguageModalVisible(false)}
+      />
     </>
   );
 };

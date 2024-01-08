@@ -1,6 +1,4 @@
 import Dashboard from './Dashboard';
-import AdminDetail from '../Screen/Employee/AdminDetail';
-import AddEmployee from '../Screen/Employee/AddEmployee';
 import NewEmployee from '../Screen/Employee/NewEmployee';
 import EmployeeDetail from '../Screen/Employee/EmployeeDetail';
 import EmployeeSettings from '../Screen/Employee/EmployeeSetting';
@@ -21,9 +19,12 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Role from '../Consts/Role';
 import KitchenScreen from '../Screen/Kitchen/Kitchen';
+import TellerScreen from '../Screen/Teller/Teller';
 import {LogoutScreen} from '../Screen/Logout/Logout';
 import LoginScreen from '../Screen/Login/Login';
-import { CashierScreen } from '../Screen/Cashier/Cashier';
+import {RootStackParamList} from './RootStackParamList';
+import {CashierScreen} from '../Screen/Cashier/Cashier';
+import SyncDataScreen from '../Screen/Sync/Sync';
 
 const stackScreens = [
   {
@@ -31,21 +32,20 @@ const stackScreens = [
     component: Dashboard,
     roles: [Role.ADMIN, Role.USER],
   },
-  {name: 'AdminDetail', component: AdminDetail, roles: [Role.ADMIN]},
-  {name: 'AddEmployee', component: AddEmployee, roles: [Role.ADMIN]},
   {name: 'NewEmployee', component: NewEmployee, roles: [Role.ADMIN]},
   {name: 'EmployeeDetail', component: EmployeeDetail, roles: [Role.ADMIN]},
   {name: 'EmployeeSettings', component: EmployeeSettings, roles: [Role.ADMIN]},
   {
     name: 'PaymentMethodScreen',
     component: PaymentMethodScreen,
-    roles: [Role.ADMIN],
+    roles: [Role.ADMIN, Role.CASHIER],
   },
   {name: 'PaymentSettings', component: PaymentSettings, roles: [Role.ADMIN]},
   {name: 'ProductDetail', component: ProductDetail, roles: [Role.ADMIN]},
   {name: 'ReportScreen', component: ReportScreen, roles: [Role.ADMIN]},
   {name: 'ProductList', component: ProductList, roles: [Role.ADMIN]},
   {name: 'SettingScreen', component: SettingScreen, roles: [Role.ADMIN]},
+  {name: 'SyncDataScreen', component: SyncDataScreen, roles: [Role.ADMIN]},
   {
     name: 'PrinterConfiguration',
     component: PrinterConfiguration,
@@ -57,7 +57,11 @@ const stackScreens = [
     component: AddCategoryScreen,
     roles: [Role.ADMIN],
   },
-  {name: 'PaymentScreen', component: PaymentScreen, roles: [Role.ADMIN]},
+  {
+    name: 'PaymentScreen',
+    component: PaymentScreen,
+    roles: [Role.ADMIN, Role.CASHIER],
+  },
   {
     name: 'SuccessfulPaymentScreen',
     component: SuccessfulPaymentScreen,
@@ -75,6 +79,7 @@ const stackScreens = [
   },
   {name: 'CategoryScreen', component: CategoryScreen, roles: [Role.ADMIN]},
   {name: 'KitchenScreen', component: KitchenScreen, roles: [Role.KITCHEN]},
+  {name: 'TellerScreen', component: TellerScreen, roles: [Role.CASHIER]},
   {
     name: 'LogoutScreen',
     component: LogoutScreen,
@@ -87,7 +92,7 @@ const stackScreens = [
   },
 ];
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 type AuthNavigationProps = {
   roles: string;
 };
@@ -95,9 +100,11 @@ const AuthNavigation: React.FC<AuthNavigationProps> = ({roles}) => {
   return (
     <Stack.Navigator
       initialRouteName={
-        roles === Role.KITCHEN || roles === Role.CASHIER
+        (roles === Role.KITCHEN
           ? 'KitchenScreen'
-          : 'Dashboard'
+          : roles === Role.CASHIER
+          ? 'TellerScreen'
+          : 'Dashboard') as keyof RootStackParamList
       }
       screenOptions={{headerShown: false}}>
       {stackScreens
@@ -107,7 +114,7 @@ const AuthNavigation: React.FC<AuthNavigationProps> = ({roles}) => {
         .map((screen, index) => (
           <Stack.Screen
             key={`admin-screen-${index}`}
-            name={screen.name}
+            name={screen.name as keyof RootStackParamList}
             component={screen.component}
           />
         ))}

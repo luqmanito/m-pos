@@ -13,7 +13,6 @@ import {
   VStack,
   FormControl,
   WarningOutlineIcon,
-  useToast,
 } from 'native-base';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -28,23 +27,23 @@ import {useDispatch, useSelector} from 'react-redux';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
 import orderNetwork from '../../Network/lib/order';
 import {RootState} from '../../Redux/store';
-import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import NavBar from '../../Components/Navbar/Navbar';
-import ToastAlert from '../../Components/Toast/Toast';
 import {createPayment} from '../../Redux/Reducers/payment';
-// import cache from '../../Util/cache';
-// import {generateInvoiceNumber} from '../../Components/Invoice/Invoice';
-import {dates} from '../../Components/Date/Today';
 import {useGenerateInvoiceNumber} from '../../Hooks/useInvoiceTemporary';
-import {getCurrentDateTime} from '../../Components/Date/Time';
 import useUserInfo from '../../Hooks/useUserInfo';
 import {PrimaryColorContext, useLoading} from '../../Context';
 import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 import cache from '../../Util/cache';
+import RupiahFormatter from '../../Util/Rupiah/Rupiah';
+import {dates} from '../../Util/Date/Today';
+import {getCurrentDateTime} from '../../Util/Date/Time';
+import useAlert from '../../Hooks/useAlert';
+import {useTranslation} from 'react-i18next';
 const PaymentScreen: React.FC = () => {
   const paymentMethodCode = useSelector(
     (state: RootState) => state.buttonSlice?.payment_methodId,
   );
+  const {t} = useTranslation();
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
   const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -66,14 +65,12 @@ const PaymentScreen: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
   const [nominal, setNominal] = useState<number | undefined>(0);
-  // const [temporaryInvoice, setTemporaryInvoice] = useState('');
   const [buttonValue, setButtonValue] = useState(50000);
   const [buttonValue2, setButtonValue2] = useState(100000);
   const [exchange, setExchange] = useState<number>(0);
   const [falseInput, setFalseInput] = useState(true);
 
   const dispatch = useDispatch();
-  const toast = useToast();
   useFocusEffect(
     useCallback(() => {
       dispatch(clearStateProduct());
@@ -86,7 +83,7 @@ const PaymentScreen: React.FC = () => {
     (state: RootState) => state.buttonSlice?.table_number,
   );
   const globalState = useSelector((state: RootState) => state?.buttonSlice);
-
+  const alert = useAlert();
   const handlePriceChange = (value: string) => {
     const numericValue = value.replace(/[^\d]/g, '');
     setNominal(Number(numericValue));
@@ -95,7 +92,8 @@ const PaymentScreen: React.FC = () => {
   const invoiceNumber = useGenerateInvoiceNumber();
   const routes = navigation.getState()?.routes;
   const prevRoute = routes[routes.length - 3];
-  const isKitchenScreen = prevRoute.name === 'KitchenScreen';
+  const isKitchenScreen =
+    prevRoute.name === 'KitchenScreen' || prevRoute.name === 'TellerScreen';
 
   useEffect(() => {
     if (paymentMethodCode === 2) {
@@ -143,65 +141,7 @@ const PaymentScreen: React.FC = () => {
   ]);
 
   const submitPayment = async (): Promise<void> => {
-    // const paymentData = {
-    //   products: filteredItems.map(item => {
-    //     return {
-    //       id: item?.productId,
-    //       quantity: item?.quantity,
-    //       note: item?.note,
-    //     };
-    //   }),
-    //   table_no: table_number,
-    //   payment_method: paymentMethodCode,
-    //   total_paid: nominal,
-    //   ref: 'OFFLINE',
-    //   invoiceNumber,
-    //   date: getCurrentDateTime(),
-    //   total_price: totalSum,
-    //   cashierName: userData?.name,
-    //   name: globalState?.customerName,
-    //   phone: globalState?.customerPhone,
-    //   email: globalState?.customerEmail,
-    // };
     try {
-      // FOR OFFLINE MODE
-      // let dataSubmissions = await cache.get('paymentSubmissions');
-      // if (dataSubmissions) {
-      //   dataSubmissions.push(paymentData);
-      //   await cache.store('paymentSubmissions', dataSubmissions);
-      //   ToastAlert(toast, 'sukses', 'Berhasil Bayar');
-      //   navigation.navigate('SuccessfulPaymentScreen');
-      //   dispatch(
-      //     createPayment({
-      //       // products: filteredItems,
-      //       totalPrice: totalSum,
-      //       totalPayment: nominal,
-      //       exchangePayment: exchange,
-      //       invoiceNumber: invoiceNumber,
-      //       datePayment: dates,
-      //       cashierName: userData?.name,
-      //     }),
-      //   );
-      // } else {
-      //   dataSubmissions = [];
-      //   dataSubmissions.push(paymentData);
-      //   await cache.store('paymentSubmissions', dataSubmissions);
-      //   ToastAlert(toast, 'sukses', 'Berhasil Bayar');
-      //   navigation.navigate('SuccessfulPaymentScreen');
-      //   dispatch(
-      //     createPayment({
-      //       // products: filteredItems,
-      //       totalPrice: totalSum,
-      //       totalPayment: nominal,
-      //       exchangePayment: exchange,
-      //       invoiceNumber: invoiceNumber,
-      //       datePayment: dates,
-      //       cashierName: userData?.name,
-      //     }),
-      //   );
-      // }
-
-      // FOR ONLINE MODE
       const response = await orderNetwork.pay({
         products: filteredItems.map(item => {
           return {
@@ -230,13 +170,11 @@ const PaymentScreen: React.FC = () => {
             cashierName: userData?.name,
           }),
         );
-        ToastAlert(toast, 'sukses', 'Berhasil Bayar');
+        alert.showAlert('success', t('pay-done'));
         navigation.navigate('SuccessfulPaymentScreen');
       }
     } catch (error: any) {
       submitFailedPayment();
-      // ToastAlert(toast, 'error', error?.response?.data?.message);
-      // console.error('Error payment:', error);
       throw error;
     }
   };
@@ -268,11 +206,10 @@ const PaymentScreen: React.FC = () => {
       if (dataSubmissions) {
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Tersimpan');
+        alert.showAlert('success', t('offline-pay'));
         navigation.navigate('SuccessfulPaymentScreen');
         dispatch(
           createPayment({
-            // products: filteredItems,
             totalPrice: totalSum,
             totalPayment: nominal,
             exchangePayment: exchange,
@@ -285,11 +222,10 @@ const PaymentScreen: React.FC = () => {
         dataSubmissions = [];
         dataSubmissions.push(paymentData);
         await cache.store('paymentSubmissions', dataSubmissions);
-        ToastAlert(toast, 'sukses', 'Pesanan Berhasil Tersimpan');
+        alert.showAlert('success', t('offline-pay'));
         navigation.navigate('SuccessfulPaymentScreen');
         dispatch(
           createPayment({
-            // products: filteredItems,
             totalPrice: totalSum,
             totalPayment: nominal,
             exchangePayment: exchange,
@@ -300,15 +236,14 @@ const PaymentScreen: React.FC = () => {
         );
       }
     } catch (error: any) {
-      ToastAlert(toast, 'error', error?.response?.data?.message);
-      // console.error('Error payment:', error);
+      alert.showAlert('error', error?.response?.data?.message);
       throw error;
     }
   };
 
   return (
     <>
-      <NavBar msg="Pembayaran" />
+      <NavBar msg={t('payment')} />
       <Box flex={1} mx={4} my={4}>
         <Box
           rounded="lg"
@@ -328,7 +263,7 @@ const PaymentScreen: React.FC = () => {
           }}>
           <VStack flexDirection={'row'} p={2}>
             <VStack ml={2} flex={6}>
-              <Text fontSize={'md'}>Total Tagihan</Text>
+              <Text fontSize={'md'}>{t('total-bill')}</Text>
               <Text bold fontSize={'lg'}>
                 {RupiahFormatter(totalSum || detailOrderItems?.total)}
               </Text>
@@ -343,7 +278,7 @@ const PaymentScreen: React.FC = () => {
                 onPress={() => setIsOpen(true)}
                 borderRadius={20}>
                 <Text bold fontSize={'md'} color={primaryColor?.primaryColor}>
-                  Lihat Detail
+                  {t('see-detail')}
                 </Text>
               </Button>
             </VStack>
@@ -351,7 +286,7 @@ const PaymentScreen: React.FC = () => {
         </Box>
         {paymentMethodCode === 1 ? (
           <>
-            <Text my={4}>Nominal Pembayaran</Text>
+            <Text my={4}>{t('nominal')}</Text>
             <FormControl
               isInvalid={falseInput === false || nominal === 0 ? false : true}>
               <Input
@@ -360,11 +295,11 @@ const PaymentScreen: React.FC = () => {
                 value={nominal !== undefined ? RupiahFormatter(nominal) : ''}
                 onChangeText={handlePriceChange}
                 keyboardType={'numeric'}
-                placeholder="Masukkan Harga"
+                placeholder={t('input-price')}
               />
               <FormControl.ErrorMessage
                 leftIcon={<WarningOutlineIcon size="xs" />}>
-                Nominal pembayaran kurang dari total tagihan.
+                {t('pay-insufficent')}
               </FormControl.ErrorMessage>
             </FormControl>
             <View flexDirection={'row'}>
@@ -379,7 +314,7 @@ const PaymentScreen: React.FC = () => {
                   )
                 }
                 mt={4}>
-                <Text color={'gray.500'}>Uang Pas</Text>
+                <Text color={'gray.500'}>{t('exact-money')}</Text>
               </Button>
 
               <Button
@@ -413,7 +348,7 @@ const PaymentScreen: React.FC = () => {
         bottom={4}>
         <View p={2} mx={4} flexDirection={'row'}>
           <Text flex={6} bold>
-            Kembalian
+            {t('exchange')}
           </Text>
           <View flex={6} alignItems={'flex-end'}>
             <Text bold>{RupiahFormatter(exchange)}</Text>
@@ -438,7 +373,7 @@ const PaymentScreen: React.FC = () => {
           justifyContent={'center'}
           bg={primaryColor?.primaryColor}>
           <Text fontSize={'lg'} color="white">
-            {paymentMethodCode === 1 ? 'Terima Pembayaran' : 'Sudah Bayar'}
+            {paymentMethodCode === 1 ? t('accept-payment') : t('payment-done')}
           </Text>
         </Button>
       </View>
@@ -450,12 +385,9 @@ const PaymentScreen: React.FC = () => {
           onClose={() => setIsConfirm(false)}>
           <Modal.Content mb={0} mt={'auto'} maxWidth="400px">
             <Modal.CloseButton />
-            <Modal.Header>{'Konfirmasi Pembayaran ?'}</Modal.Header>
+            <Modal.Header>{t('pay-check')}</Modal.Header>
             <Modal.Body>
-              <Text>
-                Pesanan akan dianggap sudah dibayar dan dicatat di daftar
-                transaksi.
-              </Text>
+              <Text>{t('pay-note')}</Text>
               <Button
                 mt={4}
                 bg={primaryColor?.primaryColor}
@@ -464,7 +396,7 @@ const PaymentScreen: React.FC = () => {
                 }}
                 leftIcon={<FontAwesome name="check" size={15} color="white" />}>
                 <Text bold color={primaryColor?.secondaryColor}>
-                  Konfirmasi Pembayaran
+                  {t('pay-confirm')}
                 </Text>
               </Button>
               <Button
@@ -479,7 +411,7 @@ const PaymentScreen: React.FC = () => {
                   />
                 }>
                 <Text bold color={primaryColor?.primaryColor}>
-                  Kembali
+                  {t('exchange')}
                 </Text>
               </Button>
             </Modal.Body>
@@ -491,7 +423,7 @@ const PaymentScreen: React.FC = () => {
         <Modal size={'full'} isOpen={isOpen} onClose={() => setIsOpen(false)}>
           <Modal.Content mb={0} mt={'auto'} maxWidth="400px">
             <Modal.CloseButton />
-            <Modal.Header>{'Detail Tagihan'}</Modal.Header>
+            <Modal.Header>{t('pay-detail')}</Modal.Header>
             <Modal.Body>
               {isKitchenScreen
                 ? detailOrderItems?.products.map(item => {
@@ -537,7 +469,7 @@ const PaymentScreen: React.FC = () => {
                 <Text flex={6}>
                   {`Subtotal (${
                     isKitchenScreen ? totalQtyCashier : totalQty
-                  } Produk)`}{' '}
+                  } ${t('product')})`}{' '}
                 </Text>
                 <View
                   flex={6}
@@ -552,7 +484,7 @@ const PaymentScreen: React.FC = () => {
               </View>
               <View flexDirection={'row'}>
                 <Text bold flex={6}>
-                  Total Tagihan
+                  {t('total-bill')}
                 </Text>
                 <View
                   flex={6}
@@ -571,7 +503,7 @@ const PaymentScreen: React.FC = () => {
                 leftIcon={
                   <AntDesign name="closecircleo" size={15} color="white" />
                 }>
-                Tutup
+                {t('close')}
               </Button>
             </Modal.Body>
           </Modal.Content>

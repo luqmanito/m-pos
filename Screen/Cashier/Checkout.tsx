@@ -1,5 +1,3 @@
-// HomeScreen.tsx
-
 import React, {useState, useCallback, useContext} from 'react';
 import {
   View,
@@ -29,7 +27,6 @@ import {clearDataCamera} from '../../Redux/Reducers/upload';
 import Product from '../../Components/Product/Product';
 import {RootState} from '../../Redux/store';
 import {clearCart, updateCartItemQuantity} from '../../Redux/Reducers/cart';
-import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import NavBar from '../../Components/Navbar/Navbar';
 import {
   setCustomerEmail,
@@ -42,8 +39,12 @@ import {screenWidth} from '../../App';
 import {PrimaryColorContext, useLoading} from '../../Context';
 import usePaymentSubmit from '../../Hooks/useSubmitPayment';
 import useUserInfo from '../../Hooks/useUserInfo';
+import Container from '../../Components/Layout/Container';
+import RupiahFormatter from '../../Util/Rupiah/Rupiah';
+import {useTranslation} from 'react-i18next';
 
 const CheckoutScreen: React.FC = () => {
+  const {t} = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const cartItems = useSelector((state: RootState) => state.cartSlice.items);
   const totalSum = cartItems.reduce((sum, item) => sum + item.subTotal, 0);
@@ -107,56 +108,58 @@ const CheckoutScreen: React.FC = () => {
       <NavBar
         msg={
           prevRoute?.name === 'EditOrderScreen'
-            ? 'Ubah Ringkasan Pesanan '
-            : 'Ringkasan Pesanan'
+            ? t('edit-order-summary')
+            : t('order-summary')
         }
       />
-      <ScrollView mb={8}>
-        <FormControl>
-          <Stack mx={4} mt={4}>
-            <FormControl.Label>
-              Nomor Meja <Text fontWeight={'light'}>{'(opsional)'}</Text>
-            </FormControl.Label>
-            <Input
-              bg={'#f4f5fa'}
-              value={table_number}
-              borderRadius={10}
-              onChangeText={text => {
-                dispatch(setTableNumber(text));
-              }}
-              type="text"
-              maxLength={30}
-              placeholder="Contoh: A2, B3"
-            />
-          </Stack>
-        </FormControl>
-        {prevRoute?.name === 'EditOrderScreen' ? (
-          <Text mt={2} ml={4}>
-            Nama Customer : {customer_name}
-          </Text>
-        ) : null}
-        {filteredItems.length > 0
-          ? filteredItems.map(product => {
-              return (
-                <Product
-                  key={product?.productId}
-                  name={product?.name}
-                  id={product?.productId}
-                  onCheckout={true}
-                  basePrice={product?.basePrice}
-                  quantity={product?.quantity}
-                  price={product?.basePrice}
-                  photos={product?.photos}
-                  toggle={false}
-                  onCashier={false}
-                  onEditNote={product?.note}
-                  setNoteProduct={setNoteProduct}
-                />
-              );
-            })
-          : null}
-      </ScrollView>
-
+      <Container>
+        <ScrollView mb={8}>
+          <FormControl>
+            <Stack my={4}>
+              <FormControl.Label>
+                {t('table-number')}{' '}
+                <Text fontWeight={'light'}>{t('optional')}</Text>
+              </FormControl.Label>
+              <Input
+                bg={'#f4f5fa'}
+                value={table_number}
+                borderRadius={10}
+                onChangeText={text => {
+                  dispatch(setTableNumber(text));
+                }}
+                type="text"
+                maxLength={30}
+                placeholder="Contoh: A2, B3"
+              />
+            </Stack>
+          </FormControl>
+          {prevRoute?.name === 'EditOrderScreen' ? (
+            <Text mt={2} ml={4}>
+              {t('customer-name')} : {customer_name}
+            </Text>
+          ) : null}
+          {filteredItems.length > 0
+            ? filteredItems.map(product => {
+                return (
+                  <Product
+                    key={product?.productId}
+                    name={product?.name}
+                    id={product?.productId}
+                    onCheckout={true}
+                    basePrice={product?.basePrice}
+                    quantity={product?.quantity}
+                    price={product?.basePrice}
+                    photos={product?.photos}
+                    toggle={false}
+                    onCashier={false}
+                    onEditNote={product?.note}
+                    setNoteProduct={setNoteProduct}
+                  />
+                );
+              })
+            : null}
+        </ScrollView>
+      </Container>
       <View
         borderTopWidth={1}
         borderTopColor={'gray.200'}
@@ -164,7 +167,7 @@ const CheckoutScreen: React.FC = () => {
         bottom={4}>
         <View p={2} mx={4} flexDirection={'row'}>
           <Text flex={screenWidth > 600 ? 10 : 4} bold>
-            Total Tagihan
+            {t('total-bill')}
           </Text>
           <View alignItems={'flex-end'} flex={2}>
             <Text bold>{RupiahFormatter(totalSum)}</Text>
@@ -194,18 +197,16 @@ const CheckoutScreen: React.FC = () => {
           <Button
             isLoading={loading}
             isLoadingText="loading. . ."
-            onPress={
-              () =>
-                prevRoute.name === 'EditOrderScreen'
-                  ? setIsOpen(true)
-                  : setModalVisible(true)
-              // (navigation.navigate('PaymentMethodScreen')
+            onPress={() =>
+              prevRoute.name === 'EditOrderScreen'
+                ? setIsOpen(true)
+                : setModalVisible(true)
             }
             borderRadius={34}
             ml={4}
             bg={primaryColor?.primaryColor}>
             <Text fontSize={'lg'} color="white">
-              {prevRoute?.name === 'EditOrderScreen' ? 'Confirm' : 'Tagih'}
+              {prevRoute?.name === 'EditOrderScreen' ? t('comfirm') : t('pay')}
             </Text>
           </Button>
         </View>
@@ -214,27 +215,27 @@ const CheckoutScreen: React.FC = () => {
       <Modal isOpen={modalVisible} onClose={setModalVisible} size={'full'}>
         <Modal.Content>
           <Modal.CloseButton />
-          <Modal.Header>Isi Data Pemesan</Modal.Header>
+          <Modal.Header>{t('fill-cs-info')}</Modal.Header>
           <Modal.Body>
             <FormControl isRequired>
               <Stack>
-                <FormControl.Label>Nama </FormControl.Label>
+                <FormControl.Label>{t('name')} </FormControl.Label>
                 <Input
                   bg={'white'}
                   borderRadius={10}
                   onChangeText={text => dispatch(setCustomerName(text))}
                   type="text"
-                  placeholder="Contoh: Budi"
+                  placeholder={t('ex-name')}
                 />
               </Stack>
               <Stack mt={4}>
-                <FormControl.Label>No Handphone</FormControl.Label>
+                <FormControl.Label>{t('phone-number')}</FormControl.Label>
                 <Input
                   bg={'white'}
                   borderRadius={10}
                   onChangeText={text => dispatch(setCustomerPhone(text))}
                   type="text"
-                  placeholder="Contoh: 0812345678"
+                  placeholder={t('ex-phone-number')}
                 />
               </Stack>
               <Stack mt={4}>
@@ -244,7 +245,7 @@ const CheckoutScreen: React.FC = () => {
                   borderRadius={10}
                   onChangeText={text => dispatch(setCustomerEmail(text))}
                   type="text"
-                  placeholder="Contoh: mas@mail.com"
+                  placeholder={t('example-mail')}
                 />
               </Stack>
             </FormControl>
@@ -260,7 +261,7 @@ const CheckoutScreen: React.FC = () => {
                     ? singleSubmitPayment()
                     : navigation.navigate('PaymentMethodScreen');
                 }}>
-                Lewati
+                {t('skip')}
               </Button>
               <Button
                 onPress={() => {
@@ -270,7 +271,7 @@ const CheckoutScreen: React.FC = () => {
                     ? singleSubmitPayment()
                     : navigation.navigate('PaymentMethodScreen');
                 }}>
-                Simpan
+                {t('save')}
               </Button>
             </Button.Group>
           </Modal.Footer>
@@ -284,7 +285,7 @@ const CheckoutScreen: React.FC = () => {
           onClose={() => dispatch(setNote(false))}>
           <Modal.Content mb={0} mt={'auto'} maxWidth="400px">
             <Modal.CloseButton />
-            <Modal.Header>{'Catatan'}</Modal.Header>
+            <Modal.Header>{t('note')}</Modal.Header>
             <Modal.Body>
               <TextArea
                 onChangeText={text => setNoteProduct(text)}
@@ -293,14 +294,14 @@ const CheckoutScreen: React.FC = () => {
                 bg={'white'}
                 value={noteProduct}
                 borderRadius={10}
-                placeholder="Contoh: nomor meja, nama, level pedas.."
+                placeholder={t('note-placeholder')}
                 autoCompleteType={undefined}
               />
               <Button
                 bg={primaryColor?.primaryColor}
                 onPress={handleAddNote}
                 leftIcon={<FontAwesome name="save" size={15} color="white" />}>
-                Simpan Catatan
+                {t('save-note')}
               </Button>
             </Modal.Body>
           </Modal.Content>
@@ -313,14 +314,14 @@ const CheckoutScreen: React.FC = () => {
             <Modal.CloseButton />
             <Modal.Header>
               {prevRoute?.name === 'EditOrderScreen'
-                ? 'Konfirmasi Pesanan'
-                : 'Hapus Pesanan ?'}
+                ? t('order-confirm')
+                : t('delete-order')}
             </Modal.Header>
             <Modal.Body>
               <Text mb={4}>
                 {prevRoute?.name === 'EditOrderScreen'
-                  ? 'Pastikan pesanan sudah benar ?'
-                  : 'Pastikan pesanan yang akan dihapus sudah dibatalkan pembeli'}
+                  ? t('isOrder')
+                  : t('isOrderDelete')}
               </Text>
               <Button
                 mb={4}
@@ -342,7 +343,9 @@ const CheckoutScreen: React.FC = () => {
                     color="white"
                   />
                 }>
-                {prevRoute?.name === 'EditOrderScreen' ? 'Konfirmasi' : 'Hapus'}
+                {prevRoute?.name === 'EditOrderScreen'
+                  ? t('confirm')
+                  : t('delete')}
               </Button>
               <Button
                 bg={'#fadedb'}
@@ -350,7 +353,7 @@ const CheckoutScreen: React.FC = () => {
                 leftIcon={
                   <MaterialIcons name="cancel" size={15} color="#e85844" />
                 }>
-                <Text color={'#f04438'}>Batal</Text>
+                <Text color={'#f04438'}>{t('cancel')}</Text>
               </Button>
             </Modal.Body>
           </Modal.Content>

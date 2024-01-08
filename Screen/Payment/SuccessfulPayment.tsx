@@ -5,27 +5,25 @@ import React, {useContext} from 'react';
 import {View, Button, Text, Center, Divider, ScrollView} from 'native-base';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../Redux/store';
-import RupiahFormatter from '../../Components/Rupiah/Rupiah';
-// import DateFormatter from '../../Components/Date/Date';
 import {clearCartPayment} from '../../Redux/Reducers/payment';
 import {clearCart} from '../../Redux/Reducers/cart';
 import {clearStateButton} from '../../Redux/Reducers/button';
 import PrintReceipt from '../Printer/Components/PrintReceipt';
 import {PrimaryColorContext} from '../../Context';
-import formatDate from '../../Components/Date/Date';
+import RupiahFormatter from '../../Util/Rupiah/Rupiah';
+import formatDate from '../../Util/Date/Date';
+import {useTranslation} from 'react-i18next';
 
 type PaymentProps = {
-  navigation: any; // If you are using react-navigation, replace any with the correct navigation type
+  navigation: any;
 };
 
-const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
-  navigation,
-}) => {
+const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({navigation}) => {
   const dispatch = useDispatch();
-
+  const {t} = useTranslation();
   const routes = navigation.getState()?.routes;
   const prevRoute = routes[routes.length - 4];
-  const isKitchenScreen = prevRoute?.name === 'KitchenScreen';
+  const isKitchenScreen = prevRoute?.name === 'TellerScreen';
   const paymentReceipt = useSelector(
     (state: RootState) => state.paymentSlice.items[0],
   );
@@ -38,7 +36,7 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
         </View>
         <Center>
           <Text mt={4} fontSize={30}>
-            Pembayaran Berhasil
+            {t('Succesfull-transaction')}
           </Text>
         </Center>
         <View
@@ -67,13 +65,13 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
           {paymentReceipt?.totalPayment ? (
             <>
               <Text mx={4} mt={2} fontSize={'xl'} color={'#9191a7'}>
-                Nominal Pembayaran
+                {t('nominal')}
               </Text>
               <Text bold mx={4} fontSize={'xl'}>
                 {RupiahFormatter(paymentReceipt?.totalPayment)}
               </Text>
               <Text mx={4} mt={2} fontSize={'xl'} color={'#9191a7'}>
-                Kembalian
+                {t('exchange')}
               </Text>
               <Text bold mx={4} fontSize={'xl'}>
                 {RupiahFormatter(paymentReceipt.exchangePayment)}
@@ -82,20 +80,19 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
           ) : null}
 
           <Text mx={4} mt={2} fontSize={'xl'} color={'#9191a7'}>
-            Nomor Pesanan
+            {t('order-no')}
           </Text>
           <Text bold mx={4} fontSize={'xl'}>
             {paymentReceipt?.invoiceNumber}
           </Text>
           <Text mx={4} mt={2} fontSize={'xl'} color={'#9191a7'}>
-            Tanggal Pembayaran
+            {t('payment-date')}
           </Text>
           <Text bold mx={4} fontSize={'xl'}>
-            {/* {paymentReceipt?.datePayment} */}
             {formatDate(paymentReceipt?.datePayment)}
           </Text>
           <Text mx={4} mt={2} fontSize={'xl'} color={'#9191a7'}>
-            Nama Kasir
+            {t('cashier-name')}
           </Text>
           <Text mb={4} bold mx={4} fontSize={'xl'}>
             {paymentReceipt?.cashierName}
@@ -108,7 +105,7 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
                 size={20}
                 color={primaryColor?.primaryColor}
               />
-              Download Struk
+              {t('download')}
             </Text>
             <Text textAlign={'center'} flex={1} fontSize={'lg'}>
               <MaterialCommunityIcons
@@ -116,7 +113,7 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
                 size={20}
                 color={primaryColor?.primaryColor}
               />
-              Bagikan Struk
+              {t('share')}
             </Text>
           </View>
         </View>
@@ -128,7 +125,7 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
             dispatch(clearCart());
             dispatch(clearStateButton());
             navigation.navigate(
-              isKitchenScreen ? 'KitchenScreen' : 'Dashboard',
+              isKitchenScreen ? 'TellerScreen' : 'Dashboard',
               {screen: 'Cashier'},
             );
           }}
@@ -137,7 +134,7 @@ const SuccessfulPaymentScreen: React.FC<PaymentProps> = ({
           my={4}
           bg={primaryColor?.secondaryColor}>
           <Text fontSize={'md'} color={primaryColor?.primaryColor}>
-            Tutup
+            {t('close')}
           </Text>
         </Button>
       </ScrollView>

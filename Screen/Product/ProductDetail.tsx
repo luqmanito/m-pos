@@ -1,15 +1,10 @@
 import React, {useContext, useState} from 'react';
 import {
   Button,
-  Center,
-  FormControl,
   HStack,
   Icon,
   Image,
-  Input,
-  Modal,
   ScrollView,
-  Stack,
   Text,
   View,
   VStack,
@@ -21,27 +16,21 @@ import {useDispatch, useSelector} from 'react-redux';
 import {UploadComp} from '../../Components/Upload/Upload';
 import {clearDataCamera} from '../../Redux/Reducers/upload';
 import {RootState} from '../../Redux/store';
-
 import {Pressable} from 'react-native';
 import NavBar from '../../Components/Navbar/Navbar';
-import RupiahFormatter from '../../Components/Rupiah/Rupiah';
 import useProductDetail from '../../Hooks/useProductDetail';
 import useEditPhoto from '../../Hooks/useEditPhoto';
-import useDeleteProduct from '../../Hooks/useDeleteProduct';
 import {PrimaryColorContext, useLoading} from '../../Context';
-import {ParamListBase, RouteProp} from '@react-navigation/native';
+import {RouteProp} from '@react-navigation/native';
 import BaseInput from '../../Components/Form/BaseInput';
-import useErrorHandler from '../../Hooks/useErrorHandler';
-import {formatPrice} from '../../Components/Rupiah/RupiahFormatter';
-
-export type YourNavigatorParamList = {
-  ProductDetail: {
-    productId: number;
-  };
-} & ParamListBase;
+import {RootStackParamList} from '../../Navigation/RootStackParamList';
+import RupiahFormatter from '../../Util/Rupiah/Rupiah';
+import {formatPrice} from '../../Util/Rupiah/RupiahFormatter';
+import DeletePhotoModal from './Components/DeletePhotoModal';
+import {useTranslation} from 'react-i18next';
 
 type ProductDetailScreenProps = {
-  route: RouteProp<YourNavigatorParamList, 'ProductDetail'>;
+  route: RouteProp<RootStackParamList, 'ProductDetailsScreen'>;
   navigation: any;
 };
 
@@ -49,37 +38,57 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
   navigation,
   route,
 }) => {
+  const {t} = useTranslation();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [deleteProduct, setDeleteProduct] = useState<boolean>(false);
   const dispatch = useDispatch();
-  const productId =
-    route?.params?.productId === undefined ? null : route.params.productId;
+  const id = route?.params?.id === undefined ? null : route.params.id;
   const dataCamera = useSelector(
     (state: RootState) => state.uploadSlice.dataCamera,
   );
   const categoryName = useSelector(
     (state: RootState) => state.productSlice?.categoryName,
   );
-  const {photos, form, resetphotos, handleForm} = useProductDetail(productId);
-  const {handleDeletedPhoto, handleSubmit, handleAddSubmit} = useEditPhoto();
-  const {getFormError, clearFormErrors, isInvalid} = useErrorHandler();
-  const {handleSubmitDelete} = useDeleteProduct();
-  const {loading} = useLoading();
+  const {photos, form, resetphotos, handleForm} = useProductDetail(id);
+  const {
+    handleDeletedPhoto,
+    handleSubmit,
+    handleAddSubmit,
+    getFormError,
+    clearFormErrors,
+    isInvalid,
+  } = useEditPhoto();
+  const {loading, setLoading} = useLoading();
+  setLoading(false);
   const primaryColor = useContext(PrimaryColorContext);
-  function deleteMedia(): void {
+
+  const submittedData = {
+    name: form.name,
+    code: form.code,
+    description: form.description,
+    price: form.price,
+    productId: id,
+  };
+
+  function submitData(): void {
+    clearFormErrors();
+    id !== null ? handleSubmit(submittedData) : handleAddSubmit(submittedData);
     setIsOpen(false);
-    resetphotos();
-    handleDeletedPhoto();
   }
+
+  const updateParentState = (newValue: boolean) => {
+    setDeleteProduct(newValue);
+  };
 
   return (
     <>
-      <NavBar msg={'Detail Produk'} />
+      <NavBar msg={id ? t('product-detail') : t('add-product')} />
       <ScrollView>
         <View flex={1} mb={4} mx={4} mt={4}>
           <View>
             <Text>
-              Foto Produk <Text color={'gray.400'}>(Optional)</Text>{' '}
+              {t('product-photo')}{' '}
+              <Text color={'gray.400'}>({t('optional')})</Text>{' '}
             </Text>
           </View>
           <HStack mt={2} space={3}>
@@ -92,7 +101,7 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
                     source={photos ? {uri: photos} : {uri: dataCamera?.uri}}
                     width={100}
                     height={120}
-                    alt="logo-pemkab"
+                    alt="foto-produk"
                   />
                   <View
                     position={'absolute'}
@@ -112,47 +121,51 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
                   </View>
                 </View>
               ) : (
-                <UploadComp position="bottom" title="Foto Produk" size="full" />
+                <UploadComp
+                  position="bottom"
+                  title={t('product-photo')}
+                  size="full"
+                />
               )}
             </VStack>
           </HStack>
           <BaseInput
             inputKey={'name'}
             isRequired={true}
-            label={'Nama Produk'}
-            defaultValue={productId ? form.name : ''}
-            placeholder={'Contoh: Nasi Goreng'}
+            label={t('product-name')}
+            defaultValue={id ? form.name : ''}
+            placeholder={t('product-placeholder')}
             type={'text'}
             isInvalid={isInvalid('name')}
             warningMessage={getFormError('name')}
             onChangeText={text => handleForm('name', text)}
           />
-          <Stack mt={4}>
-            <FormControl.Label>Kategori</FormControl.Label>
-            <Pressable onPress={() => navigation.navigate('CategoryScreen')}>
-              <Input
-                borderRadius={10}
-                isReadOnly={true}
-                type="text"
-                placeholder="Pilih Kategori"
-                value={categoryName ? categoryName : ''}
-                InputRightElement={
-                  <Icon
-                    as={<Ionicons name={'chevron-forward'} />}
-                    size={6}
-                    mr="2"
-                    color="muted.400"
-                  />
-                }
-              />
-            </Pressable>
-          </Stack>
+          <Pressable onPress={() => navigation.navigate('CategoryScreen')}>
+            <BaseInput
+              inputKey={'category'}
+              isReadOnly={true}
+              isRequired={true}
+              label={t('category')}
+              defaultValue={categoryName ? categoryName : ''}
+              placeholder={t('set-category')}
+              isInvalid={isInvalid('category')}
+              rightIcon={
+                <Icon
+                  as={<Ionicons name={'chevron-forward'} />}
+                  size={6}
+                  mr="2"
+                  color="muted.400"
+                />
+              }
+              warningMessage={getFormError('category')}
+            />
+          </Pressable>
           <BaseInput
             inputKey={'code'}
             isRequired={true}
-            label={'Kode'}
-            defaultValue={productId ? form.code : ''}
-            placeholder={'Kode Produk'}
+            label={t('code')}
+            defaultValue={id ? form.code : ''}
+            placeholder={t('code-product')}
             type={'text'}
             isInvalid={isInvalid('code')}
             warningMessage={getFormError('code')}
@@ -161,9 +174,9 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
           <BaseInput
             inputKey={'description'}
             isRequired={true}
-            label={'Deskripsi'}
-            defaultValue={productId ? form.description : ''}
-            placeholder={'Jelaskan apa yang spesial dari produkmu'}
+            label={t('description')}
+            defaultValue={id ? form.description : ''}
+            placeholder={t('desc-placeholder')}
             type={'text'}
             isInvalid={isInvalid('description')}
             warningMessage={getFormError('description')}
@@ -172,8 +185,8 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
           <BaseInput
             inputKey={'price'}
             isRequired={true}
-            label={'Harga'}
-            placeholder={'Masukkan Harga'}
+            label={t('price')}
+            placeholder={t('input-price')}
             type={'text'}
             defaultValue={
               form.price !== undefined ? RupiahFormatter(form.price) : ''
@@ -189,51 +202,26 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
             w={50}
             h={50}
             borderRadius={25}
-            bg={'#fdecec'}
+            bg={id ? '#fdecec' : 'gray.300'}
             justifyContent={'center'}
             alignItems={'center'}>
             <MaterialIcons
-              disabled={loading}
+              disabled={loading || id === null ? true : false}
               onPress={() => {
                 setDeleteProduct(true);
                 setIsOpen(true);
               }}
               name="delete"
               size={25}
-              color="#ef4536"
+              color={id ? '#ef4536' : 'gray'}
             />
           </View>
           <Button
             flex={1}
             borderRadius={34}
-            isDisabled={
-              !form.name ||
-              !form.code ||
-              !categoryName ||
-              !form.description ||
-              !form.price
-                ? true
-                : false
-            }
-            onPress={() => {
-              clearFormErrors();
-              productId !== null
-                ? handleSubmit({
-                    name: form.name,
-                    code: form.code,
-                    description: form.description,
-                    price: form.price,
-                    productId,
-                  })
-                : handleAddSubmit({
-                    name: form.name,
-                    code: form.code,
-                    description: form.description,
-                    price: form.price,
-                  });
-              setIsOpen(false);
-            }}
-            isLoading={loading ? true : false}
+            onPress={submitData}
+            disabled={loading}
+            isLoading={loading}
             isLoadingText="Loading"
             w={'80%'}
             ml={4}
@@ -241,54 +229,20 @@ const ProductDetail: React.FC<ProductDetailScreenProps> = ({
             justifyContent={'center'}
             bg={primaryColor?.primaryColor}>
             <Text fontSize={'md'} color="white">
-              <MaterialIcons name="save" color="white" /> Simpan
+              <MaterialIcons name="save" color="white" /> {t('save')}
             </Text>
           </Button>
         </View>
       </ScrollView>
-      <Center>
-        <Modal
-          size={'lg'}
-          isOpen={isOpen}
-          onClose={() => {
-            setDeleteProduct(false);
-            setIsOpen(false);
-          }}>
-          <Modal.Content mb={0} maxWidth="400px">
-            <Modal.CloseButton />
-            <Modal.Header>
-              {deleteProduct ? 'Hapus Produk' : 'Hapus Foto'}
-            </Modal.Header>
-            <Text mx={4} mt={4}>
-              {deleteProduct
-                ? 'Apakah Anda yakin akan menghapus produk ini ?'
-                : 'Apa Anda yakin akan menghapus foto ?'}
-            </Text>
-            <Modal.Body flexDirection={'row'}>
-              <Button
-                flex={1}
-                mx={4}
-                isLoading={loading}
-                bg={'#ef4536'}
-                onPress={() => {
-                  deleteProduct ? handleSubmitDelete() : deleteMedia();
-                }}>
-                <Text color={'#fdecec'}>Ya</Text>
-              </Button>
-              <Button
-                flex={1}
-                bg={'#fdecec'}
-                isLoading={loading}
-                onPress={() => {
-                  setDeleteProduct(false);
-                  setIsOpen(false);
-                }}>
-                <Text color={'#ef4536'}>Tidak</Text>
-              </Button>
-            </Modal.Body>
-          </Modal.Content>
-        </Modal>
-      </Center>
+      <DeletePhotoModal
+        isDeleteProduct={deleteProduct}
+        id={id}
+        handleDeletedPhoto={handleDeletedPhoto}
+        resetphotos={resetphotos}
+        isOpen={isOpen}
+        updateParentState={updateParentState}
+        onClose={() => setIsOpen(false)}
+      />
     </>
   );
 };

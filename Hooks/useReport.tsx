@@ -1,7 +1,7 @@
 import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
-import {dates} from '../Components/Date/Today';
+// import {dates} from '../Components/Date/Today';
 import ReportNetwork from '../Network/lib/report';
 import {
   setPendingTransaction,
@@ -10,6 +10,7 @@ import {
 } from '../Redux/Reducers/report';
 import {RootState} from '../Redux/store';
 import cache from '../Util/cache';
+import {dates} from '../Util/Date/Today';
 
 type PropsType = {
   name: string;
@@ -78,9 +79,11 @@ export const useReport = () => {
     };
 
     if (isFocused) {
-      fetchDataPaymentMethods();
-      fethcDataTotalTransactions();
-      pendingStatus();
+      setTimeout(() => {
+        fetchDataPaymentMethods();
+        fethcDataTotalTransactions();
+        pendingStatus();
+      }, 2000);
     }
   }, [date?.end_date, date?.start_date, isFocused, fetchData, dispatch]);
 

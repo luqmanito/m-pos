@@ -9,11 +9,13 @@ import {Pressable} from 'react-native';
 import {RootState} from '../../Redux/store';
 import {PrimaryColorContext, useLoading} from '../../Context';
 import useCategories from '../../Hooks/useCategory';
+import {useTranslation} from 'react-i18next';
 
 interface CategoryScreenProps {}
 
 const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
   const [value, setValue] = useState<string | undefined>('');
+  const {t} = useTranslation();
   const {categories} = useCategories();
   const {loading} = useLoading();
   const navigation = useNavigation<NavigationProp<any>>();
@@ -24,7 +26,7 @@ const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
   const primaryColor = useContext(PrimaryColorContext);
   return (
     <>
-      <NavBar msg={'Pilih Kategori'} />
+      <NavBar msg={t('set-category')} />
       {loading ? (
         <View mt={12} justifyContent={'center'} alignItems={'center'}>
           <Text bold fontSize={'xl'}>
@@ -33,14 +35,14 @@ const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
         </View>
       ) : categories.length === 0 && !loading ? (
         <View mt={12} justifyContent={'center'} alignItems={'center'}>
-          <Text bold> Belum Menambahkan Kategori</Text>
+          <Text bold> {t('no-category')}</Text>
           <Button
             bg={primaryColor?.primaryColor}
             onPress={() => {
               navigation.navigate('AddCategoryScreen');
             }}
             mt={4}>
-            Tambah Kategori
+            {t('add-category')}
           </Button>
         </View>
       ) : (
@@ -87,7 +89,6 @@ const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
           );
         })
       )}
-      {/* {} */}
       <Button
         borderRadius={34}
         onPress={() => navigation.goBack()}
@@ -98,7 +99,7 @@ const CategoryScreen: FunctionComponent<CategoryScreenProps> = () => {
         alignSelf="center"
         bg={primaryColor?.primaryColor}>
         <Text fontSize={'md'} color="white">
-          <MaterialIcons name="save" size={15} color="white" /> Simpan Kategori
+          <MaterialIcons name="save" size={15} color="white" /> {t('save')}
         </Text>
       </Button>
     </>

@@ -1,3 +1,4 @@
+import {ErrorModel} from '../../models/ErrorModel';
 import axiosClient from '../axiosClient';
 
 interface userProps {
@@ -10,13 +11,23 @@ interface userProps {
 }
 
 export default {
-  createUser({name, email, password, role, password_confirmation}: userProps) {
-    return axiosClient.post('api/users', {
-      name,
-      email,
-      password,
-      role,
-      password_confirmation,
+  createUser(formData: FormData): Promise<userProps> {
+    return new Promise((resolve, reject) => {
+      axiosClient
+        .post<userProps>('api/users', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then(({data}) => {
+          resolve(data);
+        })
+        .catch(e => {
+          const err: ErrorModel | undefined = e.response.data;
+          console.log(err);
+
+          reject(err);
+        });
     });
   },
   updateUser({name, email, role, id}: userProps) {
@@ -30,10 +41,10 @@ export default {
   listUser() {
     return axiosClient.get('api/users');
   },
-  deleteUser(id: number) {
+  deleteUser(id: number | undefined | null) {
     return axiosClient.delete(`api/users/${id}`);
   },
-  detailUser(id: number | null) {
+  detailUser(id: number | undefined | null) {
     return axiosClient.get(`api/users/${id}`);
   },
   restoreUser(id: number) {

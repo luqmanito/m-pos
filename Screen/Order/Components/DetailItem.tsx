@@ -17,12 +17,14 @@ import {StyleSheet} from 'react-native';
 import useOrderDetails from '../../../Hooks/useOrderDetail';
 import {RootState} from '../../../Redux/store';
 import usePaymentSubmit from '../../../Hooks/useSubmitPayment';
+import {useTranslation} from 'react-i18next';
 
 interface Props {
   onClose: () => void;
 }
 
 const DetailItem: React.FC<Props> = ({onClose}) => {
+  const {t} = useTranslation();
   const primaryColor = useContext(PrimaryColorContext);
   const isLoading = useOrderDetails()?.isLoading;
   const {confirmOrder} = usePaymentSubmit();
@@ -35,7 +37,7 @@ const DetailItem: React.FC<Props> = ({onClose}) => {
     <>
       <View alignItems={'center'}>
         <Text bold fontSize={'2xl'}>
-          Detail Pesanan
+          {t('order-detail')}
         </Text>
         {isLoading ? (
           <Skeleton p={3} minH="545" />
@@ -67,7 +69,7 @@ const DetailItem: React.FC<Props> = ({onClose}) => {
                           flex={2}
                           color={'black'}
                           bold>
-                          Daftar Pesanan
+                          {t('list-order')}
                         </Text>
                       </View>
                       <View>
@@ -77,7 +79,9 @@ const DetailItem: React.FC<Props> = ({onClose}) => {
                           flex={2}
                           color={'black'}
                           bold>
-                          Nama Pemesan : {detailOrderItems.customer_name || '-'}
+                          {t('name-cs-info')}
+                          {' :'}
+                          {detailOrderItems.customer_name || '-'}
                         </Text>
                       </View>
                     </View>
@@ -150,7 +154,7 @@ const DetailItem: React.FC<Props> = ({onClose}) => {
                 borderRadius={10}
                 bg={primaryColor?.primaryColor}>
                 <Text color={'white'} bold>
-                  Konfirmasi
+                  {t('confirm')}
                 </Text>
               </Button>
             </View>
